@@ -1,4 +1,4 @@
-/* $Id: proto.h,v 5.48 2003/09/16 21:01:48 bertg Exp $
+/* $Id: proto.h,v 1.1.1.1 2007/01/21 16:41:23 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *

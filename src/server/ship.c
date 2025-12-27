@@ -1,4 +1,4 @@
-/* $Id: ship.c,v 4.7 2000/03/22 17:59:33 bert Exp $
+/* $Id: ship.c,v 1.1.1.1 2007/01/21 16:41:26 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

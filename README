@@ -1,6 +1,6 @@
 Interpolated eXperimental xpilot
 
-This is the xpilot-ix distribution -the hunt for lost playability
+This is the xpilot-fxi distribution -the hunt for lost playability
 
 The aim of this project is to bring a more decent server 
 for the players. The client is also optimized, but we leave
@@ -255,14 +255,33 @@ unsymmetricity it introduces.. so don't use 16 2/3 fps on a 50 fps server!
   for loss)
 - 800 start fuel as a test
 
-
+-1.3.4fxi:
+- took away Mara turnqueue, after more testing it was agreed that its more 
+  harmful than useful
+- include string.h in rank.c
+- took away shots from rank, fixed a bug losing a ball twice in rank
+- show paused players to meta server, because paused players might be
+  waiting for other players to join (thanks for the idea Kevin)
+- add greeting string option, the greeting will show up for joining players
+- changed option internalfps to fps
+- changed startscripts to reflect changes in options (internalfps->fps)
+  and fixed a bug in one script
+- fixed the frame update in maxfps (taken from bp1)
 
 ----
 
 PROBLEMS
+- the update system needs a rethink, doesnt seem to offer low fps playing with server rate 50 fps
+  or my machine is just broken (unlikely)
 - rank code isnt still completely working (using old find player routine)
 - players demand better walls !!! (they want better walls, and they only notice
   this problem, despite steering is much improved)
+
+OBSERVATIONS
+- note that sending frames wrongly will affect the steering at the client side. Even
+  if the server does computations right, it will be experienced as a bad steering if
+  wrong frames are sent to client. This could result e.g. because of wrong 
+  synchronization or wrongly implemented frame_update sending.
 
 2.x.xfinal
 - rewrite packet protocol, delete unused stuff in packets

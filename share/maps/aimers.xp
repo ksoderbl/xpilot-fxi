@@ -1,8 +1,5 @@
 # Created by xp-mapedit on Thu Jun 24 01:25:21 1999
 
-oldthrust:0.5
-
-#numRounds:0
 maxRobots:4
 emcsreprogrammines:yes
 playerminimumstartfuel:500
@@ -10,12 +7,12 @@ emcsreprogrammines:yes
 
 limitedlives : no
 worldlives : 3
-
+kineticenergyfueldrain : no
 
 mapwidth : 90
 mapheight : 90
-mapname : Dodgers
-mapauthor : thirsima@cc.hut.fi
+mapname : Aimers
+mapauthor : Flower originally, latest change by Samaseon
 teamplay : yes
 oneplayeronly : yes
 limitedvisibility : no
@@ -38,8 +35,6 @@ robotleavelife : 50
 robotleavescore : -75
 robotleaveratio : -5
 idlerun : no
-noquit : no
-contactport : 15345
 allowViewing: yes
 allowplayercrashes : yes
 allowplayerbounces : no
@@ -61,7 +56,7 @@ maxunshieldedplayerwallbounceangle : 180
 playerwallbouncebrakefactor : 0.5
 objectwallbouncebrakefactor : 0.95
 objectwallbouncelifefactor : 1
-wallbouncefueldrainmult : 0.2
+wallbouncefueldrainmult : 0
 wallbouncedestroyitemprob : 0
 reporttometaserver : yes
 denyhosts : no
@@ -126,7 +121,7 @@ itememergencythrustprob : 0.2
 itemtractorbeamprob : 0.7
 itemautopilotprob : 0.0
 itememergencyshieldprob : 0.6
-initialfuel : 1000
+initialfuel : 500
 initialtanks : 0
 initialecms : 0
 initialmines : 0

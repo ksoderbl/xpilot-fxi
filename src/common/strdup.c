@@ -1,4 +1,4 @@
-/* $Id: strdup.c,v 5.3 2001/05/27 12:27:20 bertg Exp $
+/* $Id: strdup.c,v 1.1.1.1 2007/01/21 16:41:14 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *

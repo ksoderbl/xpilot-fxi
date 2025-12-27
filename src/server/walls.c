@@ -1,4 +1,4 @@
-/* $Id: walls.c,v 4.21 2000/10/29 16:37:31 bert Exp $
+/* $Id: walls.c,v 1.3 2007/02/03 13:37:55 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -702,27 +702,25 @@ static void Move_segment(move_state_t *ms)
 		  }
 		  
 
-		    /*
-		     * Ball has been brought back to home treasure.
-		     * The team should be punished.
-		     */
-		    sprintf(msg," < The ball was loose for %ld frames >",
-			    LONG_MAX - mi->obj->life);
-		    Set_message(msg);
-		    if (enemies > 0){
-		      Rank_cashed_ball(pl);
-		      for (n = 0; n < NumPlayers; n++){
-			pl2 = Players[n];
-			if ((pl2->team != pl->team) && (!BIT(pl2->status, PAUSE))
-			    && (!(pl2->mychar == 'W'))) Rank_lost_ball(pl2); 
-			else if ((!BIT(pl2->status, PAUSE)) && (!(pl2->mychar == 'W')))
-			  Rank_won_ball(pl2);
-		      }
+		  /*
+		   * Ball has been brought back to home treasure.
+		   * The team should be punished.
+		   */
+		  sprintf(msg," < The ball was loose for %ld frames >",
+			  LONG_MAX - mi->obj->life);
+		  Set_message(msg);
+		  if (enemies > 0){
+		    Rank_cashed_ball(pl);
+		    for (n = 0; n < NumPlayers; n++){
+		      pl2 = Players[n];
+		      if ((!BIT(pl2->status, PAUSE)) && (!(pl2->mychar == 'W')))
+			Rank_won_ball(pl2);
 		    }
-		    Rank_ballrun(pl,  LONG_MAX - mi->obj->life);
-		    if (Punish_team(GetInd[mi->obj->owner],
-				    mi->obj->treasure, ms->treasure))
-		      SET_BIT(mi->obj->status, RECREATE);
+		  }
+		  Rank_ballrun(pl,  LONG_MAX - mi->obj->life);
+		  if (Punish_team(GetInd[mi->obj->owner],
+				  mi->obj->treasure, ms->treasure))
+		    SET_BIT(mi->obj->status, RECREATE);
 		}
 		mi->obj->life = 0;
 		return;
@@ -2361,8 +2359,8 @@ void Turn_player(int ind)
     }
 
     if (blocked) {
-      /* turnqueue */
-      /*pl->float_dir = (DFLOAT) pl->dir;*/
+      
+      pl->float_dir = (DFLOAT) pl->dir;
     }
 
     if (crash != -1) {

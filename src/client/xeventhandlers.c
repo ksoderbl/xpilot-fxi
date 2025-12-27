@@ -1,4 +1,4 @@
-/* $Id: xeventhandlers.c,v 4.4 2000/03/24 12:47:01 bert Exp $
+/* $Id: xeventhandlers.c,v 1.1.1.1 2007/01/21 16:41:08 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

@@ -1,4 +1,4 @@
-/* $Id: sched.h,v 4.1 1998/04/16 17:41:59 bert Exp $
+/* $Id: sched.h,v 1.1.1.1 2007/01/21 16:41:24 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

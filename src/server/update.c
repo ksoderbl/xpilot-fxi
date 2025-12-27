@@ -1,4 +1,4 @@
-/* $Id: update.c,v 4.16 1999/11/10 21:06:36 bert Exp $
+/* $Id: update.c,v 1.2 2007/02/09 23:23:35 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -126,12 +126,12 @@ void Update_objects_interpolation(void)
   
   for (i = 0; i < NumPlayers; i++){
     pl = Players[i];
-    player_fps = internalFps;
+    player_fps = fps;
     player_fps = MIN(player_fps, pl->player_fps);
     
    
-    if (player_fps < internalFps) {
-      int divisor = (internalFps - 1) / player_fps + 1;
+    if (player_fps < fps) {
+      int divisor = (fps - 1) / player_fps + 1;
       if (frame_loops % divisor)
 	continue;
     }

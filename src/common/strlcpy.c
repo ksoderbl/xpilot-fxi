@@ -1,4 +1,4 @@
-/* $Id: strlcpy.c,v 5.5 2001/05/07 20:06:09 bertg Exp $
+/* $Id: strlcpy.c,v 1.1.1.1 2007/01/21 16:41:14 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *

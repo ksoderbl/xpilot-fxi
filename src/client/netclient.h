@@ -1,4 +1,4 @@
-/* $Id: netclient.h,v 4.4 1999/10/08 21:22:03 bert Exp $
+/* $Id: netclient.h,v 1.1.1.1 2007/01/21 16:41:01 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

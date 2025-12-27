@@ -1,4 +1,4 @@
-/* $Id: server.c,v 4.18 2000/10/15 13:09:55 bert Exp $
+/* $Id: server.c,v 1.2 2007/02/09 23:23:35 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -89,7 +89,7 @@ extern int		NumQueuedPlayers;
 extern bool             limitedRoundsGameOver;
 extern int              received_packets;
 int frameDivisor;
-int internalFps;
+int fps;
 int frame_cycle = 0;
 static void Check_server_versions(void);
 static void Handle_signal(int sig_no);
@@ -187,10 +187,10 @@ int main(int argc, char **argv)
 
 #ifndef SILENT
     xpprintf("%s Server runs at %d frames per second, correction factor is %f\n", showtime(), 
-	     internalFps, 1.0/frameDivisor);
+	     fps, 1.0/frameDivisor);
 #endif
     
-    setup_timer(internalFps);
+    setup_timer(fps);
     main_loops = 0;
     sched();
     xpprintf("sched returned!?");
@@ -474,7 +474,7 @@ void Server_info(char *str, unsigned max_size)
 	    "PLAYERS (%2d/%2d)..:\n",
 	    server_version,
 	    (game_lock) ? "locked" : "ok",
-	    internalFps,
+	    fps,
 	    World.x, World.y, World.name, World.author,
 	    NumPlayers, World.NumBases);
     

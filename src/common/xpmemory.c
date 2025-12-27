@@ -1,4 +1,4 @@
-/* $Id: xpmemory.c,v 5.0 2001/05/27 20:29:02 dik Exp $
+/* $Id: xpmemory.c,v 1.1.1.1 2007/01/21 16:41:14 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *

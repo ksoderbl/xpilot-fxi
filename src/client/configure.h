@@ -1,4 +1,4 @@
-/* $Id: configure.h,v 4.2 1999/10/07 16:45:34 bert Exp $
+/* $Id: configure.h,v 1.1.1.1 2007/01/21 16:40:58 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

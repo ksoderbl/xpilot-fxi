@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([XPilot], 1.3.3fxi, foo@bar.com, xpilot)
+AC_INIT([XPilot], 1.3.4fxi, foo@bar.com, xpilot)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(src/client/xpilot.c)
 
@@ -17,13 +17,13 @@ dnl  Copyright & stuff.
 XP_AUTHORS="Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Coppa"
 AC_SUBST([XP_AUTHORS])
 
-XP_COPYRIGHTDATE="1991-2006"
+XP_COPYRIGHTDATE="1991-2007"
 AC_SUBST([XP_COPYRIGHTDATE])
 
 XP_COPYRIGHT="Copyright © $XP_COPYRIGHTDATE by $XP_AUTHORS"
 AC_SUBST([XP_COPYRIGHT])
 
-AC_SUBST([XP_RELEASEDATE],["Mar 30, 2006"])
+AC_SUBST([XP_RELEASEDATE],["Feb 11, 2007"])
 AC_SUBST([XP_DATADIR],"$prefix/share/xpilot")
 
 

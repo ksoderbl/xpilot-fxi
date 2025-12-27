@@ -1,4 +1,4 @@
-/* $Id: client.c,v 4.18 2000/03/20 10:01:58 bert Exp $
+/* $Id: client.c,v 1.1.1.1 2007/01/21 16:40:57 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

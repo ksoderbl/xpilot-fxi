@@ -1,4 +1,4 @@
-/* $Id: frame.c,v 4.19 2000/10/15 13:09:55 bert Exp $
+/* $Id: frame.c,v 1.3 2007/02/11 17:46:59 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -728,7 +728,6 @@ void Frame_update(void)
 	    continue;
 	}
      
-	player_fps = internalFps;
 	if (BIT(pl->status, PAUSE|GAME_OVER)
 	    && !allowViewing
 	    && !pl->isowner) {
@@ -748,20 +747,46 @@ void Frame_update(void)
 		}
 	    }
 	}
-	player_fps = MIN(player_fps, pl->player_fps);
+
+
+
+	
+        /*
+         * kps - with this implementation player fps can never
+         * be less than "real" fps, that is the number of "real"
+         * frames per second, typically about 12.
+         */
+        player_fps = MIN(fps, pl->player_fps);
+        if (player_fps < fps) {
+            int divisor = 2;
+
+            while (fps > player_fps * divisor)
+                divisor *= 2;
+
+            if ((frame_cycle % divisor) != 0)
+	      continue;
+        }
+
+
+
+
+#if 0
+	player_fps = MIN(fps, pl->player_fps);
 
 	/*
 	 * Reduce frame rate to player's own rate.
 	 */
-	if (player_fps < internalFps /*&& !ignoreMaxFPS*/) {
-	  int divisor = (internalFps - 1) / player_fps + 1;
+	if (player_fps < fps /*&& !ignoreMaxFPS*/) {
+	  int divisor = (fps - 1) / player_fps + 1;
 	  /*	    printf("divisor %d player %d player2 %d intern:%d\n",
-		    //	    divisor, player_fps, pl->player_fps,internalFps);
+		    //	    divisor, player_fps, pl->player_fps,fps);
 		    //	    fflush(stdout);
 	  */
 	  if (frame_cycle % divisor != 0)
 	    continue;
 	}
+
+#endif
 
 	//gettimeofday(&tv1, NULL);
 	//printf("start:%e %d\n",timeval_to_seconds(tv1));

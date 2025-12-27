@@ -1,4 +1,4 @@
-/* $Id: tuner.c,v 1.12 2002/01/18 22:34:26 kimiko Exp $
+/* $Id: tuner.c,v 1.2 2007/02/09 23:23:35 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -146,15 +146,15 @@ void tuner_framedivisor(void){
  
   LIMIT(frameDivisor, 1, 10);
   frame_cycle = 0;
-  setup_timer(internalFps);
+  setup_timer(fps);
   frame_cycle = 0;
 }
 
 
-void tuner_internalFps(void){
+void tuner_fps(void){
  
-  LIMIT(internalFps, 1, MAX_SERVER_FPS);	
+  LIMIT(fps, 1, MAX_SERVER_FPS);	
   frame_cycle = 0;
-  setup_timer(internalFps);
+  setup_timer(fps);
   frame_cycle = 0;
 }

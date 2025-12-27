@@ -1,4 +1,4 @@
-/* $Id: config.c,v 5.7 2002/01/26 13:01:01 bertg Exp $
+/* $Id: xpconfig.c,v 1.1.1.1 2007/01/21 16:41:14 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *

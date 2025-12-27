@@ -1,4 +1,4 @@
-/* $Id: defaults.h,v 5.11 2003/09/16 21:00:54 bertg Exp $
+/* $Id: defaults.h,v 1.1.1.1 2007/01/21 16:41:17 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *

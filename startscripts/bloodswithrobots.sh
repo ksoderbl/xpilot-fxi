@@ -1,1 +1,0 @@
-src/server/xpilots -noquit -password buu -map share/maps/teamcup.xp -initialFuel 500 -robotteam 2 -maxrobots 4 -gamespeed 12 -allowviewing -internalFps $1 -frameDivisor $2 -rankFileName rank.txt -rankwebpage rank.html

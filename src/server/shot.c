@@ -1,4 +1,4 @@
-/* $Id: shot.c,v 4.9 2000/03/24 14:21:52 bert Exp $
+/* $Id: shot.c,v 1.1.1.1 2007/01/21 16:41:27 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

@@ -1,4 +1,4 @@
-/* $Id: server.h,v 4.2 1998/04/16 17:42:03 bert Exp $
+/* $Id: server.h,v 1.1.1.1 2007/01/21 16:41:25 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

@@ -1,4 +1,4 @@
-/* $Id: dbuff.h,v 4.6 2000/03/24 11:35:11 bert Exp $
+/* $Id: dbuff.h,v 1.1.1.1 2007/01/21 16:40:59 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

@@ -1,4 +1,4 @@
-/* $Id: debugaudio.c,v 1.1 1998/08/30 12:13:36 bert Exp $
+/* $Id: debugaudio.c,v 1.1.1.1 2007/01/21 16:41:07 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

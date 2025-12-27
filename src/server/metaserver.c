@@ -1,4 +1,4 @@
-/* $Id: metaserver.c,v 4.8 2000/03/23 17:06:52 bert Exp $
+/* $Id: metaserver.c,v 1.3 2007/02/09 23:23:35 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -181,7 +181,7 @@ void Meta_update(int change)
     num_active_players = 0;
     memset(active_per_team, 0, sizeof active_per_team);
     for (i = 0; i < NumPlayers; i++) {
-	if (IS_HUMAN_IND(i) && !BIT(Players[i]->status, PAUSE)) {
+	if (IS_HUMAN_IND(i)) {
 	    num_active_players++;
 	    if (BIT(World.rules->mode, TEAM_PLAY)) {
 		active_per_team[i]++;
@@ -231,7 +231,7 @@ void Meta_update(int change)
 	    "add sound " SOUND_SUPPORT_STR "\n",
 	    Server.host, num_active_players,
 	    META_VERSION, World.name, World.x, World.y, World.author,
-	    World.NumBases, internalFps, contactPort,
+	    World.NumBases, fps, contactPort,
 	    game_mode, World.NumTeamBases, freebases,
 	    0,
 	    (long)(time(NULL) - serverTime),
@@ -239,7 +239,7 @@ void Meta_update(int change)
 
 
     for (i=0; i < NumPlayers; i++) {
-	if (IS_HUMAN_IND(i) && !BIT(Players[i]->status, PAUSE)) {
+	if (IS_HUMAN_IND(i)) {
 	    sprintf(string + strlen(string),
 		    "%s%s=%s@%s",
 		    (first) ? "add players " : ",",

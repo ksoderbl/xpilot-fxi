@@ -1,4 +1,4 @@
-/* $Id: xinit.h,v 4.9 2000/09/05 22:09:21 bert Exp $
+/* $Id: xinit.h,v 1.1.1.1 2007/01/21 16:41:07 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

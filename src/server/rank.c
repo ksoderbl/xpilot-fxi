@@ -21,9 +21,11 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 #include <errno.h>
 #include <expat.h>
+
 
 #define SERVER
 #include "xpconfig.h"
@@ -285,7 +287,6 @@ static const char *Rank_get_logout_message(ranknode_t *rank)
 "<td align=right><h1><u><b>Kills</b></u></h1></td>" \
 "<td align=right><h1><u><b>Deaths</b></u></h1></td>" \
 "<td align=right><h1><u><b>Rounds</b></u></h1></td>" \
-"<td align=right><h1><u><b>Shots</b></u></h1></td>" \
 "<td align=center><h1><u><b>Balls</b></u></h1></td>" \
 "<td align=right><h1><u><b>Ratio</b></u></h1></td>" \
 "<td align=right><h1><u><b>User</b></u></h1></td>" \
@@ -351,13 +352,12 @@ void Rank_write_webpage(void)
 		"<td align=right>%u"
 		"<td align=right>%u"
 		"<td align=right>%u"
-		"<td align=right>%u"
 		"<td align=center>%u/%u/%u/%u/%u"
 		"<td align=right>%.2f"
 		"<td align=right>%s",
 		rank->score,
 		rank->kills, rank->deaths,
-		rank->rounds, rank->shots,
+		rank->rounds,
 		rank->ballsCashed, rank->ballsSaved,
 		rank->ballsWon, rank->ballsLost,
 		rank->bestball,

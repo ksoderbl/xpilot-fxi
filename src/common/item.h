@@ -1,4 +1,4 @@
-/* $Id: item.h,v 4.3 1999/10/05 20:25:26 bert Exp $
+/* $Id: item.h,v 1.1.1.1 2007/01/21 16:41:11 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

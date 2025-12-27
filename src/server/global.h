@@ -1,4 +1,4 @@
-/* $Id: global.h,v 5.34 2002/08/21 14:22:30 bertg Exp $
+/* $Id: global.h,v 1.3 2007/02/09 23:23:35 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -100,6 +100,7 @@ extern char		*mapName;
 extern char		*mapAuthor;
 extern int 		contactPort;
 extern char		*serverHost;
+extern char		*greeting;
 extern char		*serverAddr;
 extern bool		crashWithPlayer;
 extern bool		bounceWithPlayer;
@@ -214,7 +215,7 @@ extern unsigned		SPACE_BLOCKS;
 /* new as of xph */ 
 
 extern int 	frameDivisor;
-extern int	internalFps;
+extern int	fps;
 extern int	gameSpeed;
 extern char	*rankFileName;
 extern char	*rankWebpageFileName;

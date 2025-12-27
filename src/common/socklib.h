@@ -14,7 +14,7 @@
  *
  * This software is provided "as is" without any express or implied warranty.
  *
- * RCS:      $Id: socklib.h,v 4.2 2000/03/12 12:08:32 bert Exp $
+ * RCS:      $Id: socklib.h,v 1.1.1.1 2007/01/21 16:41:14 kps Exp $
  *
  * Revision 1.1.1.1  1992/05/11  12:32:34  bjoerns
  * XPilot v1.0

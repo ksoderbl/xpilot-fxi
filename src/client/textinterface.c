@@ -1,5 +1,5 @@
 #include <time.h>
-/* $Id: textinterface.c,v 4.11 2000/04/01 13:38:25 bert Exp $
+/* $Id: textinterface.c,v 1.1.1.1 2007/01/21 16:41:08 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

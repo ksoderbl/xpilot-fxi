@@ -1,4 +1,4 @@
-/* $Id: command.c,v 5.23 2003/09/16 21:00:46 bertg Exp $
+/* $Id: command.c,v 1.2 2007/02/09 22:13:53 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -611,9 +611,13 @@ static int Cmd_set(char *arg, player *pl, int oper, char *msg)
 	return CMD_RESULT_NOT_OPERATOR;
     }
 
+    /*
+     * Second argument of second strtok is " " instead of ""
+     * which allows setting string options to values that contain spaces.
+     */
     if (!arg
 	|| !(option = strtok(arg, " "))
-	|| !(value = strtok(NULL, " "))) {
+	|| !(value = strtok(NULL, ""))) {
 
 	sprintf(msg, "Usage: /set option value.");
 	return CMD_RESULT_ERROR;

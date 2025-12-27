@@ -1,4 +1,4 @@
-/* $Id: cmdline.c,v 5.55 2002/08/21 14:22:29 bertg Exp $
+/* $Id: cmdline.c,v 1.3 2007/02/09 23:23:35 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -76,6 +76,7 @@ char		*mapName;		/* Name of the universe */
 char		*mapAuthor;		/* Name of the creator */
 int		contactPort;		/* Contact port number */
 char		*serverHost;		/* Host name (for multihomed hosts) */
+char		*greeting;		/* Greeting for joining players */
 
 bool		crashWithPlayer;	/* Can players overrun other players? */
 bool		bounceWithPlayer;	/* Can players bounce other players? */
@@ -555,6 +556,16 @@ static option_desc options[] = {
 	tuner_none,
 	"The server's fully qualified domain name (for multihomed hosts).\n",
 	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
+    },
+    {
+	"greeting",
+	"greeting",
+	NULL,
+	&greeting,
+	valString,
+	tuner_dummy,
+	"Short greeting string for players when they login to server.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
 	"mapData",
@@ -1332,18 +1343,18 @@ static option_desc options[] = {
 	&frameDivisor,
 	valInt,
 	tuner_framedivisor,
-	"Divisor for the internalFps to get the higher rate to act effectively as lower at places where this is required.\n",
+	"Divisor for the Fps to get the higher rate to act effectively as lower at places where this is required.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     
     {
-        "internalFps",
-	"internalFps",
+        "fps",
+	"fps",
 	"25",
-	&internalFps,
+	&fps,
 	valInt,
-	tuner_internalFps,
-	"The number of frames the server internally handles(does faster packet processing and the scheduling goes right for Linux 2.4, although requested may go wrong.\n",
+	tuner_fps,
+	"The number of frames the server handles.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {

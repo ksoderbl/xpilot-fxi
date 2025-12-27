@@ -1,4 +1,4 @@
-/* $Id: caudio.c,v 4.3 1999/11/07 11:57:30 bert Exp $
+/* $Id: caudio.c,v 1.1.1.1 2007/01/21 16:40:57 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

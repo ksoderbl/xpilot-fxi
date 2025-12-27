@@ -1,6 +1,7 @@
-/* $Id: xeventhandlers.h,v 1.1.1.1 2007/01/21 16:41:09 kps Exp $
+/* 
+ * XPilot Fix, Blood's Music optimised XPilot
  *
- * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
+ * Copyright (C) 1991-2007 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
@@ -19,22 +20,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef XEVENTHANDLERS_H
-#define XEVENTHANDLERS_H
+#ifndef	VERSION_H
+#define	VERSION_H
 
-void SelectionNotify_event(XEvent *event);
-void SelectionRequest_event(XEvent *event);
-void MapNotify_event(XEvent *event);
-int ClientMessage_event(XEvent *event);
-void FocusIn_event(XEvent *event);
-void UnmapNotify_event(XEvent *event);
-void ConfigureNotify_event(XEvent *event);
-void Expose_event(XEvent *event);
-void KeyChanged_event(XEvent *event);
-void ButtonPress_event(XEvent *xevent);
-void MotionNotify_event(XEvent *event);
-int ButtonRelease_event(XEvent *event);
+#define TITLE			"XPilot 1.3.4fxi"
+#ifndef VERSION
+#  define VERSION		"1.3.4fxi"
 #endif
+#define AUTHORS			"Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Coppa"
+#define COPYRIGHT		"Copyright © 1991-2007 by Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Coppa"
+
+#endif /* VERSION_H */

@@ -1,4 +1,4 @@
-/* $Id: checknames.c,v 1.8 1998/04/28 13:20:44 bert Exp $
+/* $Id: checknames.c,v 1.1.1.1 2007/01/21 16:41:10 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

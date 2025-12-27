@@ -1,4 +1,4 @@
-/* $Id: parser.c,v 5.18 2003/09/16 21:01:21 bertg Exp $
+/* $Id: parser.c,v 1.1.1.1 2007/01/21 16:41:27 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *

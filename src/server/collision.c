@@ -1,4 +1,4 @@
-/* $Id: collision.c,v 4.23 1999/11/08 04:56:08 dick Exp $
+/* $Id: collision.c,v 1.1.1.1 2007/01/21 16:41:16 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

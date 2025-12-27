@@ -1,4 +1,4 @@
-/* $Id: portability.h,v 4.4 2000/09/07 21:16:02 bert Exp $
+/* $Id: portability.h,v 1.1.1.1 2007/01/21 16:41:12 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

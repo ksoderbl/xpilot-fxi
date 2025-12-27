@@ -1,4 +1,4 @@
-/* $Id: paintradar.c,v 4.12 2000/09/15 13:22:12 bert Exp $
+/* $Id: paintradar.c,v 1.1.1.1 2007/01/21 16:41:03 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

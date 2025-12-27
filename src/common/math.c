@@ -1,4 +1,4 @@
-/* $Id: math.c,v 4.3 2000/04/02 09:50:54 bert Exp $
+/* $Id: math.c,v 1.1.1.1 2007/01/21 16:41:10 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

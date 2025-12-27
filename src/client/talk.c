@@ -1,4 +1,4 @@
-/* $Id: talk.c,v 4.8 1999/11/09 19:47:47 bert Exp $
+/* $Id: talk.c,v 1.1.1.1 2007/01/21 16:41:05 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

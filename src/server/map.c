@@ -1,4 +1,4 @@
-/* $Id: map.c,v 5.19 2002/01/18 22:34:26 kimiko Exp $
+/* $Id: map.c,v 1.1.1.1 2007/01/21 16:41:19 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *

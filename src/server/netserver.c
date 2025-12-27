@@ -1,4 +1,4 @@
-/* $Id: netserver.c,v 4.32 2000/10/15 13:09:55 bert Exp $
+/* $Id: netserver.c,v 1.3 2007/02/09 23:23:35 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -302,7 +302,7 @@ static int Init_setup(void)
     Setup->setup_size = ((char *) &Setup->map_data[0] - (char *) Setup) + size;
     Setup->map_data_len = size;
     Setup->map_order = type;
-    Setup->frames_per_second = internalFps;
+    Setup->frames_per_second = fps;
     Setup->lives = World.rules->lives;
     Setup->mode = World.rules->mode;
     Setup->x = World.x;
@@ -996,6 +996,10 @@ static int Handle_login(int ind)
 		pl->name, pl->realname, World.name, World.author);
     }
     Set_message(msg);
+    if (greeting) {
+	sprintf(msg, "%s [*Server greeting*]", greeting);
+	Set_player_message(pl, msg);
+    }
 
     conn_bit = (1 << ind);
     for (i = 0; i < World.NumFuels; i++) {
