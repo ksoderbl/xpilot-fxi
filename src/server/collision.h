@@ -12,27 +12,26 @@
 #include "player.h"
 
 /* proposed edgewrap version: */
-#define Collision_occured_old(o1, o2, r)						\
-    (BIT(World.rules->mode, WRAP_PLAY)					\
-	? ((((o1)->pos.x > (o2)->pos.x)					\
-	    ? (((o1)->pos.x - (o2)->pos.x > (World.width >> 1))		\
-		? ((o1)->pos.x - (o2)->pos.x > World.width - (r))	\
-		: ((o1)->pos.x - (o2)->pos.x < (r)))			\
-	    : (((o2)->pos.x - (o1)->pos.x > (World.width >> 1))		\
-		? ((o2)->pos.x - (o1)->pos.x > World.width - (r))	\
-		: ((o2)->pos.x - (o1)->pos.x < (r))))			\
-	    && (((o1)->pos.y > (o2)->pos.y)				\
-	    ? (((o1)->pos.y - (o2)->pos.y > (World.height >> 1))	\
-		? ((o1)->pos.y - (o2)->pos.y > World.height - (r))	\
-		: ((o1)->pos.y - (o2)->pos.y < (r)))			\
-	    : (((o2)->pos.y - (o1)->pos.y > (World.height >> 1))	\
-		? ((o2)->pos.y - (o1)->pos.y > World.height - (r))	\
-		: ((o2)->pos.y - (o1)->pos.y < (r)))))			\
-	: (DELTA((o1)->pos.x, (o2)->pos.x) < (r)			\
-	&& DELTA((o1)->pos.y, (o2)->pos.y) < (r)))
+#define Collision_occured_old(o1, o2, r)                                   \
+	(BIT(World.rules->mode, WRAP_PLAY)                                     \
+		 ? ((((o1)->pos.x > (o2)->pos.x)                                   \
+				 ? (((o1)->pos.x - (o2)->pos.x > (World.width >> 1))       \
+						? ((o1)->pos.x - (o2)->pos.x > World.width - (r))  \
+						: ((o1)->pos.x - (o2)->pos.x < (r)))               \
+				 : (((o2)->pos.x - (o1)->pos.x > (World.width >> 1))       \
+						? ((o2)->pos.x - (o1)->pos.x > World.width - (r))  \
+						: ((o2)->pos.x - (o1)->pos.x < (r)))) &&           \
+			(((o1)->pos.y > (o2)->pos.y)                                   \
+				 ? (((o1)->pos.y - (o2)->pos.y > (World.height >> 1))      \
+						? ((o1)->pos.y - (o2)->pos.y > World.height - (r)) \
+						: ((o1)->pos.y - (o2)->pos.y < (r)))               \
+				 : (((o2)->pos.y - (o1)->pos.y > (World.height >> 1))      \
+						? ((o2)->pos.y - (o1)->pos.y > World.height - (r)) \
+						: ((o2)->pos.y - (o1)->pos.y < (r)))))             \
+		 : (DELTA((o1)->pos.x, (o2)->pos.x) < (r) && DELTA((o1)->pos.y, (o2)->pos.y) < (r)))
 
-inline int32_t Collision_occured(int32_t p1x, int32_t p1y, int32_t p2x, int32_t p2y,
-		int32_t q1x, int32_t q1y, int32_t q2x, int32_t q2y, int32_t r);
+int32_t Collision_occured(int32_t p1x, int32_t p1y, int32_t p2x, int32_t p2y,
+						  int32_t q1x, int32_t q1y, int32_t q2x, int32_t q2y, int32_t r);
 
 void Collision_player_object_check(player_t *pl);
 bool Collision_player_player_check(player_t *pl, player_t *pl2);
