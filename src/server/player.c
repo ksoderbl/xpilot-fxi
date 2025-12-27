@@ -771,7 +771,7 @@ void Team_game_over(int winning_team, const char *reason)
 
     free(best_players);
     
-    printf("Rank write; end of round\n");
+    /* printf("Rank write; end of round\n");*/
     Rank_write_webpage();
     Rank_write_rankfile();
 

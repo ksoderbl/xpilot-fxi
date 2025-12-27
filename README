@@ -242,12 +242,17 @@ unsymmetricity it introduces.. so don't use 16 2/3 fps on a 50 fps server!
   removed and cleaned up somewhat
 - added xpping utility under contrib, not finished
 - kps fix for server crash when someone quits (fxi-fix.diff)
-- fixed the loss in steering bug (this improvement still needs rethinking)
-
+- fixed the "loss in steering" bug (this improvement still needs rethinking)
+- (still keeping maxballconnectorratio as 0.32, even though steering loss
+  has been fixed, I think this is much better than the original 0.30, because 
+  it allows for faster playing also when grabbing ball and releasing it, so 
+  high speed manouvers with ball is more likely to succeed)
 ----
-PROBLEMS
-- rank code isnt still working (using old find player routine)
 
+PROBLEMS
+- rank code isnt still completely working (using old find player routine)
+- players demand better walls !!! (they want better walls, and they only notice
+  this problem, despite steering is much improved)
 
 2.x.xfinal
 - rewrite packet protocol, delete unused stuff in packets

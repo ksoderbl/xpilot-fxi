@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<XPilotNGRank version="1.0">
+<Players>
+<Player name="Buu3" user="Ce" host="Ce" score="7265" kills="4686" deaths="561" rounds="532" ballscashed="371" ballssaved="11" ballswon="371" ballslost="2" bestball="57" timestamp="1141746191" />
+<Player name="Buu2" user="Ce" host="Ce" score="1433" kills="196" deaths="54" rounds="24" ballscashed="9" ballssaved="1" ballswon="9" bestball="56" timestamp="1141079838" />
+</Players>
+</XPilotNGRank>
