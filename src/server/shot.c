@@ -5,8 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -173,7 +171,7 @@ void Fire_general_shot(int ind, u_short team, bool cannon, DFLOAT x, DFLOAT y,
 	    if (pl->fuel.sum < -ED_SHOT)
 		return;
 	    Add_fuel(&(pl->fuel), (long)(ED_SHOT));
-	    pl->shots++;
+	    Rank_fire_shot(pl);
 	}
 	break;
     }

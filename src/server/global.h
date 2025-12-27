@@ -5,7 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,6 +91,7 @@ extern bool		NoQuit;
 extern bool		logRobots;
 extern long		main_loops;
 extern long		main_loops_slow;
+extern int		NumOperators;
 extern char		*mapFileName;
 extern int		mapRule;
 extern char		*mapData;
@@ -220,4 +220,7 @@ extern time_t           gameOverTime;
 extern int 	frameDivisor;
 extern int	internalFps;
 extern int	gameSpeed;
+extern char	*rankFileName;
+extern char	*rankWebpageFileName;
+
 #endif /* GLOBAL_H */

@@ -5,8 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -1390,6 +1388,27 @@ static option_desc options[] = {
       "Duration of last Main_loop() function call (in milliseconds).\n"
       "This option is read only.\n",
       OPT_COMMAND | OPT_VISIBLE
+    },
+    {
+        "rankFileName",
+        "rankFileName",
+        NULL,
+        &rankFileName,
+        valString,
+        tuner_none,
+        "The filename for the XML file to hold server ranking data.\n"
+        "To reset the ranking, delete this file.\n",
+        OPT_COMMAND | OPT_DEFAULTS
+    },
+    {
+        "rankWebpageFileName",
+        "rankWebpage",
+        NULL,
+        &rankWebpageFileName,
+        valString,
+        tuner_none,
+        "The filename for the webpage with the server ranking list.\n",
+        OPT_COMMAND | OPT_DEFAULTS
     }
 };
 

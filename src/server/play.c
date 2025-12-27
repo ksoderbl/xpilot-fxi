@@ -5,8 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -103,6 +101,7 @@ int Punish_team(int ind, int t_destroyed, int t_target)
 	if (Players[i]->team == td->team) {
 	    SCORE(i, -sc, tt->pos.x, tt->pos.y,
 		  "Treasure: ");
+	    Rank_lost_ball(Players[i]);
 	    if (treasureKillTeam)
 		SET_BIT(Players[i]->status, KILLED);
 	}
@@ -115,6 +114,7 @@ int Punish_team(int ind, int t_destroyed, int t_target)
 
     if (treasureKillTeam) {
 	Players[ind]->kills++;
+	Rank_add_kill(Players[ind]);
     }
 
     updateScores = true;

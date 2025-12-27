@@ -5,7 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -299,6 +298,8 @@ struct player {
 
     int		isowner;		/* If player started this server. */
     int		isoperator;		/* If player has operator privileges. */
+    bool        update_score;           /* score table info needs to be sent */
+    struct ranknode     *rank;		
 };
 
 #endif

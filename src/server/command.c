@@ -5,8 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -46,7 +44,7 @@ char command_version[] = VERSION;
 
 
 
-static int Get_player_index_by_name(char *name)
+int Get_player_index_by_name(char *name)
 {
     int			i, j, len;
 
@@ -121,7 +119,7 @@ static int Cmd_kick(char *arg, player *pl, int oper, char *msg);
 static int Cmd_queue(char *arg, player *pl, int oper, char *msg);
 static int Cmd_advance(char *arg, player *pl, int oper, char *msg);
 static int Cmd_get(char *arg, player *pl, int oper, char *msg);
-
+static int Cmd_stats(char *arg, player *pl, int oper, char *msg);
 
 typedef struct {
     const char		*name;
@@ -204,7 +202,7 @@ static Command_info commands[] = {
     },
     {
 	"set",
-	"s",
+	"set",
 	"/set <option> <value>.  Sets a server option.  (operator)",
 	1,
 	Cmd_set
@@ -223,7 +221,15 @@ static Command_info commands[] = {
 	0,
 	Cmd_version
     },
+    {
+        "stats",
+        "st",
+        "/stats <player name or ID number>.  Show player ranking info.",
+        0,
+        Cmd_stats
+    }
 };
+
 
 
 /*
@@ -540,12 +546,14 @@ static int Cmd_password(char *arg, player *pl, int oper, char *msg)
     if (!password || !arg || strcmp(arg, password)) {
 	strcpy(msg, "Wrong.");
 	if (pl->isoperator) {
+	    NumOperators--;
 	    pl->isoperator = 0;
 	    strcat(msg, "  You lost operator status.");
 	}
     }
     else {
 	if (!pl->isoperator) {
+	    NumOperators++;
 	    pl->isoperator = 1;
 	}
 	strcpy(msg, "You got operator status.");
@@ -663,7 +671,7 @@ static int Cmd_pause(char *arg, player *pl, int oper, char *msg)
 	if (Players[i]->conn != NOT_CONNECTED) {
 	    if (BIT(Players[i]->status, PLAYING | PAUSE | GAME_OVER | KILLED)
 		== PLAYING) {
-		Kill_player(i);
+		Kill_player(i, false);
 	    }
 	    Pause_player(i, 1);
 	    sprintf(msg, "%s was paused by %s.", Players[i]->name, pl->name);
@@ -715,5 +723,18 @@ static int Cmd_get(char *arg, player *pl, int oper, char *msg)
     }
 
     return CMD_RESULT_ERROR;
+}
+
+static int Cmd_stats(char *arg, player *pl, int oper, char *msg)
+{
+  /*    UNUSED_PARAM(pl); UNUSED_PARAM(oper);*/   
+    if (!arg || !*arg)   
+        return CMD_RESULT_NO_NAME;
+        
+    if (!Rank_get_stats(arg, msg)) {
+        sprintf(msg, "Player \"%s\" doesn't have ranking stats.", arg);
+        return CMD_RESULT_ERROR;
+    }
+    return CMD_RESULT_SUCCESS;
 }
 

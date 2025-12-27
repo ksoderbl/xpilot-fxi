@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([XPilot], 1.1.1ix, foo@bar.com, xpilot)
+AC_INIT([XPilot], 1.2.0ix, foo@bar.com, xpilot)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(src/client/xpilot.c)
 
@@ -23,7 +23,7 @@ AC_SUBST([XP_COPYRIGHTDATE])
 XP_COPYRIGHT="Copyright © $XP_COPYRIGHTDATE by $XP_AUTHORS"
 AC_SUBST([XP_COPYRIGHT])
 
-AC_SUBST([XP_RELEASEDATE],["Jan 30, 2005"])
+AC_SUBST([XP_RELEASEDATE],["Feb 5, 2005"])
 AC_SUBST([XP_DATADIR],"$prefix/share/xpilot")
 
 
@@ -74,6 +74,10 @@ AC_CHECK_LIB(m, cos)
 if test x$ac_cv_lib_m_cos != xyes; then
 	AC_MSG_ERROR([*** Math library not found!])
 fi
+AC_CHECK_LIB(expat, XML_ParserCreate)
+if test x$ac_cv_lib_expat_XML_ParserCreate != xyes; then
+        AC_MSG_ERROR([*** Required library Expat not found!])
+fi  
 
 AC_PATH_X
 AC_PATH_XTRA

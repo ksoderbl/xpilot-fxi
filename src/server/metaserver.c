@@ -5,8 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -236,7 +234,7 @@ void Meta_update(int change)
 	    "add sound " SOUND_SUPPORT_STR "\n",
 	    Server.host, num_active_players,
 	    META_VERSION, World.name, World.x, World.y, World.author,
-	    World.NumBases, internalFps/frameDivisor, contactPort,
+	    World.NumBases, internalFps, contactPort,
 	    game_mode, World.NumTeamBases, freebases,
 	    0,
 	    (long)(time(NULL) - serverTime),

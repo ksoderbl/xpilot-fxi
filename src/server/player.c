@@ -5,8 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -458,7 +456,7 @@ void Reset_all_players(void)
 	pl = Players[i];
 	if (endOfRoundReset) {
 	    if (!BIT(pl->status, PAUSE)) {
-		Kill_player(i);
+		Kill_player(i, false);
 		if (pl != Players[i]) {
 		    /* player was deleted. */
 		    i--;
@@ -466,6 +464,10 @@ void Reset_all_players(void)
 		}
 	    }
 	}
+	
+	if ((!BIT(pl->status, PAUSE)) && (!(pl->mychar == 'W')))
+	  Rank_add_round(pl);
+
 	CLR_BIT(pl->status, GAME_OVER);
 	CLR_BIT(pl->have, OBJ_BALL);
 	pl->kills = 0;
@@ -515,8 +517,9 @@ void Reset_all_players(void)
     }
 
     roundtime = maxRoundTime * FPS;
-
     Update_score_table();
+    Rank_write_webpage();
+    Rank_write_rankfile();
 }
 
 
@@ -1113,6 +1116,16 @@ void Delete_player(int ind)
     if (IS_ROBOT_PTR(pl)) {
 	Robot_destroy(ind);
     }
+    
+    if (pl->isoperator) {
+        if (!--NumOperators && game_lock) {
+            game_lock = false;
+            Set_message(" < The game has been unlocked as "
+                        "the last operator left! >");
+        }
+    }
+
+
 
     /* Delete remaining shots */
     for (i = NumObjs - 1; i >= 0; i--) {
@@ -1141,6 +1154,9 @@ void Delete_player(int ind)
     Free_ship_shape(pl->ship);
 
     NumPlayers--;
+
+    if (pl->rank) Rank_save_score(pl);
+    
 
     if (pl->team != TEAM_NOT_SET) {
 	World.teams[pl->team].NumMembers--;
@@ -1221,13 +1237,13 @@ void Detach_ball(int ind, int obj)
     }
 }
 
-void Kill_player(int ind)
+void Kill_player(int ind, bool rank_death)
 {
     Explode_fighter(ind);
-    Player_death_reset(ind);
+    Player_death_reset(ind, rank_death);
 }
 
-void Player_death_reset(int ind)
+void Player_death_reset(int ind, bool rank_death)
 {
     player		*pl = Players[ind];
     int			i;
@@ -1256,6 +1272,8 @@ void Player_death_reset(int ind)
     pl->lock.distance	= 0;
 
     Player_init_fuel(ind, World.items[ITEM_FUEL].initial * FUEL_SCALE_FACT);
+    if (rank_death)
+      Rank_add_death(pl);
 
     /*-BA Handle the combination of limited life games and
      *-BA robotLeaveLife by making a robot leave iff it gets

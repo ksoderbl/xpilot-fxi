@@ -124,6 +124,10 @@ extern DFLOAT		tbl_cos[];
 #ifndef MOD2
 #  define MOD2(x, m)		( (x) & ((m) - 1) )
 #endif	/* MOD2 */
+
+/* Use this to remove unused parameter warning. */
+#define UNUSED_PARAM(x) x = x
+
 /* Do NOT change these! */
 #define MAX_CHECKS		26
 #define MAX_TEAMS		10

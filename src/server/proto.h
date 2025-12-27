@@ -5,7 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -181,8 +180,8 @@ void Check_team_treasures(int);
 void Compute_game_status(void);
 void Delete_player(int ind);
 void Detach_ball(int ind, int ball);
-void Kill_player(int ind);
-void Player_death_reset(int ind);
+void Kill_player(int ind, bool rank_death);
+void Player_death_reset(int ind, bool rank_death);
 void Team_game_over(int winning_team, const char *reason);
 void Individual_game_over(int winner);
 

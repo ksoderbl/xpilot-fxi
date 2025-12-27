@@ -5,8 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -55,6 +53,7 @@ int	roundtime = -1;		/* time left this round */
 static char msg[MSG_LEN];
 
 
+void update_player_turn(int ind);
 static void Transport_to_home(int ind)
 {
     /*
@@ -116,18 +115,35 @@ void Update_objects_interpolation(void)
   int i, j;
   player *pl;
   object *obj;
-  
+  int player_fps;
   for (i = 0; i < NumObjs; i++) {
     obj = Obj[i];
     if (BIT(obj->type, OBJ_BALL)) {
       if (obj->id != -1)
 	Move_ball_interpolation(i);
     }
-    
     Move_object_interpolation(i);
   }
-  
 
+ /* printf("interp:%d %d\n", main_loops, frame_loops);*/
+  
+  for (i = 0; i < NumPlayers; i++){
+    pl = Players[i];
+    player_fps = internalFps;
+    player_fps = MIN(player_fps, pl->player_fps);
+    
+    
+    if (player_fps < internalFps) {
+      int divisor = (internalFps - 1) / player_fps + 1;
+      if (frame_loops % divisor)
+	continue;
+    }
+
+    /* update turn for player also in interpolated frame */
+    update_player_turn(i);
+    
+  }
+  
   for (i = 0; i < NumPlayers; i++) {
     pl = Players[i];
     if (!BIT(pl->status, PAUSE)) {	
@@ -136,6 +152,10 @@ void Update_objects_interpolation(void)
   }
   
 }
+
+
+
+
 
 
 void Update_objects(void)
@@ -248,7 +268,7 @@ void Update_objects(void)
 		SET_BIT(pl->status, KILLED);
 		sprintf(msg, "%s has comitted suicide.", pl->name);
 		Set_message(msg);
-		Kill_player(i);
+		Kill_player(i, true);
 		updateScores = true;
 	    }
 	}
@@ -277,37 +297,7 @@ void Update_objects(void)
 	    }
 	}
 
-	/*
-	 * Compute turn
-	 */
-	pl->turnvel	+= pl->turnacc;
-
-	/*
-	 * turnresistance is zero: client requests linear turning behaviour
-	 * when playing with pointer control.
-	 */
-	if (pl->turnresistance) {
-	    pl->turnvel *= pl->turnresistance;
-	}
-
-
-	pl->float_dir	+= pl->turnvel;
-
-	while (pl->float_dir < 0)
-	    pl->float_dir += RES;
-	while (pl->float_dir >= RES)
-	    pl->float_dir -= RES;
-
-	/*
-	 * turnresistance is zero: client requests linear turning behaviour
-	 * when playing with pointer control.
-	 */
-	if (!pl->turnresistance) {
-	    pl->turnvel = 0;
-	}
-
-	Turn_player(i);
-
+	update_player_turn(i);
 
 	/*
 	 * Compute energy drainage
@@ -393,7 +383,6 @@ void Update_objects(void)
 	if (BIT(pl->status, THRUSTING))
 	    Thrust(i);
 
-	/*Compute_sensor_range(pl);*/
 
 	pl->used &= pl->have;
     }
@@ -425,7 +414,7 @@ void Update_objects(void)
 	if (BIT(pl->status, PLAYING|PAUSE|GAME_OVER|KILLED) == PLAYING)
 	    Update_tanks(&(pl->fuel));
 	if (BIT(pl->status, KILLED)) {
-	    Kill_player(i);
+	    Kill_player(i, true);
 
 	    if (IS_HUMAN_PTR(pl)) {
 	      if (frame_loops - pl->frame_last_busy > 60 * FPS /*ok -pgm */
@@ -458,3 +447,41 @@ void Update_objects(void)
     Update_score_table();
 }
 
+
+void update_player_turn(int ind){
+  
+  /*
+   * Compute turn
+   */
+  player *pl;
+  pl = Players[ind];
+  pl->turnvel	+= pl->turnacc;
+  
+  /*
+   * turnresistance is zero: client requests linear turning behaviour
+   * when playing with pointer control.
+   */
+
+  if (pl->turnresistance) {
+    pl->turnvel *= pl->turnresistance;
+  }
+  
+  pl->float_dir	+= pl->turnvel;
+  
+  while (pl->float_dir < 0)
+    pl->float_dir += RES;
+  while (pl->float_dir >= RES)
+    pl->float_dir -= RES;
+  
+  /*
+   * turnresistance is zero: client requests linear turning behaviour
+   * when playing with pointer control.
+   */
+  if (!pl->turnresistance) {
+    pl->turnvel = 0;
+  }
+  /*  printf("%d\n",main_loops);
+      fflush(stdout);
+  */
+  Turn_player(ind);
+}

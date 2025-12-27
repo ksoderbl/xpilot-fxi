@@ -5,7 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,6 +75,8 @@ int			ShutdownDelay = 1000;
 char			ShutdownReason[MAX_CHARS];
 long			main_loops = 0;		/* needed in events.c */
 long                    main_loops_slow = 0;
+int			NumOperators = 0;
+
 static int		serverSocket;
 #ifdef LOG
 static bool		Log = true;
@@ -88,6 +89,7 @@ time_t			serverTime = 0;
 extern int		login_in_progress;
 extern int		NumQueuedPlayers;
 
+int firsttime = 1;
 int frameDivisor;
 int internalFps;
 static void Check_server_versions(void);
@@ -157,6 +159,8 @@ int main(int argc, char **argv)
 		Make_treasure_ball(i);
     }
 
+
+    Rank_init_saved_scores();
     /*
      * Get server's official name.
      */
@@ -202,6 +206,7 @@ int main(int argc, char **argv)
 #endif
     
     install_timer_tick(Main_loop, internalFps);
+    main_loops = 0;
     sched();
     xpprintf("sched returned!?");
     End_game();
@@ -223,6 +228,7 @@ void Main_loop(void)
       measure2[counter] = time1;
       gettimeofday(&t1, NULL); 
     }
+    
   }
 
   
@@ -247,7 +253,6 @@ void Main_loop(void)
     
     /* uses mainloops + FPS for timings */
     Input();
-    
     
     if (NumPlayers > NumRobots + NumPseudoPlayers || RawMode) {
       
@@ -810,6 +815,8 @@ void Game_Over(void)
 	Set_message(msg);
 	xpprintf("%s\n", msg);
     }
+    Rank_write_webpage();
+    Rank_write_rankfile();
 }
 
 

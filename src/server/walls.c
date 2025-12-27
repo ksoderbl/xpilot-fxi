@@ -5,8 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -676,6 +674,7 @@ static void Move_segment(move_state_t *ms)
 		    sprintf(msg, " < %s (team %d) has replaced the treasure >",
 			    pl->name, pl->team);
 		    Set_message(msg);
+		    Rank_saved_ball(pl);
 		    break;
 		}
 		if (mi->obj->owner == -1) {
@@ -684,6 +683,9 @@ static void Move_segment(move_state_t *ms)
 		}
 		if (World.treasures[ms->treasure].team ==
 			Players[GetInd[mi->obj->owner]]->team) {
+		  player *pl = NULL, *pl2 = NULL;
+		  int n;
+		  pl = Players[GetInd[mi->obj->owner]];
 		    /*
 		     * Ball has been brought back to home treasure.
 		     * The team should be punished.
@@ -691,6 +693,16 @@ static void Move_segment(move_state_t *ms)
 		    sprintf(msg," < The ball was loose for %ld frames >",
 			    LONG_MAX - mi->obj->life);
 		    Set_message(msg);
+		    Rank_cashed_ball(pl);
+		    Rank_ballrun(pl,  LONG_MAX - mi->obj->life);
+		    for (n = 0; n < NumPlayers; n++){
+		      pl2 = Players[n];
+		      if ((pl2->team != pl->team) && (!BIT(pl2->status, PAUSE))
+			  && (!(pl2->mychar == 'W'))) Rank_lost_ball(pl2); 
+		      else if ((!BIT(pl2->status, PAUSE)) && (!(pl2->mychar == 'W')))
+			Rank_won_ball(pl2);
+		    }
+		    
 		    if (Punish_team(GetInd[mi->obj->owner],
 				    mi->obj->treasure, ms->treasure))
 		      CLR_BIT(mi->obj->status, RECREATE);

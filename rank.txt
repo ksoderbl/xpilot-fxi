@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<XPilotNGRank version="1.0">
+<Players>
+<Player name="Coppa" user="Ce" host="Ce" score="810" kills="74" deaths="15" rounds="10" shots="1615" ballscashed="4" ballswon="4" bestball="98" timestamp="1108363955" />
+</Players>
+</XPilotNGRank>

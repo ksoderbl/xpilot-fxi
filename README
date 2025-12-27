@@ -65,16 +65,18 @@ SERVER CHANGES
   internalfps, which is in contrast to xpilot-ng server, where gamespeed had
   to equal at fps or be lower.
 - use option gameSpeed now instead of fps to change internal speed of timings,
-  there is no option fps any longer, you should use internalfps instead.
+  there is no option fps any longer, you should use internalFps instead.
 
 1.1.0ix:
-- the redundant hp for high performance is removed, and ix is used instead
-  interpolating eXperimental server.
-- server now uses interpolated frames put in-between real frames. Currently
+- the redundant hp for high performance is removed, and ix is used instead:
+  "Interpolating eXperimental".
+  Server now uses interpolated frames put in-between real frames. Currently
   no game events except for wallcollisions take effect in the interpolated
   frames. This means that both ship steering and ballhandling is identical
   to old server (connector doesn't snap now, because both the ship and ball
-  doesn't glide around).
+  doesn't glide around). This is a big step forward and now one can claim
+  that the server is almost fully xpilot-4 compatible (except for 
+  wallcollisions) for those who want low fps
 - removed the sending of shots as radar objects; going through the object
   list takes a lot of cpu time, because of the sparks, so it should be 
   avoided.
@@ -96,15 +98,36 @@ SERVER CHANGES
 - added mainlooptime 
 - some minor code deletions (removed sensor computations)
 
+1.2.0ix:
+- lock is now removed when last player with operator status leaves,
+  same feature as on ng
+- client side turning updates per second follow client fps rate(note that 
+  the /maxturnsps in xpilot-ng is broken!)
+- major feature: ported ranking code from ng (use /stats and option 
+  -rankFilename and -rankwebpage (NOTE: ANY decent bloods server has a 
+  ranking); you MUST at least use -rankFileName. If possible, you should 
+  also have a publicly available rankwebdirectory, and copy the html files 
+  there *every month*. The rank is reset by deleting the rankfilename file(s). 
+  Failure to do all of the above correctly will at least result in a 
+  small interest for your server.
+- added back the audiorequest packet to maintain compatibility
+  with clients using sound requests
+- removed Dick Balaska from credits of source files (the server doesn't
+  contain any windows code (everyone knows that the Windows server is 
+  a bloat and is too slow for serious playing anyway)
+- added startscripts directory for various scripts to start server.
+  You should use
+  startscripts/publicserver.sh 
+  if you don't have other ideas on how to set up a public blood's server, 
+  it creates a rankfile and rankwebfile (which path should be changed to a
+  public webdirectory in your system if possible).
+
 TODO
-----------
-1.1.2ix
+------------
 - fix bullet gfx bug(when you shoot, the bullet may appear
   randomly on screen, but is not lethal to anyone)
-- implement selectable client side turning updates per second 
-  (note that the /set maxmouseturnsps in xpilot-ng is broken!)
-
-...
+- fix frame ordering better - now also players playing at basic
+  rate also get interpolated frames, which is wrong
 
 2.x.xfinal
 - rewrite packet protocol, delete unused stuff in packets
@@ -115,7 +138,6 @@ TODO
   believed it would work so well, so I will not speculate on the 
   issue further. All I can say is that time stamping has a potential).
 - add all necessary features like more paused players
-- add ranking code
  
 The end result should be a server, which one can use in teamcups,
 and more serious games. The old walls code will be used throughout

@@ -5,8 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -88,6 +86,12 @@
  * connection so that it can retransmit a reliable data packet
  * if the acknowledgement timer expires.
  */
+
+/* Dont delete any useless packet routines, or you lose compatibility
+ * with the protocol version -pgm 
+ *  
+ */		
+
 
 #include "types.h"
 #include <unistd.h>
@@ -338,8 +342,7 @@ static void Init_receive(void)
     login_receive[PKT_MODIFIERBANK]		= Receive_modifier_bank;
     login_receive[PKT_MOTD]			= Receive_motd;
     login_receive[PKT_SHAPE]			= Receive_shape;
-
-
+    login_receive[PKT_REQUEST_AUDIO]		= Receive_audio_request;
     login_receive[PKT_ASYNC_FPS]		= Receive_fps_request;
 
     playing_receive[PKT_ACK]			= Receive_ack;
@@ -360,7 +363,10 @@ static void Init_receive(void)
     playing_receive[PKT_MOTD]			= Receive_motd;
     playing_receive[PKT_SHAPE]			= Receive_shape;
     playing_receive[PKT_POINTER_MOVE]		= Receive_pointer_move;
+    playing_receive[PKT_REQUEST_AUDIO]          = Receive_audio_request;
     playing_receive[PKT_ASYNC_FPS]		= Receive_fps_request;
+    
+    
 }
 
 /*
@@ -912,6 +918,9 @@ static int Handle_login(int ind)
 
     Pick_startpos(NumPlayers);
     Go_home(NumPlayers);
+
+    Rank_get_saved_score(pl);
+
     if (pl->team != TEAM_NOT_SET) {
 	World.teams[pl->team].NumMembers++;
     }
@@ -2654,3 +2663,19 @@ static int Receive_fps_request(int ind)
     return 1;
 }
 
+static int Receive_audio_request(int ind)
+{
+    connection_t        *connp = &Conn[ind];
+    player              *pl;
+    int                 n;
+    unsigned char       ch; 
+    unsigned char       onoff;
+    
+    if ((n = Packet_scanf(&connp->r, "%c%c", &ch, &onoff)) <= 0) {
+        if (n == -1) {
+            Destroy_connection(ind, "read error");
+        }
+        return n;
+    }
+    return 1;
+}

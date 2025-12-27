@@ -5,8 +5,6 @@
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
- *      Dick Balaska         <dick@xpilot.org>
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -309,10 +307,10 @@ void SCORE(int ind, int points, int x, int y, const char *msg)
     player	*pl = Players[ind];
 
     pl->score += (points);
-
+    
+    Rank_add_score(pl, points);
     if (pl->conn != NOT_CONNECTED)
-	Send_score_object(pl->conn, points, x, y, msg);
-
+      Send_score_object(pl->conn, points, x, y, msg);
     updateScores = true;
 }
 
@@ -785,6 +783,7 @@ static void PlayerObjectCollision(int ind)
 			      Players[killer]->name);
 		    } else {
 			Players[killer]->kills++;
+			Rank_add_kill(killer);
 			sc = (int)floor(Rate(Players[killer]->score, pl->score)
 				   * shotKillScoreMult);
 			Score_players(killer, sc, pl->name,
