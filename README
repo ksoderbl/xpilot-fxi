@@ -247,6 +247,16 @@ unsymmetricity it introduces.. so don't use 16 2/3 fps on a 50 fps server!
   has been fixed, I think this is much better than the original 0.30, because 
   it allows for faster playing also when grabbing ball and releasing it, so 
   high speed manouvers with ball is more likely to succeed)
+
+1.3.3fxi:
+- updates for ship turning comes at client frame rate (accidentally turned
+  off this feature from earlier releases to check that the steering indeed
+  behaves well at lower update rate, and does not have too much feeling 
+  for loss)
+- 800 start fuel as a test
+
+
+
 ----
 
 PROBLEMS

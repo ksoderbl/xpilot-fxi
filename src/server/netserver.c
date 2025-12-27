@@ -2003,7 +2003,6 @@ int Send_reliable(int ind)
 	}
     }
     else if (connp->retransmit_at_loop != 0) {
-	printf("jje\n");
 	/*
 	 * Timeout.
 	 * Either our packet or the acknowledgement got lost,

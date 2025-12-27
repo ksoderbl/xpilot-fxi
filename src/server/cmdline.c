@@ -1198,7 +1198,7 @@ static option_desc options[] = {
     {
 	"initialFuel",
 	"initialFuel",
-	"1000",
+	"800",
 	&World.items[ITEM_FUEL].initial,
 	valInt,
 	Set_initial_resources,

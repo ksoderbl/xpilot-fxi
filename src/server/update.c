@@ -139,9 +139,9 @@ void Update_objects_interpolation(void)
     /* update turn for player also in interpolated frame */
     /* printf("interpolation: %d %d %d\n", main_loops, frame_loops, frame_cycle); */
     /* fflush(stdout); */
- //   update_player_turn(i); 
+    update_player_turn(i); 
      
-  }
+    }
   
   for (i = 0; i < NumPlayers; i++) {
     pl = Players[i];

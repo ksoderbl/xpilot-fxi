@@ -43,7 +43,7 @@ itemtractorbeamprob:0.7
 itemautopilotprob:0.0
 itemprobmult:0.0000
 maxitemdensity:0.1
-initialfuel:1000
+initialfuel:700
 initialtanks:0
 initialecms:0
 initialmines:0
@@ -59,7 +59,7 @@ initialemergencyshields:0
 initialafterburners:2
 initialautopilots:1
 emcsreprogrammines:yes
-playerminimumstartfuel:500
+playerminimumstartfuel:700
 targetteamcollision:no
 allowplayerbounces:no
 itemswallbounce:no

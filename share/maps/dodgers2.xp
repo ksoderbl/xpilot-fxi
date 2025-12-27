@@ -3,7 +3,7 @@
 numRounds: 0
 robots:0
 emcsreprogrammines:yes
-playerminimumstartfuel:600
+playerminimumstartfuel:800
 emcsreprogrammines:yes
 
 limitedlives : yes
