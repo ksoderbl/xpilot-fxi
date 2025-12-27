@@ -1,8 +1,8 @@
-/* $Id: objpos.h,v 1.4 2007/09/17 19:54:49 kps Exp $
+/* $Id: objpos.h,v 1.6 2008/08/15 15:09:53 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -25,16 +25,16 @@
 #ifndef OBJPOS_H
 #define OBJPOS_H
 
-void Object_position_set_clicks(object_t *obj, int cx, int cy);
-void Object_position_set_clicks_interpolation(object_t *obj, int cx, int cy);
-void Object_position_init_clicks(object_t *obj, int cx, int cy);
-void Object_position_init_clicks_interpolation(object_t *obj, int cx, int cy);
+void Object_position_set_clicks(object_t *obj, int32_t cx, int32_t cy);
+void Object_position_set_clicks_interpolation(object_t *obj, int32_t cx, int32_t cy);
+void Object_position_init_clicks(object_t *obj, int32_t cx, int32_t cy);
+void Object_position_init_clicks_interpolation(object_t *obj, int32_t cx, int32_t cy);
 void Player_position_restore(player_t *pl);
-void Player_position_set_clicks(player_t *pl, int cx, int cy);
-void Player_position_set_clicks_interpolation(player_t *pl, int cx, int cy);
-void Player_position_init_clicks(player_t *pl, int cx, int cy);
+void Player_position_set_clicks(player_t *pl, int32_t cx, int32_t cy);
+void Player_position_set_clicks_interpolation(player_t *pl, int32_t cx, int32_t cy);
+void Player_position_init_clicks(player_t *pl, int32_t cx, int32_t cy);
 void Player_position_limit(player_t *pl);
-void Player_position_debug(player_t *pl, const char *msg);
+void Player_position_debug(player_t *pl, const int8_t *msg);
 
 #define Object_position_remember(o_) \
 	((o_)->prevpos.x = (o_)->pos.x, \

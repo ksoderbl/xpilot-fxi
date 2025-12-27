@@ -1,8 +1,8 @@
-/* $Id: strdup.c,v 1.1.1.1 2007/05/20 21:59:12 kps Exp $
+/* $Id: strdup.c,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -23,34 +23,35 @@
  */
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "error.h"
 #include "commonproto.h"
 
-char *xp_strdup(const char *old_string)
+int8_t *xp_strdup(const int8_t *old_string)
 {
-    char	*new_string;
-    size_t	string_length;
+	int8_t *new_string;
+	size_t string_length;
 
-    string_length = strlen(old_string);
-    new_string = (char *)malloc(string_length + 1);
-    if (new_string) {
-	memcpy(new_string, old_string, string_length + 1);
-    }
+	string_length = strlen(old_string);
+	new_string = (int8_t *) malloc(string_length + 1);
+	if (new_string) {
+		memcpy(new_string, old_string, string_length + 1);
+	}
 
-    return new_string;
+	return new_string;
 }
 
-char *xp_safe_strdup(const char *old_string)
+int8_t *xp_safe_strdup(const int8_t *old_string)
 {
-    char	*new_string;
+	int8_t *new_string;
 
-    new_string = xp_strdup(old_string);
-    if (new_string == NULL) {
-	fatal("Not enough memory.");
-    }
+	new_string = xp_strdup(old_string);
+	if (new_string == NULL) {
+		fatal("Not enough memory.");
+	}
 
-    return new_string;
+	return new_string;
 }
 

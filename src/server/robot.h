@@ -1,8 +1,8 @@
-/* $Id: robot.h,v 1.4 2007/10/21 12:45:07 kps Exp $
+/* $Id: robot.h,v 1.11 2008/08/15 15:09:53 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -29,15 +29,15 @@
 /*
  * We should have these configurable for experimentation.
 
-#define	NORMAL_ROBOT_SPEED	3.0
-#define	ATTACK_ROBOT_SPEED	12.0
-#define MAX_ROBOT_SPEED		20.0
+ #define	NORMAL_ROBOT_SPEED	3.0
+ #define	ATTACK_ROBOT_SPEED	12.0
+ #define MAX_ROBOT_SPEED		20.0
  */
 
 #define	NORMAL_ROBOT_SPEED	10.0
 #define	ATTACK_ROBOT_SPEED	20.0
 #define MAX_ROBOT_SPEED		20.0
- 
+
 #define ROB_LOOK_AH		2
 
 /*
@@ -98,14 +98,14 @@
  * function pointer to the robot_type_setups array.
  */
 typedef struct {
-    const char		*name;
-    void		(*create)(player_t *pl, char *str);
-    void		(*go_home)(player_t *pl);
-    void		(*play)(player_t *pl);
-    void		(*set_war)(player_t *pl, int killer);
-    int			(*war_on_player)(player_t *pl);
-    void		(*message)(player_t *pl, const char *str);
-    void		(*destroy)(player_t *pl);
+	const int8_t *name;
+	void (*create)(player_t *pl, int8_t *str);
+	void (*go_home)(player_t *pl);
+	void (*play)(player_t *pl);
+	void (*set_war)(player_t *pl, player_t *kp);
+	player_t *(*war_on_player)(player_t *pl);
+	void (*message)(player_t *pl, const int8_t *str);
+	void (*destroy)(player_t *pl);
 } robot_type_t;
 
 /*
@@ -114,53 +114,53 @@ typedef struct {
  * not by the robot type implementation.
  */
 enum robot_talk_t {
-    ROBOT_TALK_ENTER,
-    ROBOT_TALK_LEAVE,
-    ROBOT_TALK_KILL,
-    ROBOT_TALK_WAR,
-    NUM_ROBOT_TALK_TYPES
+	ROBOT_TALK_ENTER,
+	ROBOT_TALK_LEAVE,
+	ROBOT_TALK_KILL,
+	ROBOT_TALK_WAR,
+	NUM_ROBOT_TALK_TYPES
 };
 
 /*
  * Configuration data for each robot available.
  */
 typedef struct {
-    char	driver[MAX_NAME_LEN];	/* which robot code controls robot? */
-    char	name[MAX_NAME_LEN];	/* Name of this robot. */
-    char	config[MAX_CHARS];	/* Attack + defense ~ 100 */
-    unsigned	used;			/* How often has this robot been used */
-    char	shape[2*MSG_LEN];	/* shipshape string definition */
+	int8_t driver[MAX_NAME_LEN]; /* which robot code controls robot? */
+	int8_t name[MAX_NAME_LEN]; /* Name of this robot. */
+	int8_t config[MAX_CHARS]; /* Attack + defense ~ 100 */
+	uint32_t used; /* How often has this robot been used */
+	int8_t shape[2 * MSG_LEN]; /* shipshape string definition */
 } robot_t;
 
 /*
  * Robot manager data for each robot instance.
  */
 typedef struct robot_data {
-    int		robots_ind;		/* index into Robots[] */
-    int		robot_types_ind;	/* index into robot_types[] */
-    void	*private_data;		/* robot type private data */
+	int32_t robots_ind; /* index into Robots[] */
+	int32_t robot_types_ind; /* index into robot_types[] */
+	void *private_data; /* robot type private data */
 } robot_data_t;
 
 /*
  * The private robot instance data for the default robot.
  */
 typedef struct robot_default_data {
-    int		robot_lock;		/* lock mode */
-    int		robot_lock_id;		/* target player if in war mode */
-    int		robot_mode;		/* ultrashort term mode of robot. */
-    int		robot_count;		/* Misc timings, minimizes rand()use */
-    int		attack;			/* how aggressive (1-99) */
-    int		defense;		/* how defensive (1-99) */
-    DFLOAT	robot_normal_speed;
-    DFLOAT	robot_attack_speed;
-    DFLOAT	robot_max_speed;
-    int		last_used_ecm;          /* relative to robot_count */
-    int		last_dropped_mine;      /* relative to robot_count */
-    int		last_fired_missile;     /* relative to robot_count */
-    int		last_thrown_ball;	/* relative to robot_count */
-    int		longterm_mode;		/* long term robot mode */
-    int		lock_last_seen;		/* last time robot saw target */
-    position_t	lock_last_pos;		/* last known position of target */
+	int32_t robot_lock; /* lock mode */
+	player_t *robot_lock_pl; /* target player if in war mode */
+	int32_t robot_mode; /* ultrashort term mode of robot. */
+	int32_t robot_count; /* Misc timings, minimizes rand()use */
+	int32_t attack; /* how aggressive (1-99) */
+	int32_t defense; /* how defensive (1-99) */
+	DFLOAT robot_normal_speed;
+	DFLOAT robot_attack_speed;
+	DFLOAT robot_max_speed;
+	int32_t last_used_ecm; /* relative to robot_count */
+	int32_t last_dropped_mine; /* relative to robot_count */
+	int32_t last_fired_missile; /* relative to robot_count */
+	int32_t last_thrown_ball; /* relative to robot_count */
+	int32_t longterm_mode; /* long term robot mode */
+	int32_t lock_last_seen; /* last time robot saw target */
+	position_t lock_last_pos; /* last known position of target */
 } robot_default_data_t;
 
 #endif

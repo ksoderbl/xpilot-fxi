@@ -1,8 +1,8 @@
-/* $Id: draw.h,v 1.4 2007/09/12 15:17:26 kps Exp $
+/* $Id: draw.h,v 1.8 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -92,43 +92,38 @@
 #define MAX_LIGHT_PTS	    3
 #define MAX_RACK_PTS	    4
 
-typedef struct {			/* Defines wire-obj, i.e. ship */
-    position_t	*pts[MAX_SHIP_PTS];	/* the shape rotated many ways */
-    int		num_points;		/* total points in object */
-    position_t	engine[RES];		/* Engine position */
-    position_t	m_gun[RES];		/* Main gun position */
-    int		num_l_gun,
-		num_r_gun,
-		num_l_rgun,
-		num_r_rgun;		/* number of additional cannons */
-    position_t	*l_gun[MAX_GUN_PTS],	/* Additional cannon positions, left*/
-		*r_gun[MAX_GUN_PTS],	/* Additional cannon positions, right*/
-		*l_rgun[MAX_GUN_PTS],	/* Additional rear cannon positions, left*/
-		*r_rgun[MAX_GUN_PTS];	/* Additional rear cannon positions, right*/
-    int		num_l_light,		/* Number of lights */
-		num_r_light;
-    position_t	*l_light[MAX_LIGHT_PTS], /* Left and right light positions */
-		*r_light[MAX_LIGHT_PTS];
-    int		num_m_rack;		/* Number of missile racks */
-    position_t	*m_rack[MAX_RACK_PTS];
-    int		shield_radius;		/* Radius of shield used by client. */
+typedef struct { /* Defines wire-obj, i.e. ship */
+	position_t *pts[MAX_SHIP_PTS]; /* the shape rotated many ways */
+	int32_t num_points; /* total points in object */
+	position_t engine[RES]; /* Engine position */
+	position_t m_gun[RES]; /* Main gun position */
+	int32_t num_l_gun, num_r_gun, num_l_rgun, num_r_rgun; /* number of additional cannons */
+	position_t *l_gun[MAX_GUN_PTS], /* Additional cannon positions, left*/
+	*r_gun[MAX_GUN_PTS], /* Additional cannon positions, right*/
+	*l_rgun[MAX_GUN_PTS], /* Additional rear cannon positions, left*/
+	*r_rgun[MAX_GUN_PTS]; /* Additional rear cannon positions, right*/
+	int32_t num_l_light, /* Number of lights */
+	num_r_light;
+	position_t *l_light[MAX_LIGHT_PTS], /* Left and right light positions */
+	*r_light[MAX_LIGHT_PTS];
+	int32_t num_m_rack; /* Number of missile racks */
+	position_t *m_rack[MAX_RACK_PTS];
+	int32_t shield_radius; /* Radius of shield used by client. */
 #ifdef	_NAMEDSHIPS
-	char*	name;
-	char*	author;
+	int8_t* name;
+	int8_t* author;
 #endif
-    int		default_ship;		/* A default ship using statically allocated memory. */
+	int32_t default_ship; /* A default ship using statically allocated memory. */
 } shipshape_t;
 
 extern shipshape_t *Triangle_ship(void);
 extern shipshape_t *Circle_ship(void);
 extern void Free_ship_shape(shipshape_t *w);
-extern shipshape_t *Parse_shape_str(char *str);
-extern shipshape_t *Convert_shape_str(char *str);
+extern shipshape_t *Parse_shape_str(int8_t *str);
+extern shipshape_t *Convert_shape_str(int8_t *str);
 extern void Calculate_shield_radius(shipshape_t *w);
-extern int Validate_shape_str(char *str);
-extern void Convert_ship_2_string(shipshape_t *w, char *buf, char *ext,
-				  unsigned shape_version);
-
-extern int mod(int x, int y);
+extern int32_t Validate_shape_str(int8_t *str);
+extern void Convert_ship_2_string(shipshape_t *w, int8_t *buf, int8_t *ext,
+		uint32_t shape_version);
 
 #endif

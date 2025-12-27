@@ -1,8 +1,8 @@
-/* $Id: net.h,v 1.1.1.1 2007/05/20 21:59:10 kps Exp $
+/* $Id: net.h,v 1.4 2008/08/15 15:09:52 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -24,7 +24,6 @@
 
 #ifndef	NET_H
 #define	NET_H
-
 
 #define MIN_SOCKBUF_SIZE	1024
 #define MAX_SOCKBUF_SIZE	(50*1024)
@@ -65,22 +64,22 @@
  * the number of network packets.
  */
 typedef struct {
-    int		sock;		/* socket filedescriptor */
-    char	*buf;		/* i/o data buffer */
-    int		size;		/* size of buffer */
-    int		len;		/* amount of data in buffer (writing/reading) */
-    char	*ptr;		/* current position in buffer (reading) */
-    int		state;		/* read/write/locked/error status flags */
+	int32_t sock; /* socket filedescriptor */
+	int8_t *buf; /* i/o data buffer */
+	int32_t size; /* size of buffer */
+	int32_t len; /* amount of data in buffer (writing/reading) */
+	int8_t *ptr; /* current position in buffer (reading) */
+	int32_t state; /* read/write/locked/error status flags */
 } sockbuf_t;
 
-int Sockbuf_init(sockbuf_t *sbuf, int sock, int size, int state);
-int Sockbuf_cleanup(sockbuf_t *sbuf);
-int Sockbuf_clear(sockbuf_t *sbuf);
-int Sockbuf_advance(sockbuf_t *sbuf, int len);
-int Sockbuf_flush(sockbuf_t *sbuf);
-int Sockbuf_write(sockbuf_t *sbuf, char *buf, int len);
-int Sockbuf_read(sockbuf_t *sbuf);
-int Sockbuf_copy(sockbuf_t *dest, sockbuf_t *src, int len);
+int32_t Sockbuf_init(sockbuf_t *sbuf, int32_t sock, int32_t size, int32_t state);
+int32_t Sockbuf_cleanup(sockbuf_t *sbuf);
+int32_t Sockbuf_clear(sockbuf_t *sbuf);
+int32_t Sockbuf_advance(sockbuf_t *sbuf, int32_t len);
+int32_t Sockbuf_flush(sockbuf_t *sbuf);
+int32_t Sockbuf_write(sockbuf_t *sbuf, int8_t *buf, int32_t len);
+int32_t Sockbuf_read(sockbuf_t *sbuf);
+int32_t Sockbuf_copy(sockbuf_t *dest, sockbuf_t *src, int32_t len);
 
 #if !defined(STDVA)
 #   if defined(__STDC__) && !defined(__sun__) || defined(__cplusplus)
@@ -91,11 +90,11 @@ int Sockbuf_copy(sockbuf_t *dest, sockbuf_t *src, int len);
 #endif
 
 #if STDVA
-    int Packet_printf(sockbuf_t *, const char *fmt, ...);
-    int Packet_scanf(sockbuf_t *, const char *fmt, ...);
+int32_t Packet_printf(sockbuf_t *, const int8_t *fmt, ...);
+int32_t Packet_scanf(sockbuf_t *, const int8_t *fmt, ...);
 #else
-    int Packet_printf();
-    int Packet_scanf();
+int32_t Packet_printf();
+int32_t Packet_scanf();
 #endif
 
 #endif

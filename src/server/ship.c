@@ -1,8 +1,8 @@
-/* $Id: ship.c,v 1.5 2007/12/08 13:12:53 kps Exp $
+/* $Id: ship.c,v 1.13 2008/08/15 15:09:53 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -38,169 +38,156 @@
 #include "objpos.h"
 #include "netserver.h"
 
-char ship_version[] = VERSION;
-
+int8_t ship_version[] = VERSION;
 
 /******************************
  * Functions for ship movement.
  */
 
-void Thrust(int ind)
+void Thrust(player_t *pl)
 {
-    player_t		*pl = Players[ind];
-    const int		min_dir = (int)(pl->dir + RES/2 - RES*0.2 - 1);
-    const int		max_dir = (int)(pl->dir + RES/2 + RES*0.2 + 1);
-    const DFLOAT	max_speed = 1 + (pl->power * 0.14);
-    const int		max_life = 3 + (int)(pl->power * 0.35);
-    static int		keep_rand;
-    int			this_rand = (((keep_rand >>= 2)
-					? (keep_rand)
-					: (keep_rand = rand())) & 0x03);
-    int			tot_sparks = (int)((pl->power * 0.15) + this_rand + 1);
-    int		cx = pl->pos.cx + FLOAT_TO_CLICK(pl->ship->engine[pl->dir].x);
-    int		cy = pl->pos.cy + FLOAT_TO_CLICK(pl->ship->engine[pl->dir].y);
-    int			afterburners, alt_sparks;
+	const int32_t min_dir = (int32_t) (pl->dir + RES / 2 - RES * 0.2 - 1);
+	const int32_t max_dir = (int32_t) (pl->dir + RES / 2 + RES * 0.2 + 1);
+	const DFLOAT max_speed = 1 + (pl->power * 0.14);
+	const int32_t max_life = 3 + (int32_t) (pl->power * 0.35);
+	static int32_t keep_rand;
+	int32_t this_rand = (((keep_rand >>= 2) ? (keep_rand)
+			: (keep_rand = rand())) & 0x03);
+	int32_t tot_sparks = (int32_t) ((pl->power * 0.15) + this_rand + 1);
+	int32_t cx = pl->pos.cx + FLOAT_TO_CLICK(pl->ship->engine[pl->dir].x);
+	int32_t cy = pl->pos.cy + FLOAT_TO_CLICK(pl->ship->engine[pl->dir].y);
+	int32_t afterburners, alt_sparks;
 
-    afterburners = pl->item[ITEM_AFTERBURNER];
-    alt_sparks = afterburners
-		    ? AFTER_BURN_SPARKS(tot_sparks-1, afterburners) + 1
-		    : 0;
+	afterburners = pl->item[ITEM_AFTERBURNER];
+	alt_sparks = afterburners ? AFTER_BURN_SPARKS(tot_sparks-1, afterburners) + 1 : 0;
 
-    Make_debris(
-	/* pos.cx, pos.cy */ cx, cy,
-	/* vel.x, vel.y   */ pl->vel.x, pl->vel.y,
-	/* owner id       */ pl->id,
-	/* owner team	  */ pl->team,
-	/* kind           */ OBJ_SPARK,
-	/* mass           */ THRUST_MASS,
-	/* status         */ OWNERIMMUNE,
-	/* color          */ RED,
-	/* radius         */ 8,
-	/* min,max debris */ tot_sparks-alt_sparks, tot_sparks-alt_sparks,
-	/* min,max dir    */ min_dir, max_dir,
-	/* min,max speed  */ 1.0, max_speed,
-	/* min,max life   */ 3, max_life
-	);
+	Make_debris(
+	/* pos.cx, pos.cy */cx, cy,
+	/* vel.x, vel.y   */pl->vel.x, pl->vel.y,
+	/* owner id       */pl,
+	/* owner team	  */pl->team,
+	/* kind           */OBJ_SPARK,
+	/* mass           */THRUST_MASS,
+	/* status         */OWNERIMMUNE,
+	/* color          */RED,
+	/* radius         */8,
+	/* min,max debris */tot_sparks - alt_sparks, tot_sparks - alt_sparks,
+	/* min,max dir    */min_dir, max_dir,
+	/* min,max speed  */1.0, max_speed,
+	/* min,max life   */3, max_life);
 
-    Make_debris(
-	/* pos.cx, pos.cy */ cx, cy,
-	/* vel.x, vel.y   */ pl->vel.x, pl->vel.y,
-	/* owner id       */ pl->id,
-	/* owner team	  */ pl->team,
-	/* kind           */ OBJ_SPARK,
-	/* mass           */ THRUST_MASS * ALT_SPARK_MASS_FACT,
-	/* status         */ OWNERIMMUNE,
-	/* color          */ BLUE,
-	/* radius         */ 8,
-	/* min,max debris */ alt_sparks, alt_sparks,
-	/* min,max dir    */ min_dir, max_dir,
-	/* min,max speed  */ 1.0, max_speed,
-	/* min,max life   */ 3, max_life
-	);
+	Make_debris(
+	/* pos.cx, pos.cy */cx, cy,
+	/* vel.x, vel.y   */pl->vel.x, pl->vel.y,
+	/* owner id       */pl,
+	/* owner team	  */pl->team,
+	/* kind           */OBJ_SPARK,
+	/* mass           */THRUST_MASS * ALT_SPARK_MASS_FACT,
+	/* status         */OWNERIMMUNE,
+	/* color          */BLUE,
+	/* radius         */8,
+	/* min,max debris */alt_sparks, alt_sparks,
+	/* min,max dir    */min_dir, max_dir,
+	/* min,max speed  */1.0, max_speed,
+	/* min,max life   */3, max_life);
 }
 
 /* Calculates the recoil if a ship fires a shot */
 void Recoil(object_t *ship, object_t *shot)
 {
-    /* new code thanks to Uoti Urpala. */
-    ship->vel.x -= (((shot->vel.x - ship->vel.x) *
-	shot->mass) / ship->mass);
-    ship->vel.y -= (((shot->vel.y - ship->vel.y) *
-	shot->mass) / ship->mass);
+	/* new code thanks to Uoti Urpala. */
+	ship->vel.x
+			-= (((shot->vel.x - ship->vel.x) * shot->mass)
+					/ ship->mass);
+	ship->vel.y
+			-= (((shot->vel.y - ship->vel.y) * shot->mass)
+					/ ship->mass);
 }
 
-void Record_shove(player_t *pl, player_t *pusher, long time)
+void Record_shove(player_t *pl, player_t *pusher, int32_t time)
 {
-    shove_t		*shove = &pl->shove_record[pl->shove_next];
+	shove_t *shove = &pl->shove_record[pl->shove_next];
 
-    if (++pl->shove_next == MAX_RECORDED_SHOVES) {
-	pl->shove_next = 0;
-    }
-    shove->pusher_id = pusher->id;
-    shove->time = time;
+	if (++pl->shove_next == MAX_RECORDED_SHOVES) {
+		pl->shove_next = 0;
+	}
+	shove->pusher_pl = pusher;
+	shove->time = time;
 }
 
 /* Calculates the effect of a collision between two objects */
 void Delta_mv(object_t *ship, object_t *obj)
 {
-    DFLOAT	vx, vy, m;
+	DFLOAT vx, vy, m;
 
-    m = ship->mass + ABS(obj->mass);
-    vx = (ship->vel.x * ship->mass + obj->vel.x * obj->mass) / m;
-    vy = (ship->vel.y * ship->mass + obj->vel.y * obj->mass) / m;
-    if (ship->type == OBJ_PLAYER
-	&& obj->id != -1
-	&& BIT(obj->status, COLLISIONSHOVE)) {
-	player_t *pl = (player_t *)ship;
-	player_t *pusher = Players[GetInd[obj->id]];
-	if (pusher != pl) {
-	    Record_shove(pl, pusher, frame_loops);
+	m = ship->mass + ABS(obj->mass);
+	vx = (ship->vel.x * ship->mass + obj->vel.x * obj->mass) / m;
+	vy = (ship->vel.y * ship->mass + obj->vel.y * obj->mass) / m;
+	if (ship->type == OBJ_PLAYER && obj->owner && BIT(obj->status,
+			COLLISIONSHOVE)) {
+		player_t *pl = (player_t *) ship;
+		player_t *pusher = obj->owner;
+		if (pusher != pl) {
+			Record_shove(pl, pusher, frame_loops);
+		}
 	}
-    }
-    ship->vel.x = vx;
-    ship->vel.y = vy;
-    obj->vel.x = vx;
-    obj->vel.y = vy;
+	ship->vel.x = vx;
+	ship->vel.y = vy;
+	obj->vel.x = vx;
+	obj->vel.y = vy;
 }
-
 
 /* took the inelastic ballpopper from ng-465 -pgm */
 
-void Obj_repel(object_t *ship, object_t *obj2, int repel_dist)
+void Obj_repel(object_t *ship, object_t *obj2, int32_t repel_dist)
 {
-  DFLOAT              xd, yd,
-                      dvx1, dvy1,
-                      dvx2, dvy2,
-                      m;
+	DFLOAT xd, yd, dvx1, dvy1, dvx2, dvy2, m;
 
-    xd = WRAP_DX(obj2->pos.x - ship->pos.x);
-    yd = WRAP_DY(obj2->pos.y - ship->pos.y);
+	xd = WRAP_DX(obj2->pos.x - ship->pos.x);
+	yd = WRAP_DY(obj2->pos.y - ship->pos.y);
 
-    m = ship->mass + ABS(obj2->mass);
-    dvx1 = (ship->vel.x * ship->mass + obj2->vel.x * obj2->mass) / m;
-    dvy1 = (ship->vel.y * ship->mass + obj2->vel.y * obj2->mass) / m;
-    dvx2 = dvx1;
-    dvy2 = dvy1;
+	m = ship->mass + ABS(obj2->mass);
+	dvx1 = (ship->vel.x * ship->mass + obj2->vel.x * obj2->mass) / m;
+	dvy1 = (ship->vel.y * ship->mass + obj2->vel.y * obj2->mass) / m;
+	dvx2 = dvx1;
+	dvy2 = dvy1;
 
-    if (ship->type == OBJ_PLAYER && obj2->id != -1) {
-        player_t *pl = (player_t *)ship;
-        player_t *pusher = Players[GetInd[obj2->id]];
-        if (pusher != pl) {
-            Record_shove(pl, pusher, frame_loops);
-        }
-    }
+	if (ship->type == OBJ_PLAYER && obj2->owner) {
+		player_t *pl = (player_t *) ship;
+		player_t *pusher = obj2->owner;
+		if (pusher != pl) {
+			Record_shove(pl, pusher, frame_loops);
+		}
+	}
 
-    if (obj2->type == OBJ_PLAYER && ship->id != -1) {
-        player_t *pl = (player_t *)obj2;
-        player_t *pusher = Players[GetInd[ship->id]];
-        if (pusher != pl) {
-            Record_shove(pl, pusher, frame_loops);
-        }
-    }
+	if (obj2->type == OBJ_PLAYER && ship->owner) {
+		player_t *pl = (player_t *) obj2;
+		player_t *pusher = ship->owner;
+		if (pusher != pl) {
+			Record_shove(pl, pusher, frame_loops);
+		}
+	}
 
-    ship->vel.x = dvx1;
-    ship->vel.y = dvy1;
-    
-    obj2->vel.x = dvx2;
-    obj2->vel.y = dvy2;
+	ship->vel.x = dvx1;
+	ship->vel.y = dvy1;
+
+	obj2->vel.x = dvx2;
+	obj2->vel.y = dvy2;
 }
-
-
 
 /*
  * Add fuel to fighter's tanks.
  * Maybe use more than one of tank to store the fuel.
  */
-void Add_fuel(pl_fuel_t *ft, long fuel)
+void Add_fuel(pl_fuel_t *ft, int32_t fuel)
 {
-    if (ft->sum + fuel > ft->max)
-	fuel = ft->max - ft->sum;
-    else if (ft->sum + fuel < 0)
-	fuel = -ft->sum;
-    ft->sum += fuel;
-    ft->tank[ft->current] += fuel;
+	if (ft->sum + fuel > ft->max)
+		fuel = ft->max - ft->sum;
+	else if (ft->sum + fuel < 0)
+		fuel = -ft->sum;
+	ft->sum += fuel;
+	ft->tank[ft->current] += fuel;
 }
-
 
 /*
  * Move fuel from add-on tanks to main tank,
@@ -208,240 +195,242 @@ void Add_fuel(pl_fuel_t *ft, long fuel)
  */
 void Update_tanks(pl_fuel_t *ft)
 {
-    if (ft->num_tanks) {
-	int  t, check;
-	long low_level;
-	long fuel;
-	long *f;
+	if (ft->num_tanks) {
+		int32_t t, check;
+		int32_t low_level;
+		int32_t fuel;
+		int32_t *f;
 
-	/* Set low_level to minimum fuel in each tank */
-	low_level = ft->sum / (ft->num_tanks + 1) - 1;
-	if (low_level < 0)
-	    low_level = 0;
-	if (TANK_REFILL_LIMIT < low_level)
-	    low_level = TANK_REFILL_LIMIT;
+		/* Set low_level to minimum fuel in each tank */
+		low_level = ft->sum / (ft->num_tanks + 1) - 1;
+		if (low_level < 0)
+			low_level = 0;
+		if (TANK_REFILL_LIMIT < low_level)
+			low_level = TANK_REFILL_LIMIT;
 
-	t = ft->num_tanks;
-	check = MAX_TANKS<<2;
-	fuel = 0;
-	f = ft->tank + t;
-
-	while (t>=0 && check--) {
-	    long m = TANK_CAP(t);
-
-	    /* Add the previous over/underflow and do a new cut */
-	    *f += fuel;
-	    if (*f > m) {
-		fuel = *f - m;
-		*f = m;
-	    } else if (*f < 0) {
-		fuel = *f;
-		*f = 0;
-	    } else
+		t = ft->num_tanks;
+		check = MAX_TANKS << 2;
 		fuel = 0;
+		f = ft->tank + t;
 
-	    /* If there is no over/underflow, let the fuel run to main-tank */
-	    if (!fuel) {
-		if (t
-		    && t != ft->current
-		    && *f >= low_level + REFUEL_RATE
-		    && *(f-1) <= TANK_CAP(t-1) - REFUEL_RATE) {
+		while (t >= 0 && check--) {
+			int32_t m = TANK_CAP(t);
 
-		    *f -= REFUEL_RATE;
-		    fuel = REFUEL_RATE;
-		} else if (t && *f < low_level) {
-		    *f += REFUEL_RATE;
-		    fuel = -REFUEL_RATE;
+			/* Add the previous over/underflow and do a new cut */
+			*f += fuel;
+			if (*f > m) {
+				fuel = *f - m;
+				*f = m;
+			}
+			else if (*f < 0) {
+				fuel = *f;
+				*f = 0;
+			}
+			else
+				fuel = 0;
+
+			/* If there is no over/underflow, let the fuel run to main-tank */
+			if (!fuel) {
+				if (t && t != ft->current && *f >= low_level
+						+ REFUEL_RATE && *(f - 1)
+						<= TANK_CAP(t-1)
+								- REFUEL_RATE) {
+
+					*f -= REFUEL_RATE;
+					fuel = REFUEL_RATE;
+				}
+				else if (t && *f < low_level) {
+					*f += REFUEL_RATE;
+					fuel = -REFUEL_RATE;
+				}
+			}
+			if (fuel && t == 0) {
+				t = ft->num_tanks;
+				f = ft->tank + t;
+			}
+			else {
+				t--;
+				f--;
+			}
 		}
-	    }
-	    if (fuel && t == 0) {
-	       t = ft->num_tanks;
-	       f = ft->tank + t;
-	    } else {
-		t--;
-		f--;
-	    }
+		if (!check) {
+			error("fuel problem");
+			fuel = ft->sum;
+			ft->sum = ft->max = 0;
+			t = 0;
+			while (t <= ft->num_tanks) {
+				if (fuel) {
+					if (fuel > TANK_CAP(t)) {
+						ft->tank[t] = TANK_CAP(t);
+						fuel -= TANK_CAP(t);
+					}
+					else {
+						ft->tank[t] = fuel;
+						fuel = 0;
+					}
+					ft->sum += ft->tank[t];
+				}
+				else
+					ft->tank[t] = 0;
+				ft->max += TANK_CAP(t);
+				t++;
+			}
+		}
 	}
-	if (!check) {
-	    error("fuel problem");
-	    fuel = ft->sum;
-	    ft->sum =
-	    ft->max = 0;
-	    t = 0;
-	    while (t <= ft->num_tanks) {
-		if (fuel) {
-		    if (fuel>TANK_CAP(t)) {
-			ft->tank[t] = TANK_CAP(t);
-			fuel -= TANK_CAP(t);
-		    } else {
-			ft->tank[t] = fuel;
-			fuel = 0;
-		    }
-		    ft->sum += ft->tank[t];
-		} else
-		    ft->tank[t] = 0;
-		ft->max += TANK_CAP(t);
-		t++;
-	    }
-	}
-    } else
-	ft->tank[0] = ft->sum;
+	else
+		ft->tank[0] = ft->sum;
 }
 
-
 void Make_wreckage(
-    /* pos.cx, pos.cy   */ int    cx,           int cy,
-    /* vel.x, vel.y     */ DFLOAT velx,         DFLOAT vely,
-    /* owner id         */ int    id,
-    /* owner team	*/ u_short team,
-    /* min,max mass     */ DFLOAT min_mass,     DFLOAT max_mass,
-    /* total mass       */ DFLOAT total_mass,
-    /* status           */ long   status,
-    /* color            */ int    color,
-    /* max wreckage     */ int    max_wreckage,
-    /* min,max dir      */ int    min_dir,      int    max_dir,
-    /* min,max speed    */ DFLOAT min_speed,    DFLOAT max_speed,
-    /* min,max life     */ int    min_life,     int    max_life
-)
+/* pos.cx, pos.cy   */int32_t cx, int32_t cy,
+/* vel.x, vel.y     */DFLOAT velx, DFLOAT vely,
+/* owner id         */player_t *pl,
+/* owner team	*/team_t *team,
+/* min,max mass     */DFLOAT min_mass, DFLOAT max_mass,
+/* total mass       */DFLOAT total_mass,
+/* status           */int32_t status,
+/* color            */int32_t color,
+/* max wreckage     */int32_t max_wreckage,
+/* min,max dir      */int32_t min_dir, int32_t max_dir,
+/* min,max speed    */DFLOAT min_speed, DFLOAT max_speed,
+/* min,max life     */int32_t min_life, int32_t max_life)
 {
-    object_t		*wreckage;
-    int			i, life, size;
-    DFLOAT		mass, sum_mass = 0.0;
+	object_t *wreckage;
+	int32_t i, life, size;
+	DFLOAT mass, sum_mass = 0.0;
 
-    if (!useWreckage) {
-	return;
-    }
-    cx = WRAP_XCLICK(cx);
-    cy = WRAP_YCLICK(cy);
-    if (cx < 0 || cx >= World.cwidth || cy < 0 || cy >= World.cheight) {
-	return;
-    }
-    if (max_life < min_life)
-	max_life = min_life;
-    if (ShotsLife >= intGameSpeed) {
-	if (min_life > ShotsLife) {
-	    min_life = ShotsLife;
-	    max_life = ShotsLife;
+	if (!useWreckage) {
+		return;
 	}
-    }
-
-    if (min_speed * max_life > World.hypotenuse)
-	min_speed = World.hypotenuse / max_life;
-    if (max_speed * min_life > World.hypotenuse)
-	max_speed = World.hypotenuse / min_life;
-    if (max_speed < min_speed)
-	max_speed = min_speed;
-
-    if (max_wreckage > MAX_TOTAL_SHOTS - NumObjs) {
-	max_wreckage = MAX_TOTAL_SHOTS - NumObjs;
-    }
-
-    for (i = 0; i < max_wreckage && sum_mass < total_mass; i++, NumObjs++) {
-	DFLOAT		speed;
-	int		dir, radius;
-
-	wreckage = Obj[NumObjs];
-	wreckage->color = color;
-	wreckage->id = id;
-	wreckage->team = team;
-	wreckage->type = OBJ_WRECKAGE;
-
-	/* Position */
-	Object_position_init_clicks(wreckage, cx, cy);
-
-	/* Direction */
-	dir = MOD2(min_dir + (int)(rfrac() * MOD2(max_dir - min_dir, RES)), RES);
-	wreckage->dir = dir;
-
-	/* Velocity and acceleration */
-	speed = min_speed + rfrac() * (max_speed - min_speed);
-	wreckage->vel.x = velx + tcos(dir) * speed;
-	wreckage->vel.y = vely + tsin(dir) * speed;
-	wreckage->acc.x = 0;
-	wreckage->acc.y = 0;
-
-	/* Mass */
-	mass = min_mass + rfrac() * (max_mass - min_mass);
-	if ( sum_mass + mass > total_mass )
-	    mass = total_mass - sum_mass;
-	wreckage->mass = mass;
-	sum_mass += mass;
-	if ( mass < min_mass ) {
-	    NumObjs--;
-	    break;
+	cx = WRAP_XCLICK(cx);
+	cy = WRAP_YCLICK(cy);
+	if (cx < 0 || cx >= World.cwidth || cy < 0 || cy >= World.cheight) {
+		return;
+	}
+	if (max_life < min_life)
+		max_life = min_life;
+	if (ShotsLife >= intGameSpeed) {
+		if (min_life > ShotsLife) {
+			min_life = ShotsLife;
+			max_life = ShotsLife;
+		}
 	}
 
-	/* Lifespan  */
-	life = (int)(min_life + rfrac() * (max_life - min_life) + 1);
-	if (life * speed > World.hypotenuse) {
-	    life = (long)(World.hypotenuse / speed);
+	if (min_speed * max_life > World.hypotenuse)
+		min_speed = World.hypotenuse / max_life;
+	if (max_speed * min_life > World.hypotenuse)
+		max_speed = World.hypotenuse / min_life;
+	if (max_speed < min_speed)
+		max_speed = min_speed;
+
+	if (max_wreckage > MAX_TOTAL_SHOTS - NumObjs) {
+		max_wreckage = MAX_TOTAL_SHOTS - NumObjs;
 	}
-	wreckage->life = life;
-	wreckage->fuselife = wreckage->life;
 
-	/* Wreckage type, rotation, and size */
-	wreckage->turnspeed = 0.02 + rfrac() * 0.35;
-	wreckage->rotation = (int)(rfrac() * RES);
-	size = (int) ( 256.0 * 1.5 * mass / total_mass );
-	if ( size > 255 )
-	    size = 255;
-	wreckage->size = size;
-	wreckage->info = rand();
+	for (i = 0; i < max_wreckage && sum_mass < total_mass; i++, NumObjs++) {
+		DFLOAT speed;
+		int32_t dir, radius;
 
-	radius = wreckage->size * 16 / 256;
-	if ( radius < 8 ) radius = 8;
+		wreckage = Obj[NumObjs];
+		wreckage->color = color;
+		wreckage->owner = pl;
+		wreckage->team = team;
+		wreckage->type = OBJ_WRECKAGE;
 
-	wreckage->spread_left = 0;
-	wreckage->pl_range = radius;
-	wreckage->pl_radius = radius;
-	wreckage->status = status;
-    }
+		/* Position */
+		Object_position_init_clicks(wreckage, cx, cy);
+
+		/* Direction */
+		dir = MOD2(min_dir + (int32_t) (rfrac() * MOD2(max_dir - min_dir,
+				RES)), RES);
+		wreckage->dir = dir;
+
+		/* Velocity and acceleration */
+		speed = min_speed + rfrac() * (max_speed - min_speed);
+		wreckage->vel.x = velx + tcos(dir) * speed;
+		wreckage->vel.y = vely + tsin(dir) * speed;
+		wreckage->acc.x = 0;
+		wreckage->acc.y = 0;
+
+		/* Mass */
+		mass = min_mass + rfrac() * (max_mass - min_mass);
+		if (sum_mass + mass > total_mass)
+			mass = total_mass - sum_mass;
+		wreckage->mass = mass;
+		sum_mass += mass;
+		if (mass < min_mass) {
+			NumObjs--;
+			break;
+		}
+
+		/* Lifespan  */
+		life = (int32_t) (min_life + rfrac() * (max_life - min_life) + 1);
+		if (life * speed > World.hypotenuse) {
+			life = (int32_t) (World.hypotenuse / speed);
+		}
+		wreckage->life = life;
+		wreckage->fuselife = wreckage->life;
+
+		/* Wreckage type, rotation, and size */
+		wreckage->turnspeed = 0.02 + rfrac() * 0.35;
+		wreckage->rotation = (int32_t) (rfrac() * RES);
+		size = (int32_t) (256.0 * 1.5 * mass / total_mass);
+		if (size > 255)
+			size = 255;
+		wreckage->size = size;
+		wreckage->info = rand();
+
+		radius = wreckage->size * 16 / 256;
+		if (radius < 8)
+			radius = 8;
+
+		wreckage->spread_left = 0;
+		wreckage->pl_range = radius;
+		wreckage->pl_radius = radius;
+		wreckage->status = status;
+	}
 }
 
 /* Explode a fighter */
-void Explode_fighter(int ind)
+void Explode_fighter(player_t *pl)
 {
-    player_t *pl = Players[ind];
-    int min_debris, max_debris;
+	int32_t min_debris, max_debris;
 
-    min_debris = (int)(1 + (pl->fuel.sum / (8.0 * FUEL_SCALE_FACT)));
-    max_debris = (int)(min_debris + (pl->mass * 2.0));
-    /* reduce debris since we also create wreckage objects */
-    min_debris >>= 1;
-    max_debris >>= 1;
+	min_debris = (int32_t) (1 + (pl->fuel.sum / (8.0 * FUEL_SCALE_FACT)));
+	max_debris = (int32_t) (min_debris + (pl->mass * 2.0));
+	/* reduce debris since we also create wreckage objects */
+	min_debris >>= 1;
+	max_debris >>= 1;
 
-    Make_debris(
-	/* pos.cx, pos.cy */ pl->pos.cx, pl->pos.cy,
-	/* vel.x, vel.y   */ pl->vel.x, pl->vel.y,
-	/* owner id       */ pl->id,
-	/* owner team	  */ pl->team,
-	/* kind           */ OBJ_DEBRIS,
-	/* mass           */ 3.5,
-	/* status         */ 0,
-	/* color          */ RED,
-	/* radius         */ 8,
-	/* min,max debris */ min_debris, max_debris,
-	/* min,max dir    */ 0, RES-1,
-	/* min,max speed  */ 20.0, 20 + (((int)(pl->mass))>>1),
-	/* min,max life   */ 5, (int)(5 + (pl->mass * 1.5))
-	);
+	Make_debris(
+	/* pos.cx, pos.cy */pl->pos.cx, pl->pos.cy,
+	/* vel.x, vel.y   */pl->vel.x, pl->vel.y,
+	/* owner id       */pl,
+	/* owner team	  */pl->team,
+	/* kind           */OBJ_DEBRIS,
+	/* mass           */3.5,
+	/* status         */0,
+	/* color          */RED,
+	/* radius         */8,
+	/* min,max debris */min_debris, max_debris,
+	/* min,max dir    */0, RES - 1,
+	/* min,max speed  */20.0, 20 + (((int32_t) (pl->mass)) >> 1),
+	/* min,max life   */5, (int32_t) (5 + (pl->mass * 1.5)));
 
-    if ( !BIT(pl->status, KILLED) )
-	return;
-    Make_wreckage(
-	/* pos.cx, pos.cy   */ pl->pos.cx, pl->pos.cy,
-	/* vel.x, vel.y     */ pl->vel.x, pl->vel.y,
-	/* owner id         */ pl->id,
-	/* owner team	    */ pl->team,
-	/* min,max mass     */ MAX(pl->mass/8.0, 0.33), pl->mass,
-	/* total mass       */ 2.0 * pl->mass,
-	/* status           */ 0,
-	/* color            */ WHITE,
-	/* max wreckage     */ 10,
-	/* min,max dir      */ 0, RES-1,
-	/* min,max speed    */ 10.0, 10 + (((int)(pl->mass))>>1),
-	/* min,max life     */ 5, (int)(5 + (pl->mass * 1.5))
-	);
+	if (!BIT(pl->status, KILLED))
+		return;
+	Make_wreckage(
+	/* pos.cx, pos.cy   */pl->pos.cx, pl->pos.cy,
+	/* vel.x, vel.y     */pl->vel.x, pl->vel.y,
+	/* owner id         */pl,
+	/* owner team	    */pl->team,
+	/* min,max mass     */MAX(pl->mass/8.0, 0.33), pl->mass,
+	/* total mass       */2.0 * pl->mass,
+	/* status           */0,
+	/* color            */WHITE,
+	/* max wreckage     */10,
+	/* min,max dir      */0, RES - 1,
+	/* min,max speed    */10.0, 10 + (((int32_t) (pl->mass)) >> 1),
+	/* min,max life     */5, (int32_t) (5 + (pl->mass * 1.5)));
 
 }
-

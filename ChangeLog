@@ -1,3 +1,130 @@
+2009-04-13  Piotr Kamisiński <rotunda_pk@users.sourceforge.net>
+	
+	* code cleanups
+	* version incremented to 1.4.3
+
+2009-04-10  Piotr Kamisiński <rotunda_pk@users.sourceforge.net>
+	
+	* BUGFIX: fixed the 'connector bug', cleaned up the conditions for
+	when it's allowed to grab ball
+
+2008-10-12  Piotr Kamisiński <rotunda_pk@users.sourceforge.net>
+
+	* code cleanups
+	* BUGFIXES addressing requests: #2160285, #2160281 
+
+2008-09-02  Piotr Kamisiński <rotunda_pk@users.sourceforge.net>
+
+	* share/maps/robotblood8.xp: added (map with 8 robots)
+	* src/server/cmdline.c, src/server/contact.c, src/server/map.c,
+	src/server/tuner.c: removed the minRobots option
+	* src/server/event.c: BUGFIX - player locking works now
+	* src/server/map.h: added a flag with team properties
+	* src/server/player.c, src/server/netserver.c, src/server/robot.c,
+	src/server/server.c, src/server/update.c: removed the NumPseudoPlayers
+	variable
+	* src/server/robot.c: changed name of MAX_ROBOTS to NumRobotDefs
+
+2008-08-26  Piotr Kamisiński <rotunda_pk@users.sourceforge.net>
+
+	* src/server/shot.c: function Delete_object finally takes a pointer
+	instead of an index as argument
+	* src/common/structs.h, src/server/command.c, src/server/contact.c, 
+	src/server/event.c, src/server/frame.c, src/server/global.h,
+	src/server/map.c, src/server/map.h, src/server/object.h,
+	src/server/player.c, src/server/proto.h, src/server/robotdef.c,
+	src/server/server.c, src/server/update.c: simple refactoring
+	* src/server/event.c: BUGFIX - incorrect handling of range checks
+	in Players[] caused Handle_keyboard to get stuck on KEY_LOCK_{NEXT,
+	PREV}
+	* configure: put this script back under version control
+
+2008-08-16  Piotr Kamisiński <rotunda_pk@users.sourceforge.net>
+
+	* many files: cleanups to make the code compile on FreeBSD
+	* configure.ac: added --enable-debug option, which enables usage of
+	debugging symbols and some warning
+
+2008-08-15  Piotr Kamisiński <rotunda_pk@users.sourceforge.net>
+
+	* all files: conversion of some author names to UTF-8; continued
+	refactoring of the treasure code
+	* collision.c, player.c, robotdef.c, shot.c, update.c, walls.c:
+	cleanup of the ball code
+	* netserver.h: connection_t::team is now of type (team_t*)
+	* many files: GROUND RULE NOW: object_t::id are now used exclusively
+	for numbering of object instances; object_t::owner describe the player
+	who owns the object (in the old ball code object_t::id took care of
+	that). A new object status 'IS_ATTACHED' flag was introduced to mark
+	when the ball is being carried by some player. The 'RECREATE' flag is
+	obsolete.
+
+2008-08-13  Piotr Kamisiński <rotunda_pk@users.sourceforge.net>
+
+	* src/common/structs.h: added this file; it contains forward
+	definitions of common structures
+	* src/server/collision.c, src/server/command.c, src/server/contact.c,
+	src/server/event.c, src/server/frame.c, src/server/global.h,
+	src/server/map.c, src/server/map.h, src/server/netserver.c,
+	src/server/netserver.h, src/server/object.h, src/server/play.c,
+	src/server/player.c, src/server/proto.h, src/server/robot.c,
+	src/server/robotdef.c, src/server/server.c, src/server/serverconst.h,
+	src/server/ship.c, src/server/shot.c, src/server/update.c,
+	src/server/walls.c: refactoring: replacement of indices of bases,
+	teams and treasures with pointers to their structures; cleanup of the
+	code, specifically Cmd_team()
+
+2008-08-11  Piotr Kamisiński <rotunda_pk@users.sourceforge.net>
+
+	* src/server/event.c: BUGFIX - it's now possible to lock on another
+	teammate when he's the only active player
+	(https://sourceforge.net/tracker/index.php?func=detail&aid=2035933&group_id=147895&atid=769889)
+	* src/server/collision.c, src/server/command.c, src/server/contact.c, 
+	src/server/frame.c, src/server/global.h, src/server/metaserver.c, 
+	src/server/netserver.c, src/server/netserver.h, src/server/object.h,
+	src/server/player.c, src/server/proto.h, src/server/robot.c,
+	src/server/robot.h, src/server/robotdef.c, src/server/server.c,
+	src/server/ship.c, src/server/update.c, src/server/walls.c: major
+	refactoring and cleanups
+
+2008-08-10  Piotr Kamisiński <rotunda_pk@users.sourceforge.net>
+
+	* src/server/netserver.c: removed the client version check in
+	Send_player(...)
+	* src/server/collision.c, src/server/command.c, src/server/defaults.h, 
+	src/server/event.c, src/server/frame.c, src/server/metaserver.c, 
+	src/server/proto.h, src/server/robot.c, src/server/robotdef.c, 
+	src/server/server.c, src/server/serverconst.h: general refactoring and
+	code cleanup
+	* src/server/update.c: BUGFIX - eliminated "shaking" at respawn after
+	a round ends
+	(https://sourceforge.net/tracker/index.php?func=detail&aid=2046151&group_id=147895&atid=769889)
+	* src/server/player.c: let only Init_player(...) increment NumPlayers,
+	then return pointer to the player structure
+
+2008-08-05  Piotr Kamisiński <rotunda_pk@users.sourceforge.net>
+
+	* all source and header files: Rename of all integer data types to the
+	standard defined in glibc's stdint.h.
+
+2008-08-03  Piotr Kamisiński <rotunda_pk@users.sourceforge.net>
+
+	* all source and header files: Reformatting according to a modified
+	K&R coding style (Eclipse template located in file
+	misc/eclipse-coding-style.xml).
+
+2008-07-30  Piotr Kamisiński <rotunda_pk@users.sourceforge.net>
+
+	* src/server/collision.c, src/server/command.c, src/server/contact.c,
+	src/server/event.c, src/server/frame.c, src/server/netserver.c,
+	src/server/netserver.h, src/server/object.h, src/server/play.c, 
+	src/server/player.c, src/server/proto.h, src/server/robot.c,
+	src/server/robot.h, src/server/robotdef.c, src/server/server.c,
+	src/server/ship.c, src/server/shot.c, src/server/update.c,
+	src/server/walls.c: Refactoring: functions that took integer indices
+	of players/objects/connections now take pointers to the respective
+	structures.
+
 2008-01-04  Kristian Söderblom <kps@users.sourceforge.net>
 
 	* configure.ac: Changed version to 1.4.2.

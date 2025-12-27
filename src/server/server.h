@@ -1,8 +1,8 @@
-/* $Id: server.h,v 1.2 2007/09/17 19:54:49 kps Exp $
+/* $Id: server.h,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -26,10 +26,10 @@
 #define SERVER_H
 
 enum TeamPickType {
-    PickForHuman	= 1,
-    PickForRobot	= 2
+	PickForHuman = 1, PickForRobot = 2
 };
 
-void Main_loop();
+void Main_loop(int32_t argv);
+void Queue_loop(void);
 
 #endif

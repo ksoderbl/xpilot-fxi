@@ -1,8 +1,8 @@
-/* $Id: bit.h,v 1.1.1.1 2007/05/20 21:59:10 kps Exp $
+/* $Id: bit.h,v 1.3 2008/08/15 15:09:52 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -37,6 +37,6 @@
 #define BITV_ISSET(X,N)	((X)[(N) / BITV_SIZE] & (1 << (N) % BITV_SIZE))
 #define BITV_TOGGLE(X,N)	((X)[(N) / BITV_SIZE] ^= 1 << (N) % BITV_SIZE)
 
-typedef unsigned char bitv_t;
+typedef uint8_t bitv_t;
 
 #endif

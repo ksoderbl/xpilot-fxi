@@ -1,6 +1,6 @@
-/* $Id: tuner.h,v 1.4 2008/08/15 15:09:53 rotunda_pk Exp $
+/* $Id: structs.h,v 1.3 2008/08/26 20:51:06 rotunda_pk Exp $
  *
- * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
+ * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
@@ -22,18 +22,15 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef	TUNER_H
-#define	TUNER_H
+#ifndef STRUCTS_H_
+#define STRUCTS_H_
 
-void tuner_plock(void);
-void tuner_shotsmax(void);
-void tuner_shipmass(void);
-void tuner_ballmass(void);
-void tuner_maxrobots(void);
-void tuner_minrobots(void);
-void tuner_worldlives(void);
-void tuner_framedivisor(void);
-void tuner_fps(void);
-void tuner_gamespeed(void);
+/* Forward definitions of common structures */
+typedef struct _player player_t;
+typedef struct _team team_t;
+typedef struct _base base_t;
+typedef struct _fuel fuel_t;
+typedef struct _treasure treasure_t;
+typedef struct _connection connection_t;
 
-#endif
+#endif /* STRUCTS_H_ */

@@ -1,8 +1,8 @@
-/* $Id: strlcpy.c,v 1.1.1.1 2007/05/20 21:59:12 kps Exp $
+/* $Id: strlcpy.c,v 1.4 2008/08/15 15:09:52 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -25,82 +25,80 @@
 #include <stdlib.h>
 #include "commonproto.h"
 
-
 /*
-    NAME
-	strlcpy
-    ARGS
-	char *dest
-	const char *src
-	size_t size
-    DESC
-	Copy src to dest.
-	Dest may hold at most size - 1 characters
-	and will always be NUL terminated,
-	except if size equals zero.
-	Return strlen(src).
-	There was not enough room in dest if the
-	return value is bigger or equal than size.
-*/
-size_t strlcpy(char *dest, const char *src, size_t size)
+ NAME
+ strlcpy
+ ARGS
+ int8_t *dest
+ const int8_t *src
+ size_t size
+ DESC
+ Copy src to dest.
+ Dest may hold at most size - 1 characters
+ and will always be NUL terminated,
+ except if size equals zero.
+ Return strlen(src).
+ There was not enough room in dest if the
+ return value is bigger or equal than size.
+ */
+size_t strlcpy(int8_t *dest, const int8_t *src, size_t size)
 {
-    register char	*d = dest;
-    register const char	*s = src;
-    register char	*maxd = dest + (size - 1);
+	register int8_t *d = dest;
+	register const int8_t *s = src;
+	register int8_t *maxd = dest + (size - 1);
 
-    if (size > 0) {
-	while (*s && d < maxd) {
-	    *d = *s;
-	    s++;
-	    d++;
+	if (size > 0) {
+		while (*s && d < maxd) {
+			*d = *s;
+			s++;
+			d++;
+		}
+		*d = '\0';
 	}
-	*d = '\0';
-    }
-    while (*s) {
-	s++;
-    }
-    return (s - src);
+	while (*s) {
+		s++;
+	}
+	return (s - src);
 }
 
-
 /*
-    NAME
-	strlcat
-    ARGS
-	char *dest
-	const char *src
-	size_t size
-    DESC
-	Append src to dest.
-	Dest may hold at most size - 1 characters
-	and will always be NUL terminated,
-	except if size equals zero.
-	Return strlen(src) + strlen(dest).
-	There was not enough room in dest if the
-	return value is bigger or equal than size.
-*/
-size_t strlcat(char *dest, const char *src, size_t size)
+ NAME
+ strlcat
+ ARGS
+ int8_t *dest
+ const int8_t *src
+ size_t size
+ DESC
+ Append src to dest.
+ Dest may hold at most size - 1 characters
+ and will always be NUL terminated,
+ except if size equals zero.
+ Return strlen(src) + strlen(dest).
+ There was not enough room in dest if the
+ return value is bigger or equal than size.
+ */
+size_t strlcat(int8_t *dest, const int8_t *src, size_t size)
 {
-    register char	*d = dest;
-    register const char	*s = src;
-    register char	*maxd = dest + (size - 1);
-    size_t		dlen = 0;
+	register int8_t *d = dest;
+	register const int8_t *s = src;
+	register int8_t *maxd = dest + (size - 1);
+	size_t dlen = 0;
 
-    if (size > 0) {
-	while (*d && d < maxd) {
-	    d++;
+	if (size > 0) {
+		while (*d && d < maxd) {
+			d++;
+		}
+		dlen = (d - dest);
+		while (*s && d < maxd) {
+			*d = *s;
+			s++;
+			d++;
+		}
+		*d = '\0';
 	}
-	dlen = (d - dest);
-	while (*s && d < maxd) {
-	    *d = *s;
-	    s++;
-	    d++;
+	while (*s) {
+		s++;
 	}
-	*d = '\0';
-    }
-    while (*s) {
-	s++;
-    }
-    return dlen + (s - src);
+	return dlen + (s - src);
 }
 

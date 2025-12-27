@@ -1,8 +1,8 @@
-/* $Id: checknames.h,v 1.1.1.1 2007/05/20 21:59:10 kps Exp $
+/* $Id: checknames.h,v 1.3 2008/08/15 15:09:52 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -28,13 +28,13 @@
 #define NAME_OK		1
 #define NAME_ERROR	0
 
-int Check_real_name(char *name);
-void Fix_real_name(char *name);
-int Check_nick_name(char *name);
-void Fix_nick_name(char *name);
-int Check_host_name(char *name);
-void Fix_host_name(char *name);
-int Check_disp_name(char *name);
-void Fix_disp_name(char *name);
+int32_t Check_real_name(int8_t *name);
+void Fix_real_name(int8_t *name);
+int32_t Check_nick_name(int8_t *name);
+void Fix_nick_name(int8_t *name);
+int32_t Check_host_name(int8_t *name);
+void Fix_host_name(int8_t *name);
+int32_t Check_disp_name(int8_t *name);
+void Fix_disp_name(int8_t *name);
 
 #endif

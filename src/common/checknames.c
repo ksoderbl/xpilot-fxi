@@ -1,8 +1,8 @@
-/* $Id: checknames.c,v 1.1.1.1 2007/05/20 21:59:10 kps Exp $
+/* $Id: checknames.c,v 1.4 2008/08/15 15:09:52 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -38,180 +38,184 @@
 #include "pack.h"
 #include "checknames.h"
 
-char checknames_version[] = VERSION;
+int8_t checknames_version[] = VERSION;
 
-int Check_real_name(char *name)
+int32_t Check_real_name(int8_t *name)
 {
-    unsigned char *str;
+	uint8_t *str;
 
-    name[MAX_NAME_LEN - 1] = '\0';
-    if (!*name) {
-	return NAME_ERROR;
-    }
-    str = (unsigned char *) name;
-    for (; *str; str++) {
-	if (!isgraph(*str)) {
-	    return NAME_ERROR;
+	name[MAX_NAME_LEN - 1] = '\0';
+	if (!*name) {
+		return NAME_ERROR;
 	}
-    }
+	str = (uint8_t *) name;
+	for (; *str; str++) {
+		if (!isgraph(*str)) {
+			return NAME_ERROR;
+		}
+	}
 
-    return NAME_OK;
+	return NAME_OK;
 }
 
-void Fix_real_name(char *name)
+void Fix_real_name(int8_t *name)
 {
-    unsigned char *str;
+	uint8_t *str;
 
-    name[MAX_NAME_LEN - 1] = '\0';
-    if (!*name) {
-	strcpy(name, "X");
-	return;
-    }
-    str = (unsigned char *) name;
-    for (; *str; str++) {
-	if (!isgraph(*str)) {
-	    *str = 'x';
+	name[MAX_NAME_LEN - 1] = '\0';
+	if (!*name) {
+		strcpy(name, "X");
+		return;
 	}
-    }
+	str = (uint8_t *) name;
+	for (; *str; str++) {
+		if (!isgraph(*str)) {
+			*str = 'x';
+		}
+	}
 }
 
-int Check_nick_name(char *name)
+int32_t Check_nick_name(int8_t *name)
 {
-    unsigned char *str;
+	uint8_t *str;
 
-    name[MAX_NAME_LEN - 1] = '\0';
-    if (!*name) {
-	return NAME_ERROR;
-    }
-    str = (unsigned char *) name;
-    if (!isupper(*str)) {
-	return NAME_ERROR;
-    }
-    for (; *str; str++) {
-	if (!isprint(*str)) {
-	    return NAME_ERROR;
+	name[MAX_NAME_LEN - 1] = '\0';
+	if (!*name) {
+		return NAME_ERROR;
 	}
-    }
-    --str;
-    if (isspace(*str)) {
-	return NAME_ERROR;
-    }
+	str = (uint8_t *) name;
+	if (!isupper(*str)) {
+		return NAME_ERROR;
+	}
+	for (; *str; str++) {
+		if (!isprint(*str)) {
+			return NAME_ERROR;
+		}
+	}
+	--str;
+	if (isspace(*str)) {
+		return NAME_ERROR;
+	}
 
-    return NAME_OK;
+	return NAME_OK;
 }
 
-void Fix_nick_name(char *name)
+void Fix_nick_name(int8_t *name)
 {
-    unsigned char *str;
+	uint8_t *str;
 
-    name[MAX_NAME_LEN - 1] = '\0';
-    if (!*name) {
-	static int n;
-	sprintf(name, "X%d", n++);
-	return;
-    }
-    str = (unsigned char *) name;
-    if (!isupper(*str)) {
-	if (islower(*str)) {
-	    *str = toupper(*str);
-	} else {
-	    *str = 'X';
+	name[MAX_NAME_LEN - 1] = '\0';
+	if (!*name) {
+		static int32_t n;
+		sprintf(name, "X%d", n++);
+		return;
 	}
-    }
-    for (; *str; str++) {
-	if (!isprint(*str)) {
-	    *str = 'x';
+	str = (uint8_t *) name;
+	if (!isupper(*str)) {
+		if (islower(*str)) {
+			*str = toupper(*str);
+		}
+		else {
+			*str = 'X';
+		}
 	}
-    }
-    --str;
-    while (isspace(*str)) {
-	*str-- = '\0';
-    }
+	for (; *str; str++) {
+		if (!isprint(*str)) {
+			*str = 'x';
+		}
+	}
+	--str;
+	while (isspace(*str)) {
+		*str-- = '\0';
+	}
 }
 
 /* isalnum() depends on locale. */
-static int is_alpha_numeric(unsigned char c)
+static int32_t is_alpha_numeric(uint8_t c)
 {
-    if (c >= 'A' && c <= 'Z') return 1;
-    if (c >= 'a' && c <= 'z') return 1;
-    if (c >= '0' && c <= '9') return 1;
-    return 0;
+	if (c >= 'A' && c <= 'Z')
+		return 1;
+	if (c >= 'a' && c <= 'z')
+		return 1;
+	if (c >= '0' && c <= '9')
+		return 1;
+	return 0;
 }
 
-int Check_host_name(char *name)
+int32_t Check_host_name(int8_t *name)
 {
-    unsigned char *str;
+	uint8_t *str;
 
-    name[MAX_HOST_LEN - 1] = '\0';
-    str = (unsigned char *) name;
-    if (!is_alpha_numeric(*str)) {
-	return NAME_ERROR;
-    }
-    for (; *str; str++) {
+	name[MAX_HOST_LEN - 1] = '\0';
+	str = (uint8_t *) name;
 	if (!is_alpha_numeric(*str)) {
-	    if (*str == '.' || *str == '-') {
-		if (str[1] == '.' || str[1] == '-' || !str[1]) {
-		    return NAME_ERROR;
-		}
-	    }
-	    else {
 		return NAME_ERROR;
-	    }
 	}
-    }
-    return NAME_OK;
+	for (; *str; str++) {
+		if (!is_alpha_numeric(*str)) {
+			if (*str == '.' || *str == '-') {
+				if (str[1] == '.' || str[1] == '-' || !str[1]) {
+					return NAME_ERROR;
+				}
+			}
+			else {
+				return NAME_ERROR;
+			}
+		}
+	}
+	return NAME_OK;
 }
 
-void Fix_host_name(char *name)
+void Fix_host_name(int8_t *name)
 {
-    unsigned char *str;
+	uint8_t *str;
 
-    name[MAX_HOST_LEN - 1] = '\0';
-    str = (unsigned char *) name;
-    if (!is_alpha_numeric(*str)) {
-	strcpy(name, "xxx.xxx");
-	return;
-    }
-    for (; *str; str++) {
+	name[MAX_HOST_LEN - 1] = '\0';
+	str = (uint8_t *) name;
 	if (!is_alpha_numeric(*str)) {
-	    if (*str == '.' || *str == '-') {
-		if (str[1] == '.' || str[1] == '-' || !str[1]) {
-		    *str = 'x';
-		}
-	    }
-	    else {
-		*str = 'x';
-	    }
+		strcpy(name, "xxx.xxx");
+		return;
 	}
-    }
+	for (; *str; str++) {
+		if (!is_alpha_numeric(*str)) {
+			if (*str == '.' || *str == '-') {
+				if (str[1] == '.' || str[1] == '-' || !str[1]) {
+					*str = 'x';
+				}
+			}
+			else {
+				*str = 'x';
+			}
+		}
+	}
 }
 
 /*
  */
-int Check_disp_name(char *name)
+int32_t Check_disp_name(int8_t *name)
 {
-    unsigned char *str;
+	uint8_t *str;
 
-    name[MAX_NAME_LEN] = '\0';
-    str = (unsigned char *) name;
-    for (; *str; str++) {
-	if (!isgraph(*str)) {
-	    return NAME_ERROR;
+	name[MAX_NAME_LEN] = '\0';
+	str = (uint8_t *) name;
+	for (; *str; str++) {
+		if (!isgraph(*str)) {
+			return NAME_ERROR;
+		}
 	}
-    }
-    return NAME_OK;
+	return NAME_OK;
 }
 
-void Fix_disp_name(char *name)
+void Fix_disp_name(int8_t *name)
 {
-    unsigned char *str;
+	uint8_t *str;
 
-    name[MAX_NAME_LEN] = '\0';
-    str = (unsigned char *) name;
-    for (; *str; str++) {
-	if (!isgraph(*str)) {
-	    *str = 'x';
+	name[MAX_NAME_LEN] = '\0';
+	str = (uint8_t *) name;
+	for (; *str; str++) {
+		if (!isgraph(*str)) {
+			*str = 'x';
+		}
 	}
-    }
 }
 

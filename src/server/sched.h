@@ -1,8 +1,8 @@
-/* $Id: sched.h,v 1.2 2007/09/17 19:54:49 kps Exp $
+/* $Id: sched.h,v 1.5 2008/08/15 15:09:53 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -27,11 +27,11 @@
 
 void block_timer(void);
 void allow_timer(void);
-void setup_timer(int);
-void install_timeout(void (*func)(void *), int offset, void *arg);
-void remove_timeout(void (*func)(void *), void *arg);
-void install_input(void (*func)(int, void *), int fd, void *arg);
-void remove_input(int fd);
+void setup_timer(int32_t);
+void install_timeout(void(*func)(void *), int32_t offset, void *arg);
+void remove_timeout(void(*func)(void *), void *arg);
+void install_input(void(*func)(int32_t, void *), int32_t fd, void *arg);
+void remove_input(int32_t fd);
 void sched(void);
 void stop_sched(void);
 

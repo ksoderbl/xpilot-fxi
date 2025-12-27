@@ -1,8 +1,8 @@
-/* $Id: xpconfig.c,v 1.1.1.1 2007/05/20 21:59:10 kps Exp $
+/* $Id: xpconfig.c,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -23,6 +23,7 @@
  */
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -86,114 +87,127 @@
 #    define CONTACTADDRESS	"xpilot@xpilot.org"
 #endif
 
-
-char xpconfig_version[] = VERSION;
-
+int8_t xpconfig_version[] = VERSION;
 
 
+int8_t *Conf_contactaddress(void);
+int8_t *Conf_datadir(void);
+int8_t *Conf_defaults_file_name(void);
+int8_t *Conf_password_file_name(void);
+int8_t *Conf_mapdir(void);
+int8_t *Conf_default_map(void);
+int8_t *Conf_servermotdfile(void);
+int8_t *Conf_localmotdfile(void);
+int8_t *Conf_logfile(void);
+int8_t *Conf_ship_file(void);
+int8_t *Conf_localguru(void);
+int8_t *Conf_robotfile(void);
+int8_t *Conf_zcat_ext(void);
+int8_t *Conf_zcat_format(void);
 
-char *Conf_datadir(void)
+
+int8_t *Conf_datadir(void)
 {
-    static char conf[] = CONF_DATADIR;
+	static int8_t conf[] = CONF_DATADIR;
 
-    return conf;
+	return conf;
 }
 
-char *Conf_defaults_file_name(void)
+int8_t *Conf_defaults_file_name(void)
 {
-    static char conf[] = DEFAULTS_FILE_NAME;
+	static int8_t conf[] = DEFAULTS_FILE_NAME;
 
-    return conf;
+	return conf;
 }
 
-char *Conf_password_file_name(void)
+int8_t *Conf_password_file_name(void)
 {
-    static char conf[] = PASSWORD_FILE_NAME;
+	static int8_t conf[] = PASSWORD_FILE_NAME;
 
-    return conf;
+	return conf;
 }
 
-char *Conf_mapdir(void)
+int8_t *Conf_mapdir(void)
 {
-    static char conf[] = MAPDIR;
+	static int8_t conf[] = MAPDIR;
 
-    return conf;
+	return conf;
 }
 
-static char conf_default_map_string[] = DEFAULT_MAP;
+static int8_t conf_default_map_string[] = DEFAULT_MAP;
 
-char *Conf_default_map(void)
+int8_t *Conf_default_map(void)
 {
-    return conf_default_map_string;
+	return conf_default_map_string;
 }
 
-char *Conf_servermotdfile(void)
+int8_t *Conf_servermotdfile(void)
 {
-    static char conf[] = SERVERMOTDFILE;
-    static char env[] = "XPILOTSERVERMOTD";
-    char *filename;
+	static int8_t conf[] = SERVERMOTDFILE;
+	static int8_t env[] = "XPILOTSERVERMOTD";
+	int8_t *filename;
 
-    filename = getenv(env);
-    if (filename == NULL) {
-	filename = conf;
-    }
+	filename = getenv(env);
+	if (filename == NULL) {
+		filename = conf;
+	}
 
-    return filename;
+	return filename;
 }
 
-char *Conf_localmotdfile(void)
+int8_t *Conf_localmotdfile(void)
 {
-    static char conf[] = LOCALMOTDFILE;
+	static int8_t conf[] = LOCALMOTDFILE;
 
-    return conf;
+	return conf;
 }
 
-char conf_logfile_string[] = LOGFILE;
+int8_t conf_logfile_string[] = LOGFILE;
 
-char *Conf_logfile(void)
+int8_t *Conf_logfile(void)
 {
-    return conf_logfile_string;
+	return conf_logfile_string;
 }
 
 /* needed by client/default.c */
-char conf_ship_file_string[] = SHIP_FILE;
+int8_t conf_ship_file_string[] = SHIP_FILE;
 
-char *Conf_ship_file(void)
+int8_t *Conf_ship_file(void)
 {
-    return conf_ship_file_string;
+	return conf_ship_file_string;
 }
 
-char *Conf_localguru(void)
+int8_t *Conf_localguru(void)
 {
-    static char conf[] = LOCALGURU;
+	static int8_t conf[] = LOCALGURU;
 
-    return conf;
+	return conf;
 }
 
-char *Conf_contactaddress(void)
+int8_t *Conf_contactaddress(void)
 {
-    static char conf[] = CONTACTADDRESS;
+	static int8_t conf[] = CONTACTADDRESS;
 
-    return conf;
+	return conf;
 }
 
-static char conf_robotfile_string[] = ROBOTFILE;
+static int8_t conf_robotfile_string[] = ROBOTFILE;
 
-char *Conf_robotfile(void)
+int8_t *Conf_robotfile(void)
 {
-    return conf_robotfile_string;
+	return conf_robotfile_string;
 }
 
-char *Conf_zcat_ext(void)
+int8_t *Conf_zcat_ext(void)
 {
-    static char conf[] = ZCAT_EXT;
+	static int8_t conf[] = ZCAT_EXT;
 
-    return conf;
+	return conf;
 }
 
-char *Conf_zcat_format(void)
+int8_t *Conf_zcat_format(void)
 {
-    static char conf[] = ZCAT_FORMAT;
+	static int8_t conf[] = ZCAT_FORMAT;
 
-    return conf;
+	return conf;
 }

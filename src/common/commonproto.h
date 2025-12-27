@@ -1,8 +1,8 @@
-/* $Id: commonproto.h,v 1.1.1.1 2007/05/20 21:59:10 kps Exp $
+/* $Id: commonproto.h,v 1.4 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -25,34 +25,39 @@
 #ifndef	COMMONPROTO_H
 #define	COMMONPROTO_H
 
-#ifndef TYPES_H
-/* need DFLOAT */
 #include "types.h"
-#endif
+#include "config.h"
+
 
 /* randommt.c */
-extern void seedMT(unsigned int seed);
-extern unsigned int reloadMT(void);
-extern unsigned int randomMT(void);
+void seedMT(uint32_t seed);
+uint32_t reloadMT(void);
+uint32_t randomMT(void);
 
 /* math.c */
-extern double rfrac(void);
-extern int mod(int x, int y);
-extern void Make_table(void);
+double rfrac(void);
+int32_t mod(int32_t x, int32_t y);
+void Make_table(void);
 
 /* strdup.c */
-extern char *xp_strdup(const char *);
-extern char *xp_safe_strdup(const char *old_string);
+int8_t *xp_strdup(const int8_t *);
+int8_t *xp_safe_strdup(const int8_t *old_string);
 
 /* default.c */
-unsigned String_hash(const char *s);
+uint32_t String_hash(const int8_t *s);
 
-/* strlcpy.c */
-size_t strlcpy(char *dest, const char *src, size_t size);
-size_t strlcat(char *dest, const char *src, size_t size);
+/* strlcpy.c, unnecessary on FreeBSD */
+#if (!__BSD_VISIBLE)
+size_t strlcpy(int8_t *dest, const int8_t *src, size_t size);
+size_t strlcat(int8_t *dest, const int8_t *src, size_t size);
+#endif
+
+#if (!HAVE_STRINGS_H)
+int32_t strcasecmp(const int8_t *str1, const int8_t *str2);
+int32_t strncasecmp(const int8_t *str1, const int8_t *str2, size_t n);
+#endif
 
 /* xpmemory.c */
-
 void *xp_malloc(size_t size);
 void *xp_realloc(void *oldptr, size_t size);
 void *xp_calloc(size_t nmemb, size_t size);

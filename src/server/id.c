@@ -1,8 +1,8 @@
-/* $Id: id.c,v 1.2 2007/09/17 19:54:49 kps Exp $
+/* $Id: id.c,v 1.5 2008/08/15 15:09:53 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -33,69 +33,72 @@
 #include "proto.h"
 #include "error.h"
 
-char id_version[] = VERSION;
+int8_t id_version[] = VERSION;
 
-static int		ID_queue[NUM_IDS];
-static int		ID_inuse[NUM_IDS + 1];
-static int		ID_inited = 0;
-static unsigned		get_ID;
-static unsigned		put_ID;
+static int32_t ID_queue[NUM_IDS];
+static int32_t ID_inuse[NUM_IDS + 1];
+static int32_t ID_inited = 0;
+static uint32_t get_ID;
+static uint32_t put_ID;
 
 static void init_ID(void)
 {
-    int			i, id;
+	int32_t i, id;
 
-    if (ID_inited == 0) {
-	ID_inited = 1;
-	for (i = 0, id = 1; i < NUM_IDS; i++, id++) {
-	    ID_queue[i] = id;
-	    ID_inuse[id] = 0;
+	if (ID_inited == 0) {
+		ID_inited = 1;
+		for (i = 0, id = 1; i < NUM_IDS; i++, id++) {
+			ID_queue[i] = id;
+			ID_inuse[id] = 0;
+		}
+		get_ID = 0;
+		put_ID = NUM_IDS;
 	}
-	get_ID = 0;
-	put_ID = NUM_IDS;
-    }
-    if (put_ID - get_ID > NUM_IDS) {
-	error("ID queue corruption (%u,%u,%d)", get_ID, put_ID, NUM_IDS);
-	exit(1);
-    }
+	if (put_ID - get_ID > NUM_IDS) {
+		error("ID queue corruption (%u,%u,%d)", get_ID, put_ID, NUM_IDS);
+		exit(1);
+	}
 }
 
-int peek_ID(void)
+int32_t peek_ID(void)
 {
-    int			id;
+	int32_t id;
 
-    init_ID();
+	init_ID();
 
-    if (get_ID == put_ID) {
-	id = 0;
-    } else {
-	id = ID_queue[get_ID % NUM_IDS];
-    }
-    return id;
+	if (get_ID == put_ID) {
+		id = 0;
+	}
+	else {
+		id = ID_queue[get_ID % NUM_IDS];
+	}
+	return id;
 }
 
-int request_ID(void)
+int32_t request_ID(void)
 {
-    int			id;
+	int32_t id;
 
-    id = peek_ID();
-    if (id != 0) {
-	get_ID++;
-	ID_inuse[id] = 1;
-    }
+	id = peek_ID();
+	if (id != 0) {
+		get_ID++;
+		ID_inuse[id] = 1;
+	}
 
-    return id;
+	return id;
 }
 
-void release_ID(int id)
+void release_ID(int32_t id)
 {
-    init_ID();
+	init_ID();
 
-    if (put_ID - get_ID == NUM_IDS || id <= 0 || id > NUM_IDS || ID_inuse[id] != 1) {
-	error("Illegal ID (%u,%u,%d,%d)", get_ID, put_ID, id, ID_inuse[id % (NUM_IDS + 1)]);
-	exit(1);
-    }
-    ID_queue[put_ID++ % NUM_IDS] = id;
-    ID_inuse[id] = 0;
+	if (put_ID - get_ID == NUM_IDS || id <= 0 || id > NUM_IDS
+			|| ID_inuse[id] != 1) {
+		error("Illegal ID (%u,%u,%d,%d)", get_ID, put_ID, id,
+				ID_inuse[id % (NUM_IDS + 1)]);
+		exit(1);
+	}
+	ID_queue[put_ID++ % NUM_IDS] = id;
+	ID_inuse[id] = 0;
 }
 

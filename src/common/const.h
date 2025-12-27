@@ -1,8 +1,8 @@
-/* $Id: const.h,v 1.2 2007/09/11 19:20:28 kps Exp $
+/* $Id: const.h,v 1.5 2008/08/15 15:09:52 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -54,13 +54,13 @@
 #   endif
 #endif
 #ifndef	RAND_MAX
-    /*
-     * Ough!  If this is possible then we shouldn't be using RAND_MAX!
-     * Older systems which don't have RAND_MAX likely should have it
-     * to be defined as 32767, not as INT_MAX!
-     * We better get our own pseudo-random library to overcome this mess
-     * and get a uniform solution for everything.
-     */
+/*
+ * Ough!  If this is possible then we shouldn't be using RAND_MAX!
+ * Older systems which don't have RAND_MAX likely should have it
+ * to be defined as 32767, not as INT_MAX!
+ * We better get our own pseudo-random library to overcome this mess
+ * and get a uniform solution for everything.
+ */
 #   define  RAND_MAX	INT_MAX
 #endif
 
@@ -85,27 +85,27 @@
 
 #define TABLE_SIZE	RES
 
-extern DFLOAT		tbl_sin[];
-extern DFLOAT		tbl_cos[];
+extern DFLOAT tbl_sin[];
+extern DFLOAT tbl_cos[];
 
 #if 0
-  /* The way it was: one table, and always range checking. */
+/* The way it was: one table, and always range checking. */
 # define tsin(x)	(tbl_sin[MOD2(x, TABLE_SIZE)])
 # define tcos(x)	(tbl_sin[MOD2((x)+TABLE_SIZE/4, TABLE_SIZE)])
 #else
 # if 0
-   /* Range checking: find out where the table size is exceeded. */
+/* Range checking: find out where the table size is exceeded. */
 #  define CHK2(x, m)	((MOD2(x, m) != x) ? (printf("MOD %s:%d:%s\n", __FILE__, __LINE__, #x), MOD2(x, m)) : (x))
 # else
-   /* No range checking. */
+/* No range checking. */
 #  define CHK2(x, m)	(x)
 # endif
-  /* New table lookup with optional range checking and no extra calculations. */
+/* New table lookup with optional range checking and no extra calculations. */
 # define tsin(x)	(tbl_sin[CHK2(x, TABLE_SIZE)])
 # define tcos(x)	(tbl_cos[CHK2(x, TABLE_SIZE)])
 #endif
 
-#define NELEM(a)	((int)(sizeof(a) / sizeof((a)[0])))
+#define NELEM(a)	((int32_t)(sizeof(a) / sizeof((a)[0])))
 
 #undef ABS
 #define ABS(x)			( (x)<0 ? -(x) : (x) )

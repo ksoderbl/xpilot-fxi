@@ -1,8 +1,8 @@
-/* $Id: error.h,v 1.1.1.1 2007/05/20 21:59:10 kps Exp $
+/* $Id: error.h,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -35,20 +35,21 @@
 #define	ERROR_H
 
 #include <stdio.h>
+#include <stdint.h>
 #include <errno.h>
 
 # if (defined(__STDC__) && !defined(__sun__) || defined(__cplusplus) || defined(_WINDOWS))
 #  include <stdarg.h>
-    extern void warn(const char *fmt, ...);
-    extern void error(const char *fmt, ...);
-    extern void fatal(const char *fmt, ...);
-    extern void dumpcore(const char *fmt, ...);
+extern void warn(const int8_t *fmt, ...);
+extern void error(const int8_t *fmt, ...);
+extern void fatal(const int8_t *fmt, ...);
+extern void dumpcore(const int8_t *fmt, ...);
 # else
 #  include <varargs.h>
-    extern void warn();
-    extern void error();
-    extern void fatal();
-    extern void dumpcore();
+extern void warn();
+extern void error();
+extern void fatal();
+extern void dumpcore();
 # endif
 
 #ifdef _WINDOWS
@@ -59,6 +60,6 @@
 # endif
 #endif
 
-extern void init_error(const char *prog);
+extern void init_error(const int8_t *prog);
 
 #endif	/* ERROR_H */

@@ -1,8 +1,8 @@
-/* $Id: serverconst.h,v 1.3 2007/09/17 19:54:49 kps Exp $
+/* $Id: serverconst.h,v 1.7 2008/08/15 15:09:53 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -25,10 +25,7 @@
 #ifndef SERVERCONST_H
 #define SERVERCONST_H
 
-#ifndef CONST_H
 #include "const.h"
-#endif
-
 
 /*
  * Two macros for edge wrap of x and y coordinates measured in pixels.
@@ -97,9 +94,8 @@
 		    : (dy))) \
 	    : (dy))
 
-
-#define PSEUDO_TEAM(i,j)\
-	(Players[(i)]->pseudo_team == Players[(j)]->pseudo_team)
+#define PSEUDO_TEAM(pl1, pl2)\
+	((pl1)->pseudo_team == (pl2)->pseudo_team)
 
 /*
  * Used where we wish to know if a player is simply on the same team.
@@ -109,17 +105,16 @@
 	|| (BIT(World.rules->mode, TEAM_PLAY)				\
 	   && (Players[i]->team == Players[j]->team)			\
 	   && (Players[i]->team != TEAM_NOT_SET))) */
-#define TEAM(i, j) \
+#define TEAM(pl1, pl2) \
 	(BIT(World.rules->mode, TEAM_PLAY) \
-	&& (Players[i]->team == Players[j]->team) \
-	&& (Players[i]->team != TEAM_NOT_SET))
+	&& ((pl1)->team == (pl2)->team) \
+	&& ((pl1)->team != NULL))
 
 /*
  * Used where we wish to know if a player is on the same team
  * and has immunity to shots, thrust sparks, lasers, ecms, etc.
  */
-#define TEAM_IMMUNE(i, j)	(teamImmunity && TEAM(i, j))
-
+#define TEAM_IMMUNE(pl1, pl2)	(teamImmunity && TEAM(pl1, pl2))
 
 #define RECOVERY_DELAY		(intGameSpeed*3)
 #define ROBOT_CREATE_DELAY	(intGameSpeed*2)
@@ -143,7 +138,6 @@
  (((f)*((MAX_AFTERBURNER+1)+(n)*(ALT_FUEL_FACT-1)))/(MAX_AFTERBURNER+1.0))
 
 #define THRUST_MASS             0.7
-
 
 #define MAX_TANKS               8
 #define TANK_MASS               (ShipMass/10)

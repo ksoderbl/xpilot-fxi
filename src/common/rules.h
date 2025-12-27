@@ -1,8 +1,8 @@
-/* $Id: rules.h,v 1.2 2007/12/06 15:11:17 kps Exp $
+/* $Id: rules.h,v 1.5 2008/08/15 15:09:52 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -57,7 +57,9 @@
 
 #define KILLED			(1L<<10)
 #define CONFUSED		(1L<<14)
-#define RECREATE		(1L<<17)	/* Recreate ball */
+
+#define IS_ATTACHED		(1L<<16)	/* Ball was stolen from its box */
+//#define RECREATE		(1L<<17)	/* Ball should be recreated, after it's been destroyed */
 #define FROMBOUNCE		(1L<<18)	/* Spark from wall bounce */
 #define OWNERIMMUNE		(1L<<19)	/* Owner is immune to object */
 #define REPROGRAM		(1L<<20)	/* Player reprogramming */
@@ -65,8 +67,8 @@
 #define COLLISIONSHOVE		(1L<<22)	/* Collision counts as shove */
 
 typedef struct {
-    int		lives;
-    long	mode;
+	int32_t lives;
+	int32_t mode;
 } rules_t;
 
 #endif

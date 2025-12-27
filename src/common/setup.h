@@ -1,8 +1,8 @@
-/* $Id: setup.h,v 1.1.1.1 2007/05/20 21:59:11 kps Exp $
+/* $Id: setup.h,v 1.4 2008/08/15 15:09:52 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -113,20 +113,20 @@
  * Structure defining the server configuration, including the map layout.
  */
 typedef struct {
-    long		setup_size;		/* size including map data */
-    long		map_data_len;		/* num. compressed map bytes */
-    long		mode;			/* playing mode */
-    short		lives;			/* max. number of lives */
-    short		x;			/* width in blocks */
-    short		y;			/* height in blocks */
-    short		width;			/* width in pixels */
-    short		height;			/* height in pixels */
-    short		frames_per_second;	/* FPS */
-    short		map_order;		/* row major or col major */
-    char		name[MAX_CHARS];	/* name of map */
-    char		author[MAX_CHARS];	/* name of author of map */
-    unsigned char	map_data[4];		/* compressed map data */
-    /* plus more mapdata here (HACK) */
+	int32_t setup_size; /* size including map data */
+	int32_t map_data_len; /* num. compressed map bytes */
+	int32_t mode; /* playing mode */
+	int16_t lives; /* max. number of lives */
+	int16_t x; /* width in blocks */
+	int16_t y; /* height in blocks */
+	int16_t width; /* width in pixels */
+	int16_t height; /* height in pixels */
+	int16_t frames_per_second; /* FPS */
+	int16_t map_order; /* row major or col major */
+	int8_t name[MAX_CHARS]; /* name of map */
+	int8_t author[MAX_CHARS]; /* name of author of map */
+	uint8_t map_data[4]; /* compressed map data */
+/* plus more mapdata here (HACK) */
 } setup_t;
 
 #ifndef NETSERVER_C

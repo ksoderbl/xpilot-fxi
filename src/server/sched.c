@@ -1,8 +1,8 @@
-/* $Id: sched.c,v 1.3 2007/10/14 22:14:44 kps Exp $
+/* $Id: sched.c,v 1.6 2008/08/15 15:09:53 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -43,44 +43,40 @@
 #include "server.h"
 #include "portability.h"
 
-char sched_version[] = VERSION;
+int8_t sched_version[] = VERSION;
 
-int sched_running = false;
+int32_t sched_running = false;
 
-
-volatile long	timer_ticks;	/* SIGALRMs that have occurred */
+volatile int32_t timer_ticks; /* SIGALRMs that have occurred */
 #if 0
-static long		timers_used;	/* SIGALRMs that have been used */
-static long		timer_freq;	/* rate at which timer ticks. (in FPS) */
-static void		(*timer_handler)(void);
-static time_t		current_time;
+static int32_t timers_used; /* SIGALRMs that have been used */
+static int32_t timer_freq; /* rate at which timer ticks. (in FPS) */
+static void (*timer_handler)(void);
+static time_t current_time;
 #endif
-typedef	int		FDTYPE;
+typedef int32_t FDTYPE;
 //static double sched_times[1000];
-//static int counter = 0;
+//static int32_t counter = 0;
 static struct sigaction act;
-
 
 static inline double timeval_to_seconds(struct timeval tv)
 {
-    return ((double)tv.tv_sec)/1000 + tv.tv_usec * 1e-3;
+	return ((double) tv.tv_sec) / 1000 + tv.tv_usec * 1e-3;
 }
-
-
 
 /*
  * Block or unblock a single signal.
  */
-static void sig_ok(int signum, int flag)
+static void sig_ok(int32_t signum, int32_t flag)
 {
-    sigset_t    sigset;
+	sigset_t sigset;
 
-    sigemptyset(&sigset);
-    sigaddset(&sigset, signum);
-    if (sigprocmask((flag) ? SIG_UNBLOCK : SIG_BLOCK, &sigset, NULL) == -1) {
-	error("sigprocmask(%d,%d)", signum, flag);
-	exit(1);
-    }
+	sigemptyset(&sigset);
+	sigaddset(&sigset, signum);
+	if (sigprocmask((flag) ? SIG_UNBLOCK : SIG_BLOCK, &sigset, NULL) == -1) {
+		error("sigprocmask(%d,%d)", signum, flag);
+		exit(1);
+	}
 }
 
 /*
@@ -89,7 +85,7 @@ static void sig_ok(int signum, int flag)
  */
 void block_timer(void)
 {
-    sig_ok(SIGALRM, 0);
+	sig_ok(SIGALRM, 0);
 }
 
 /*
@@ -98,186 +94,179 @@ void block_timer(void)
  */
 void allow_timer(void)
 {
-    sig_ok(SIGALRM, 1);
+	sig_ok(SIGALRM, 1);
 }
-
 
 /*
  * Setup the handling of the SIGALRM signal
  * and setup the real-time interval timer.
  */
-void setup_timer(int timer_freq)
+void setup_timer(int32_t timer_freq)
 {
 
-    struct itimerval itv;
+	struct itimerval itv;
 
-    /*
-     * Prevent SIGALRMs from disturbing the initialization.
-     */
-    block_timer();
+	/*
+	 * Prevent SIGALRMs from disturbing the initialization.
+	 */
+	block_timer();
 
-    /*
-     * Install a signal handler for the alarm signal.
-     */
-    act.sa_handler = Main_loop;
-    act.sa_flags = 0;
-    sigemptyset(&act.sa_mask);
-    sigaddset(&act.sa_mask, SIGALRM);
-    if (sigaction(SIGALRM, &act, (struct sigaction *)NULL) == -1) {
-	error("sigaction SIGALRM");
-	exit(1);
-    }
+	/*
+	 * Install a signal handler for the alarm signal.
+	 */
+	act.sa_handler = Main_loop;
+	act.sa_flags = 0;
+	sigemptyset(&act.sa_mask);
+	sigaddset(&act.sa_mask, SIGALRM);
+	if (sigaction(SIGALRM, &act, (struct sigaction *) NULL) == -1) {
+		error("sigaction SIGALRM");
+		exit(1);
+	}
 
-    /*
-     * Install a real-time timer.
-     */
-    if (timer_freq <= 0 || timer_freq > 100) {
-	error("illegal timer frequency: %ld", timer_freq);
-	exit(1);
-    }
+	/*
+	 * Install a real-time timer.
+	 */
+	if (timer_freq <= 0 || timer_freq > 100) {
+		error("illegal timer frequency: %ld", timer_freq);
+		exit(1);
+	}
 
-    itv.it_interval.tv_sec = 0;
-    itv.it_interval.tv_usec = 1000000 / timer_freq;
-    itv.it_value = itv.it_interval;
-    if (setitimer(ITIMER_REAL, &itv, NULL) == -1) {
-	error("setitimer");
-	exit(1);
-    }
+	itv.it_interval.tv_sec = 0;
+	itv.it_interval.tv_usec = 1000000 / timer_freq;
+	itv.it_value = itv.it_interval;
+	if (setitimer(ITIMER_REAL, &itv, NULL) == -1) {
+		error("setitimer");
+		exit(1);
+	}
 
-
-    /*
-     * Allow the real-time timer to generate SIGALRM signals.
-     */
-    allow_timer();
+	/*
+	 * Allow the real-time timer to generate SIGALRM signals.
+	 */
+	allow_timer();
 }
 
-
-
-#define NUM_SELECT_FD		((int)sizeof(int) * 8)
+#define NUM_SELECT_FD		((int32_t)sizeof(int32_t) * 8)
 
 struct io_handler {
-    int			fd;
-    void		(*func)(int, void *);
-    void		*arg;
+	int32_t fd;
+	void (*func)(int32_t, void *);
+	void *arg;
 };
 
-static struct io_handler	input_handlers[NUM_SELECT_FD];
-static fd_set			input_mask;
-static int			max_fd, min_fd;
-static int			input_inited = false;
+static struct io_handler input_handlers[NUM_SELECT_FD];
+static fd_set input_mask;
+static int32_t max_fd, min_fd;
+static int32_t input_inited = false;
 
-static void io_dummy(int fd, void *arg)
+static void io_dummy(int32_t fd, void *arg)
 {
-    xpprintf("io_dummy called!  (%d, %p)\n", fd, arg);
+	xpprintf("io_dummy called!  (%d, %p)\n", fd, arg);
 }
 
-void install_input(void (*func)(int, void *), int fd, void *arg)
+void install_input(void(*func)(int32_t, void *), int32_t fd, void *arg)
 {
-    int i;
+	int32_t i;
 
-    if (input_inited == false) {
-	input_inited = true;
-	FD_ZERO(&input_mask);
-	min_fd = fd;
-	max_fd = fd;
-	for (i = 0; i < NELEM(input_handlers); i++) {
-	    input_handlers[i].fd = -1;
-	    input_handlers[i].func = io_dummy;
-	    input_handlers[i].arg = 0;
-	}
-    }
-    if (fd < min_fd || fd >= min_fd + NUM_SELECT_FD) {
-	error("install illegal input handler fd %d (%d)", fd, min_fd);
-	ServerExit();
-    }
-    if (FD_ISSET(fd, &input_mask)) {
-	error("input handler %d busy", fd);
-	ServerExit();
-    }
-    input_handlers[fd - min_fd].fd = fd;
-    input_handlers[fd - min_fd].func = func;
-    input_handlers[fd - min_fd].arg = arg;
-    FD_SET(fd, &input_mask);
-    if (fd > max_fd) {
-	max_fd = fd;
-    }
-}
-
-void remove_input(int fd)
-{
-    if (fd < min_fd || fd >= min_fd + NUM_SELECT_FD) {
-	error("remove illegal input handler fd %d (%d)", fd, min_fd);
-	ServerExit();
-    }
-    if (FD_ISSET(fd, &input_mask)) {
-	input_handlers[fd - min_fd].fd = -1;
-	input_handlers[fd - min_fd].func = io_dummy;
-	input_handlers[fd - min_fd].arg = 0;
-	FD_CLR((FDTYPE)fd, &input_mask);
-	if (fd == max_fd) {
-	    int i = fd;
-	    max_fd = -1;
-	    while (--i >= min_fd) {
-		if (FD_ISSET(i, &input_mask)) {
-		    max_fd = i;
-		    break;
+	if (input_inited == false) {
+		input_inited = true;
+		FD_ZERO(&input_mask);
+		min_fd = fd;
+		max_fd = fd;
+		for (i = 0; i < NELEM(input_handlers); i++) {
+			input_handlers[i].fd = -1;
+			input_handlers[i].func = io_dummy;
+			input_handlers[i].arg = 0;
 		}
-	    }
 	}
-    }
+	if (fd < min_fd || fd >= min_fd + NUM_SELECT_FD) {
+		error("install illegal input handler fd %d (%d)", fd, min_fd);
+		ServerExit();
+	}
+	if (FD_ISSET(fd, &input_mask)) {
+		error("input handler %d busy", fd);
+		ServerExit();
+	}
+	input_handlers[fd - min_fd].fd = fd;
+	input_handlers[fd - min_fd].func = func;
+	input_handlers[fd - min_fd].arg = arg;
+	FD_SET(fd, &input_mask);
+	if (fd > max_fd) {
+		max_fd = fd;
+	}
 }
 
+void remove_input(int32_t fd)
+{
+	if (fd < min_fd || fd >= min_fd + NUM_SELECT_FD) {
+		error("remove illegal input handler fd %d (%d)", fd, min_fd);
+		ServerExit();
+	}
+	if (FD_ISSET(fd, &input_mask)) {
+		input_handlers[fd - min_fd].fd = -1;
+		input_handlers[fd - min_fd].func = io_dummy;
+		input_handlers[fd - min_fd].arg = 0;
+		FD_CLR((FDTYPE)fd, &input_mask);
+		if (fd == max_fd) {
+			int32_t i = fd;
+			max_fd = -1;
+			while (--i >= min_fd) {
+				if (FD_ISSET(i, &input_mask)) {
+					max_fd = i;
+					break;
+				}
+			}
+		}
+	}
+}
 
 void stop_sched(void)
 {
-    sched_running = 0;
+	sched_running = 0;
 }
-
-
 
 void sched(void)
 {
-    int			i, n;
-    struct timeval	tv /*, *tvp = &tv, tv1*/;
-    fd_set readmask;
-    if (sched_running) {
-	error("sched already running");
-	exit(1);
-    }
-
-    sched_running = 1;
-    
-    while (sched_running) {
-      tv.tv_sec = 0;
-      tv.tv_usec = 0;
-      
-      /*
-      gettimeofday(&tv1, NULL);
-      sched_times[counter] = timeval_to_seconds(tv1);
-      counter++;
-      if (counter > 600){
-	int i;
-	for (i = 0; i < 600; i++){
-	  printf("%e\n",sched_times[i]);
-	  
+	int32_t i, n;
+	struct timeval tv /*, *tvp = &tv, tv1*/;
+	fd_set readmask;
+	if (sched_running) {
+		error("sched already running");
+		exit(1);
 	}
-	exit(1);
-      }
-      */
 
-      readmask = input_mask;
-      n = select(max_fd + 1, &readmask, 0, 0, NULL);
-      if (n != -1){
-	sigprocmask(SIG_BLOCK, &act.sa_mask, NULL);
-	for (i = max_fd; i >= min_fd; i--) {
-	  if (FD_ISSET(i, &readmask)) {
-	    struct io_handler *ioh;
-	    ioh = &input_handlers[i - min_fd];
-	    (*(ioh->func))(ioh->fd, ioh->arg);
-	  }
+	sched_running = 1;
+
+	while (sched_running) {
+		tv.tv_sec = 0;
+		tv.tv_usec = 0;
+
+		/*
+		 gettimeofday(&tv1, NULL);
+		 sched_times[counter] = timeval_to_seconds(tv1);
+		 counter++;
+		 if (counter > 600){
+		 int32_t i;
+		 for (i = 0; i < 600; i++){
+		 printf("%e\n",sched_times[i]);
+
+		 }
+		 exit(1);
+		 }
+		 */
+
+		readmask = input_mask;
+		n = select(max_fd + 1, &readmask, 0, 0, NULL);
+		if (n != -1) {
+			sigprocmask(SIG_BLOCK, &act.sa_mask, NULL);
+			for (i = max_fd; i >= min_fd; i--) {
+				if (FD_ISSET(i, &readmask)) {
+					struct io_handler *ioh;
+					ioh = &input_handlers[i - min_fd];
+					(*(ioh->func))(ioh->fd, ioh->arg);
+				}
+			}
+			sigprocmask(SIG_UNBLOCK, &act.sa_mask, NULL);
+		}
 	}
-	sigprocmask(SIG_UNBLOCK, &act.sa_mask, NULL);
-      }
-    }
 }
 

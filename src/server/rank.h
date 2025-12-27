@@ -10,34 +10,34 @@
 #include "global.h"
 
 /* #include "version.h"
-#include "config.h"
-#include "const.h"
-#include "global.h"
-#include "proto.h"
-#include "map.h"
-#include "object.h"
-#include "objpos.h"
-*/
+ #include "config.h"
+ #include "const.h"
+ #include "global.h"
+ #include "proto.h"
+ #include "map.h"
+ #include "object.h"
+ #include "objpos.h"
+ */
 
 typedef struct ranknode {
 
-    char name[MAX_NAME_LEN];
-    char user[MAX_NAME_LEN];
-    char host[MAX_HOST_LEN];
+	int8_t name[MAX_NAME_LEN];
+	int8_t user[MAX_NAME_LEN];
+	int8_t host[MAX_HOST_LEN];
 
-    time_t timestamp;
+	time_t timestamp;
 
-    int kills, deaths;
-    int rounds, shots;
-    int ballsCashed, ballsSaved;
-    int ballsWon, ballsLost;
-    int bestball;
-    int score;
-    player_t *pl;
+	int32_t kills, deaths;
+	int32_t rounds, shots;
+	int32_t ballsCashed, ballsSaved;
+	int32_t ballsWon, ballsLost;
+	int32_t bestball;
+	int32_t score;
+	player_t *pl;
 } ranknode_t;
 
-bool Rank_get_stats(const char *name, char *buf);
-ranknode_t *Rank_get_by_name(const char *name);
+bool Rank_get_stats(const int8_t *name, int8_t *buf);
+ranknode_t *Rank_get_by_name(const int8_t *name);
 void Rank_init_saved_scores(void);
 void Rank_get_saved_score(player_t *pl);
 void Rank_save_score(player_t *pl);
@@ -47,101 +47,97 @@ void Rank_show_ranks(void);
 
 /* static routines from rank.h + player.h in ng47pre */
 
-
-static inline void Player_add_score(player_t *pl, int points)
+static inline void Player_add_score(player_t *pl, int32_t points)
 {
-    pl->score += points;
-    pl->update_score = true;
-    updateScores = true;
+	pl->score += points;
+	pl->update_score = true;
+	updateScores = true;
 }
 
-static inline void Player_set_score(player_t *pl, int points)
+static inline void Player_set_score(player_t *pl, int32_t points)
 {
-    pl->score = points;
-    pl->update_score = true;
-    updateScores = true;
+	pl->score = points;
+	pl->update_score = true;
+	updateScores = true;
 }
 
-static inline void Rank_add_score(player_t *pl, int points)
+static inline void Rank_add_score(player_t *pl, int32_t points)
 {
-    if (pl->rank)
-        pl->rank->score += points;
+	if (pl->rank)
+		pl->rank->score += points;
 }
 
-static inline void Rank_set_score(int ind, int points)
+static inline void Rank_set_score(int32_t ind, int32_t points)
 {
-    player_t *pl = Players[ind];
-    pl->score = points;
-    pl->update_score = true;
-    if (pl->rank)
-        pl->rank->score = points;
+	player_t *pl = Players[ind];
+	pl->score = points;
+	pl->update_score = true;
+	if (pl->rank)
+		pl->rank->score = points;
 }
 
 static inline void Rank_fire_shot(player_t *pl)
 {
-    pl->shots++;
-    if (pl->rank)
-        pl->rank->shots++;
+	pl->shots++;
+	if (pl->rank)
+		pl->rank->shots++;
 }
 
 static inline void Rank_add_kill(player_t *pl)
 {
-    pl->kills++;
-    if (pl->rank)
-        pl->rank->kills++;
+	pl->kills++;
+	if (pl->rank)
+		pl->rank->kills++;
 }
 
 static inline void Rank_add_death(player_t *pl)
 {
-    pl->deaths++;
-    if (pl->rank)
-        pl->rank->deaths++;
+	pl->deaths++;
+	if (pl->rank)
+		pl->rank->deaths++;
 }
 
 static inline void Rank_add_round(player_t *pl)
 {
-    if (pl->rank)
-	pl->rank->rounds++;
+	if (pl->rank)
+		pl->rank->rounds++;
 }
 
 static inline void Rank_cashed_ball(player_t *pl)
 {
-    if (pl->rank)
-        pl->rank->ballsCashed++; 
+	if (pl->rank)
+		pl->rank->ballsCashed++;
 }
 
 static inline void Rank_saved_ball(player_t *pl)
 {
-    if (pl->rank)
-        pl->rank->ballsSaved++;
+	if (pl->rank)
+		pl->rank->ballsSaved++;
 }
 
 static inline void Rank_won_ball(player_t *pl)
 {
-    if (pl->rank)
-        pl->rank->ballsWon++;
+	if (pl->rank)
+		pl->rank->ballsWon++;
 }
 
 static inline void Rank_lost_ball(player_t *pl)
 {
-    if (pl->rank)
-        pl->rank->ballsLost++;
+	if (pl->rank)
+		pl->rank->ballsLost++;
 }
 
-static inline void Rank_ballrun(player_t *pl, int tim)
+static inline void Rank_ballrun(player_t *pl, int32_t tim)
 {
-    if (pl->rank) {
-        if (pl->rank->bestball == 0 || tim < pl->rank->bestball)
-            pl->rank->bestball = tim;
-    }
+	if (pl->rank) {
+		if (pl->rank->bestball == 0 || tim < pl->rank->bestball)
+			pl->rank->bestball = tim;
+	}
 }
 
-
-
-static inline int Rank_get_best_ballrun(player_t *pl)
+static inline int32_t Rank_get_best_ballrun(player_t *pl)
 {
-    return pl->rank ? pl->rank->bestball : 0;
+	return pl->rank ? pl->rank->bestball : 0;
 }
-
 
 #endif

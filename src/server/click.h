@@ -1,8 +1,8 @@
-/* $Id: click.h,v 1.2 2007/09/17 19:54:49 kps Exp $
+/* $Id: click.h,v 1.5 2008/08/15 15:09:52 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -38,11 +38,11 @@
 #define CLICK			(1 << CLICK_SHIFT)
 #define PIXEL_CLICKS		CLICK
 #define BLOCK_CLICKS		(BLOCK_SZ << CLICK_SHIFT)
-#define CLICK_TO_PIXEL(C)	((int)((C) >> CLICK_SHIFT))
-#define CLICK_TO_BLOCK(C)	((int)((C) / (BLOCK_SZ << CLICK_SHIFT)))
+#define CLICK_TO_PIXEL(C)	((int32_t)((C) >> CLICK_SHIFT))
+#define CLICK_TO_BLOCK(C)	((int32_t)((C) / (BLOCK_SZ << CLICK_SHIFT)))
 #define CLICK_TO_FLOAT(C)	((DFLOAT)(C) * (1.0f / CLICK))
 #define PIXEL_TO_CLICK(I)	((click_t)(I) << CLICK_SHIFT)
-#define FLOAT_TO_CLICK(F)	((int)((F) * CLICK))
+#define FLOAT_TO_CLICK(F)	((int32_t)((F) * CLICK))
 
 /*
  * Two acros for edge wrap of x and y coordinates measured in clicks.
@@ -66,14 +66,14 @@
 		    : (y_))) \
 	    : (y_))
 
-typedef int click_t;
+typedef int32_t click_t;
 
 typedef struct {
-    click_t		cx, cy;
+	click_t cx, cy;
 } clpos_t;
 
 typedef struct {
-    click_t		cx, cy;
+	click_t cx, cy;
 } clvec_t;
 
 #endif

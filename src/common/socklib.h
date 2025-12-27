@@ -14,7 +14,7 @@
  *
  * This software is provided "as is" without any express or implied warranty.
  *
- * RCS:      $Id: socklib.h,v 1.1.1.1 2007/05/20 21:59:12 kps Exp $
+ * RCS:      $Id: socklib.h,v 1.3 2008/08/05 19:02:04 rotunda_pk Exp $
  *
  * Revision 1.1.1.1  1992/05/11  12:32:34  bjoerns
  * XPilot v1.0
@@ -44,52 +44,48 @@
 #define SL_ETIMEOUT		11	/* Timeout */
 #define SL_EADDR		12	/* Invalid dotted decimal address */
 
-extern int
-    sl_errno,
-    sl_timeout_s,
-    sl_timeout_us,
-    sl_default_retries,
-    sl_broadcast_enabled;
+extern int32_t sl_errno, sl_timeout_s, sl_timeout_us, sl_default_retries,
+		sl_broadcast_enabled;
 
-extern void	SetTimeout(int, int);
-extern int	CreateServerSocket(int);
-extern int	GetPortNum(int);
-extern char	*GetSockAddr(int);
-extern int	GetRemoteHostName(int, char *, int);
-extern int	CreateClientSocket(char *, int);
-extern int	CreateClientSocketNonBlocking(char *, int);
-extern int	SocketAccept(int);
-extern int	SocketLinger(int);
-extern int	SetSocketReceiveBufferSize(int, int);
-extern int	SetSocketSendBufferSize(int, int);
-extern int	SetSocketNoDelay(int, int);
-extern int	SetSocketNonBlocking(int, int);
-extern int	SetSocketBroadcast(int, int);
-extern int	GetSocketError(int);
-extern int	SocketReadable(int);
-extern int	SocketRead(int, char *, int);
-extern int	SocketWrite(int, char *, int);
-extern int	SocketClose(int);
-extern int	CreateDgramSocket(int);
-extern int	CreateDgramAddrSocket(char *, int);
-extern int	DgramBind(int fd, char *dotaddr, int port);
-extern int	DgramConnect(int, char *, int);
-extern int	DgramSend(int, char *, int, char *, int);
-extern int	DgramReceiveAny(int, char *, int);
-extern int	DgramReceive(int, char *, char *, int);
-extern int	DgramReply(int, char *, int);
-extern int	DgramRead(int fd, char *rbuf, int size);
-extern int	DgramWrite(int fd, char *wbuf, int size);
-extern int	DgramSendRec(int, char *, int, char *, int, char *, int);
-extern char	*DgramLastaddr(void);
-extern char	*DgramLastname(void);
-extern int	DgramLastport(void);
-extern void	DgramClose(int);
-extern unsigned long GetInetAddr(char *name);
-extern void	GetLocalHostName(char *name, unsigned size,
-				 int search_domain_for_xpilot);
-extern char	*GetAddrByName(const char *name);
-extern int	GetNameByAddr(const char *addr, char *name, int size);
+extern void SetTimeout(int32_t, int32_t);
+extern int32_t CreateServerSocket(int32_t);
+extern int32_t GetPortNum(int32_t);
+extern int8_t *GetSockAddr(int32_t);
+extern int32_t GetRemoteHostName(int32_t, int8_t *, int32_t);
+extern int32_t CreateClientSocket(int8_t *, int32_t);
+extern int32_t CreateClientSocketNonBlocking(int8_t *, int32_t);
+extern int32_t SocketAccept(int32_t);
+extern int32_t SocketLinger(int32_t);
+extern int32_t SetSocketReceiveBufferSize(int32_t, int32_t);
+extern int32_t SetSocketSendBufferSize(int32_t, int32_t);
+extern int32_t SetSocketNoDelay(int32_t, int32_t);
+extern int32_t SetSocketNonBlocking(int32_t, int32_t);
+extern int32_t SetSocketBroadcast(int32_t, int32_t);
+extern int32_t GetSocketError(int32_t);
+extern int32_t SocketReadable(int32_t);
+extern int32_t SocketRead(int32_t, int8_t *, int32_t);
+extern int32_t SocketWrite(int32_t, int8_t *, int32_t);
+extern int32_t SocketClose(int32_t);
+extern int32_t CreateDgramSocket(int32_t);
+extern int32_t CreateDgramAddrSocket(int8_t *, int32_t);
+extern int32_t DgramBind(int32_t fd, int8_t *dotaddr, int32_t port);
+extern int32_t DgramConnect(int32_t, int8_t *, int32_t);
+extern int32_t DgramSend(int32_t, int8_t *, int32_t, int8_t *, int32_t);
+extern int32_t DgramReceiveAny(int32_t, int8_t *, int32_t);
+extern int32_t DgramReceive(int32_t, int8_t *, int8_t *, int32_t);
+extern int32_t DgramReply(int32_t, int8_t *, int32_t);
+extern int32_t DgramRead(int32_t fd, int8_t *rbuf, int32_t size);
+extern int32_t DgramWrite(int32_t fd, int8_t *wbuf, int32_t size);
+extern int32_t DgramSendRec(int32_t, int8_t *, int32_t, int8_t *, int32_t, int8_t *, int32_t);
+extern int8_t *DgramLastaddr(void);
+extern int8_t *DgramLastname(void);
+extern int32_t DgramLastport(void);
+extern void DgramClose(int32_t);
+extern uint32_t GetInetAddr(int8_t *name);
+extern void GetLocalHostName(int8_t *name, uint32_t size,
+		int32_t search_domain_for_xpilot);
+extern int8_t *GetAddrByName(const int8_t *name);
+extern int32_t GetNameByAddr(const int8_t *addr, int8_t *name, int32_t size);
 
 #if !defined(select) && defined(__linux__)
 #define select(N, R, W, E, T)	select((N),		\

@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([XPilot], 1.4.2fxi, kps at users.sourceforge.net, xpilot)
+AC_INIT([XPilot], 1.4.3fxi, kps at users.sourceforge.net, xpilot)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(src/server/walls.c)
 
@@ -14,16 +14,16 @@ AM_MAINTAINER_MODE
 AM_CONFIG_HEADER(config.h)
 
 dnl  Copyright & stuff.
-XP_AUTHORS="Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Dick Balaska and Kristian Söderblom"
+XP_AUTHORS="Bjoern Stabell, Ken Ronny Schouten, Bert Gijsbers, Dick Balaska and Kristian Soderblom"
 AC_SUBST([XP_AUTHORS])
 
-XP_COPYRIGHTDATE="1991-2008"
+XP_COPYRIGHTDATE="1991-2009"
 AC_SUBST([XP_COPYRIGHTDATE])
 
-XP_COPYRIGHT="Copyright © $XP_COPYRIGHTDATE by $XP_AUTHORS"
+XP_COPYRIGHT="Copyright (C) $XP_COPYRIGHTDATE by $XP_AUTHORS"
 AC_SUBST([XP_COPYRIGHT])
 
-AC_SUBST([XP_RELEASEDATE],["Jan 4, 2008"])
+AC_SUBST([XP_RELEASEDATE],["Apr 1, 2009"])
 AC_SUBST([XP_DATADIR],"$prefix/share/xpilot")
 
 
@@ -92,6 +92,19 @@ if test x$ac_cv_lib_expat_XML_ParserCreate != xyes; then
         AC_MSG_ERROR([*** Required library Expat not found!])
 fi  
 
+dnl override CFLAGS selection when debugging
+dnl TODO: make the old debug flags work with gcc 3.x
+dnl CFLAGS="-g -O0 -Wall -Wcast-align -Wimplicit -Wpointer-arith -Wno-pointer-sign -Wswitch -Wredundant-decls -Wreturn-type -Wunused  -Wstrict-prototypes  -Wmissing-declarations"
+
+CFLAGS="-O2"
+AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug], [enable debug messages]),
+[if test x$enable_debug = xyes; then
+	CFLAGS="-g -O0 -Wall -Wcast-align -Wimplicit -Wswitch -Wredundant-decls -Wreturn-type -Wunused  -Wstrict-prototypes  -Wmissing-declarations"
+fi])
+
+dnl AC_DEFINE_UNQUOTED(CFLAGS, "$CFLAGS", [C compiler flags])
+
+
 dnl  Checks for header files.
 dnl AC_HEADER_STDC
 AC_HEADER_TIME
@@ -117,6 +130,7 @@ AC_CHECK_HEADERS([ \
 	signal.h \
 	stdarg.h \
 	stddef.h \
+	stdint.h \
 	sys/file.h \
 	sys/filio.h \
 	sys/fcntl.h \

@@ -1,8 +1,8 @@
-/* $Id: walls.h,v 1.4 2007/09/17 19:54:49 kps Exp $
+/* $Id: walls.h,v 1.8 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -25,13 +25,10 @@
 #ifndef WALLS_H
 #define WALLS_H
 
-#ifndef CLICK_H
 #include "click.h"
-#endif
 
-extern char walls_version[];
-extern long KILLING_SHOTS;
-int Rate(int winner, int looser);
+extern int8_t walls_version[];
+int32_t Rate(int32_t winner, int32_t looser);
 
 /*
  * Wall collision detection and bouncing.
@@ -45,56 +42,56 @@ int Rate(int winner, int looser);
  * Therefore a fixed point sub-pixel resolution is used called clicks.
  */
 
-#define FLOAT_TO_INT(F)		((F) < 0 ? -(int)(0.5f-(F)) : (int)((F)+0.5f))
-#define DOUBLE_TO_INT(D)	((D) < 0 ? -(int)(0.5-(D)) : (int)((D)+0.5))
+#define FLOAT_TO_INT32(F)		((F) < 0 ? -(int32_t)(0.5f-(F)) : (int32_t)((F)+0.5f))
+#define DOUBLE_TO_INT32(D)	((D) < 0 ? -(int32_t)(0.5-(D)) : (int32_t)((D)+0.5))
 
 typedef enum {
-    NotACrash = 0,
-    CrashUniverse = 0x01,
-    CrashWall = 0x02,
-    CrashTreasure = 0x08,
-    CrashUnknown = 0x20,
-    CrashWallSpeed = 0x80,
-    CrashWallNoFuel = 0x100
+	NotACrash = 0,
+	CrashUniverse = 0x01,
+	CrashWall = 0x02,
+	CrashTreasure = 0x08,
+	CrashUnknown = 0x20,
+	CrashWallSpeed = 0x80,
+	CrashWallNoFuel = 0x100
 } move_crash_t;
 
 typedef enum {
-    NotABounce = 0,
-    BounceHorLo = 0x01,
-    BounceHorHi = 0x02,
-    BounceVerLo = 0x04,
-    BounceVerHi = 0x08,
-    BounceLeftDown = 0x10,
-    BounceLeftUp = 0x20,
-    BounceRightDown = 0x40,
-    BounceRightUp = 0x80,
-    BounceEdge = 0x0100
+	NotABounce = 0,
+	BounceHorLo = 0x01,
+	BounceHorHi = 0x02,
+	BounceVerLo = 0x04,
+	BounceVerHi = 0x08,
+	BounceLeftDown = 0x10,
+	BounceLeftUp = 0x20,
+	BounceRightDown = 0x40,
+	BounceRightUp = 0x80,
+	BounceEdge = 0x0100
 } move_bounce_t;
 
 typedef struct {
-    int			edge_wrap;
-    int			edge_bounce;
-    int			wall_bounce;
-    int			treasure_crashes;
-    object_t		*obj;
-    player_t		*pl;
+	int32_t edge_wrap;
+	int32_t edge_bounce;
+	int32_t wall_bounce;
+	int32_t treasure_crashes;
+	object_t *obj;
+	player_t *pl;
 } move_info_t;
 
 typedef struct {
-    const move_info_t	*mip;
-    move_crash_t	crash;
-    move_bounce_t	bounce;
-    clpos_t		pos;
-    vector_t		vel;
-    clvec_t		todo;
-    clvec_t		done;
-    int			dir;
-    int			treasure;
+	const move_info_t *mip;
+	move_crash_t crash;
+	move_bounce_t bounce;
+	clpos_t pos;
+	vector_t vel;
+	clvec_t todo;
+	clvec_t done;
+	int32_t dir;
+	treasure_t *treasure;
 } move_state_t;
 
 struct move_parameters {
-    unsigned long	obj_bounce_mask;	/* which objects bounce? */
-    unsigned long	obj_treasure_mask;	/* objects treasure crash? */
+	uint32_t obj_bounce_mask; /* which objects bounce? */
+	uint32_t obj_treasure_mask; /* objects treasure crash? */
 };
 
 #endif

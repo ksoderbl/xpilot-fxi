@@ -1,8 +1,8 @@
-/* $Id: netserver.h,v 1.9 2007/10/17 14:32:10 kps Exp $
+/* $Id: netserver.h,v 1.18 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -25,7 +25,9 @@
 #ifndef	NETSERVER_H
 #define	NETSERVER_H
 
-#ifdef NETSERVER_C
+#include "net.h"
+#include "object.h"
+
 
 /*
  * Different states a connection can be in.
@@ -58,6 +60,8 @@
  */
 #define MAX_RTT			(fps + 1)
 
+/* Check whether the connection is tied to any player */
+#define Connection_is_occupied(connp)	((connp) ? (player_t *)((connp)->pl) : NULL)
 /*
  * The retransmission timeout bounds in number of frames.
  */
@@ -69,128 +73,98 @@
 #define MAXHOSTNAMELEN 64
 #endif
 
-
 /*
  * All the connection state info.
  * Some of it is hardly ever used, if at all.
  */
-typedef struct {
-    int			state;			/* state of connection */
-    int			drain_state;		/* state after draining done */
-    unsigned		magic;			/* magic cookie */
-    sockbuf_t		r;			/* input buffer */
-    sockbuf_t		w;			/* output buffer */
-    sockbuf_t		c;			/* reliable data buffer */
-    long		start;			/* time of last state change */
-    long		timeout;		/* time when state timeouts */
-    long		last_send_loops;	/* last update of reliable */
-    long		reliable_offset;	/* amount of data acked */
-    long		reliable_unsent;	/* next unsend reliable byte */
-    long		retransmit_at_loop;	/* next retransmission time */
-    int			rtt_smoothed;		/* smoothed roundtrip time */
-    int			rtt_dev;		/* roundtrip time deviation */
-    int			rtt_retransmit;		/* retransmission time */
-    int			rtt_timeouts;		/* how many timeouts */
-    int			acks;			/* good acknowledgements */
-    int			setup;			/* amount of setup done */
-    int			my_port;		/* server port for this player */
-    int			his_port;		/* client port for this player */
-    int			id;			/* index into GetInd[] or -1 */
-    int			team;			/* team of player */
-    unsigned		version;		/* XPilot version of client */
-    long		last_key_change;	/* last keyboard change */
-    long		talk_sequence_num;	/* talk acknowledgement */
-    int			num_keyboard_updates;	/* Keyboards in one packet */
-    int			view_width, view_height;/* Viewable area dimensions */
-    int			debris_colors;		/* Max. debris intensities */
-    int			spark_rand;		/* Sparkling effect */
-    char		*real;			/* real login name of player */
-    char		*nick;			/* nickname of player */
-    char		*dpy;			/* display of player */
-    shipshape_t		*ship;			/* ship shape of player */
-    char		*addr;			/* address of players host */
-    char		*host;			/* hostname of players host */
-} connection_t;
-
-static int Compress_map(unsigned char *map, int size);
-static int Init_setup(void);
-static int Handle_listening(int ind);
-static int Handle_setup(int ind);
-static int Handle_login(int ind);
-static void Handle_input(int fd, void *arg);
+struct _connection {
+	int32_t cid; /* connection ID */
+	int32_t state; /* state of connection */
+	int32_t drain_state; /* state after draining done */
+	uint32_t magic; /* magic cookie */
+	sockbuf_t r; /* input buffer */
+	sockbuf_t w; /* output buffer */
+	sockbuf_t c; /* reliable data buffer */
+	int32_t start; /* time of last state change */
+	int32_t timeout; /* time when state timeouts */
+	int32_t last_send_loops; /* last update of reliable */
+	int32_t reliable_offset; /* amount of data acked */
+	int32_t reliable_unsent; /* next unsend reliable byte */
+	int32_t retransmit_at_loop; /* next retransmission time */
+	int32_t rtt_smoothed; /* smoothed roundtrip time */
+	int32_t rtt_dev; /* roundtrip time deviation */
+	int32_t rtt_retransmit; /* retransmission time */
+	int32_t rtt_timeouts; /* how many timeouts */
+	int32_t acks; /* good acknowledgements */
+	int32_t setup; /* amount of setup done */
+	int32_t my_port; /* server port for this player */
+	int32_t his_port; /* client port for this player */
+	team_t *team; /* team number suggested by the incoming player */
+	uint32_t version; /* XPilot version of client */
+	int32_t last_key_change; /* last keyboard change */
+	int32_t talk_sequence_num; /* talk acknowledgement */
+	int32_t num_keyboard_updates; /* Keyboards in one packet */
+	int32_t view_width, view_height;/* Viewable area dimensions */
+	int32_t debris_colors; /* Max. debris intensities */
+	int32_t spark_rand; /* Sparkling effect */
+	int8_t *real; /* real login name of player */
+	int8_t *nick; /* nickname of player */
+	int8_t *dpy; /* display of player */
+	shipshape_t *ship; /* ship shape of player */
+	int8_t *addr; /* address of players host */
+	int8_t *host; /* hostname of players host */
+	player_t *pl; /* pointer to the player's structure */
+};
 
 
-static int Receive_keyboard(int ind);
-static int Receive_quit(int ind);
-static int Receive_play(int ind);
-static int Receive_power(int ind);
-static int Receive_ack(int ind);
-static int Receive_ack_fuel(int ind);
-static int Receive_discard(int ind);
-static int Receive_undefined(int ind);
-static int Receive_talk(int ind);
-static int Receive_display(int ind);
-static int Receive_modifier_bank(int ind);
-static int Receive_motd(int ind);
-static int Receive_shape(int ind);
-static int Receive_pointer_move(int ind);
-static int Receive_audio_request(int ind);
-static int Receive_fps_request(int ind);
-
-#endif	/* NETSERVER_C */
-
-#ifndef OBJECT_H
-#include "object.h" /* need player_t */
-#endif
-
-char *showtime(void);
-int Get_motd(char *buf, int offset, int maxlen, int *size_ptr);
-int Setup_net_server(void);
-void Destroy_connection(int ind, const char *reason);
-int Check_connection(char *real, char *nick, char *dpy, char *addr);
-int Setup_connection(char *real, char *nick, char *dpy, int team,
-		     char *addr, char *host, unsigned version);
-int Input(void);
-int Send_reply(int ind, int replyto, int result);
-int Send_self(int ind, player_t *pl,
-	      int lock_id,
-	      int lock_dist,
-	      int lock_dir,
-	      int autopilotlight,
-	      long status,
-	      char *mods);
-int Send_leave(int ind, int id);
-int Send_war(int ind, int robot_id, int killer_id);
-int Send_seek(int ind, int programmer_id, int robot_id, int sought_id);
-int Send_player(int ind, int id);
-int Send_score(int ind, int id, int score, int life, int mychar);
-int Send_score_object(int ind, int score, int x, int y, const char *string);
-int Send_base(int ind, int id, int num);
-int Send_fuel(int ind, int num, int fuel);
-int Send_destruct(int ind, int count);
-int Send_shutdown(int ind, int count, int delay);
-int Send_debris(int ind, int type, unsigned char *p, int n);
-int Send_wreckage(int ind, int x, int y, u_byte wrtype, u_byte size, u_byte rot);
-int Send_fastshot(int ind, int type, unsigned char *p, int n);
-int Send_ball(int ind, int x, int y, int id);
-int Send_ship(int ind, int x, int y, int id, int dir, int shield);
-int Send_refuel(int ind, int x0, int y0, int x1, int y1);
-int Send_connector(int ind, int x0, int y0, int x1, int y1, int tractor);
-int Send_radar(int ind, int x, int y, int size);
-int Send_fastradar(int ind, unsigned char *buf, int n);
-int Send_damaged(int ind, int damaged);
-int Send_message(int ind, const char *msg);
-int Send_start_of_frame(int ind);
-int Send_end_of_frame(int ind);
-int Send_reliable(int ind);
-int Send_time_left(int ind, long sec);
-int Send_eyes(int ind, int id);
-void Get_display_parameters(int ind, int *width, int *height,
-			    int *debris_colors, int *spark_rand);
-int Get_player_id(int);
-int Get_conn_version(int ind);
-int Send_shape(int ind, int shape);
-const char *Player_get_addr(player_t *pl);
+int8_t *showtime(void);
+int32_t Get_motd(int8_t *buf, int32_t offset, int32_t maxlen, int32_t *size_ptr);
+int32_t Setup_net_server(void);
+void Destroy_connection(connection_t *connp, const int8_t *reason);
+int32_t Check_connection(int8_t *real, int8_t *nick, int8_t *dpy, int8_t *addr);
+int32_t Setup_connection(int8_t *real, int8_t *nick, int8_t *dpy, team_t *team, int8_t *addr,
+		int8_t *host, uint32_t version);
+int32_t Input(void);
+int32_t Send_reply(connection_t *connp, int32_t replyto, int32_t result);
+int32_t Send_self(connection_t *connp, player_t *pl, player_t *lock_pl, int32_t lock_dist,
+		int32_t lock_dir, int32_t autopilotlight, int32_t status, int8_t *mods);
+int32_t Send_leave(connection_t *connp, int32_t id);
+int32_t Send_war(connection_t *connp, player_t *war_src_pl, player_t *war_dst_pl);
+int32_t Send_seek(connection_t *connp, int32_t programmer_id, int32_t robot_id,
+		int32_t sought_id);
+int32_t Send_player(connection_t *connp, player_t *pl);
+int32_t Send_score(connection_t *connp, player_t *pl);
+int32_t Send_score_object(connection_t *connp, int32_t score, int32_t x, int32_t y,
+		const int8_t *string);
+int32_t Send_base(connection_t *connp, player_t *pl);
+int32_t Send_fuel(connection_t *connp, fuel_t *f);
+int32_t Send_destruct(connection_t *connp, int32_t count);
+int32_t Send_shutdown(connection_t *connp, int32_t count, int32_t delay);
+int32_t Send_debris(connection_t *connp, int32_t type, uint8_t *p, int32_t n);
+int32_t Send_wreckage(connection_t *connp, int32_t x, int32_t y, uint8_t wrtype,
+		uint8_t size, uint8_t rot);
+int32_t Send_fastshot(connection_t *connp, int32_t type, uint8_t *p, int32_t n);
+int32_t Send_ball(connection_t *connp, int32_t x, int32_t y, object_t *ball);
+int32_t Send_paused(connection_t *connp, int32_t x, int32_t y, int32_t count);
+int32_t Send_ship(connection_t *connp, int32_t x, int32_t y, int32_t id, int32_t dir, int32_t shield,
+		int32_t cloak, int32_t eshield, int32_t phased, int32_t deflector);
+int32_t Send_refuel(connection_t *connp, int32_t x0, int32_t y0, int32_t x1, int32_t y1);
+int32_t Send_connector(connection_t *connp, int32_t x0, int32_t y0, int32_t x1, int32_t y1,
+		int32_t tractor);
+int32_t Send_radar(connection_t *connp, int32_t x, int32_t y, int32_t size);
+int32_t Send_fastradar(connection_t *connp, uint8_t *buf, int32_t n);
+int32_t Send_damaged(connection_t *connp, int32_t damaged);
+int32_t Send_message(connection_t *connp, const int8_t *msg);
+int32_t Send_start_of_frame(connection_t *connp);
+int32_t Send_end_of_frame(connection_t *connp);
+int32_t Send_reliable(connection_t *connp);
+int32_t Send_time_left(connection_t *connp, int32_t sec);
+int32_t Send_eyes(connection_t *connp, player_t *pl);
+void Get_display_parameters(connection_t *connp, int32_t *width, int32_t *height,
+		int32_t *debris_colors, int32_t *spark_rand);
+//int32_t Get_player_id(int32_t);
+int32_t Send_shape(connection_t *connp, int32_t shape);
+const int8_t *Player_get_addr(player_t *pl);
 
 #endif
 

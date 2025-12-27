@@ -1,8 +1,8 @@
-/* $Id: xpmemory.c,v 1.1.1.1 2007/05/20 21:59:12 kps Exp $
+/* $Id: xpmemory.c,v 1.4 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -28,80 +28,81 @@
 #include "error.h"
 #include "commonproto.h"
 
+
 void *xp_malloc(size_t size)
 {
-    void	*p;
+	void *p;
 
-    p = (void *) malloc(size);
+	p = (void *) malloc(size);
 
-    return p;
+	return p;
 }
 
 void *xp_realloc(void *oldptr, size_t size)
 {
-    void	*p;
+	void *p;
 
-    p = (void *) realloc(oldptr, size);
+	p = (void *) realloc(oldptr, size);
 
-    return p;
+	return p;
 }
 
 void *xp_calloc(size_t nmemb, size_t size)
 {
-    void	*p;
+	void *p;
 
-    p = (void *) calloc(nmemb, size);
+	p = (void *) calloc(nmemb, size);
 
-    return p;
+	return p;
 }
 
 void xp_free(void *p)
 {
-    if (p) {
-	free(p);
-    }
+	if (p) {
+		free(p);
+	}
 }
 
 void *xp_safe_malloc(size_t size)
 {
-    void	*p;
+	void *p;
 
-    p = (void *) malloc(size);
-    if (p == NULL) {
-	fatal("Not enough memory.");
-    }
+	p = (void *) malloc(size);
+	if (p == NULL) {
+		fatal("Not enough memory.");
+	}
 
-    return p;
+	return p;
 }
 
 void *xp_safe_realloc(void *oldptr, size_t size)
 {
-    void	*p;
+	void *p;
 
-    p = (void *) realloc(oldptr, size);
-    if (p == NULL) {
-	fatal("Not enough memory.");
-    }
+	p = (void *) realloc(oldptr, size);
+	if (p == NULL) {
+		fatal("Not enough memory.");
+	}
 
-    return p;
+	return p;
 }
 
 void *xp_safe_calloc(size_t nmemb, size_t size)
 {
-    void	*p;
+	void *p;
 
-    p = (void *) calloc(nmemb, size);
-    if (p == NULL) {
-	fatal("Not enough memory.");
-    }
+	p = (void *) calloc(nmemb, size);
+	if (p == NULL) {
+		fatal("Not enough memory.");
+	}
 
-    return p;
+	return p;
 }
 
 void xp_safe_free(void *p)
 {
-    if (p) {
-	free(p);
-    }
+	if (p) {
+		free(p);
+	}
 }
 

@@ -1,8 +1,8 @@
-/* $Id: item.h,v 1.1.1.1 2007/05/20 21:59:10 kps Exp $
+/* $Id: item.h,v 1.3 2008/08/15 15:09:52 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -26,28 +26,28 @@
 #define ITEM_H
 
 enum Item {
-    ITEM_FUEL			= 0,
-    ITEM_WIDEANGLE		= 1,
-    ITEM_REARSHOT		= 2,
-    ITEM_AFTERBURNER		= 3,
-    ITEM_CLOAK			= 4,
-    ITEM_SENSOR			= 5,
-    ITEM_TRANSPORTER		= 6,
-    ITEM_TANK			= 7,
-    ITEM_MINE			= 8,
-    ITEM_MISSILE		= 9,
-    ITEM_ECM			= 10,
-    ITEM_LASER			= 11,
-    ITEM_EMERGENCY_THRUST	= 12,
-    ITEM_TRACTOR_BEAM		= 13,
-    ITEM_AUTOPILOT		= 14,
-    ITEM_EMERGENCY_SHIELD	= 15,
-    ITEM_DEFLECTOR		= 16,
-    ITEM_HYPERJUMP		= 17,
-    ITEM_PHASING		= 18,
-    ITEM_MIRROR			= 19,
-    ITEM_ARMOR			= 20,
-    NUM_ITEMS			= 21
+	ITEM_FUEL = 0,
+	ITEM_WIDEANGLE = 1,
+	ITEM_REARSHOT = 2,
+	ITEM_AFTERBURNER = 3,
+	ITEM_CLOAK = 4,
+	ITEM_SENSOR = 5,
+	ITEM_TRANSPORTER = 6,
+	ITEM_TANK = 7,
+	ITEM_MINE = 8,
+	ITEM_MISSILE = 9,
+	ITEM_ECM = 10,
+	ITEM_LASER = 11,
+	ITEM_EMERGENCY_THRUST = 12,
+	ITEM_TRACTOR_BEAM = 13,
+	ITEM_AUTOPILOT = 14,
+	ITEM_EMERGENCY_SHIELD = 15,
+	ITEM_DEFLECTOR = 16,
+	ITEM_HYPERJUMP = 17,
+	ITEM_PHASING = 18,
+	ITEM_MIRROR = 19,
+	ITEM_ARMOR = 20,
+	NUM_ITEMS = 21
 };
 
 #define ITEM_BIT_FUEL			(1U << ITEM_FUEL)

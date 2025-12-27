@@ -1,8 +1,8 @@
-/* $Id: strcasecmp.c,v 1.1.1.1 2007/05/20 21:59:12 kps Exp $
+/* $Id: strcasecmp.c,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -23,46 +23,50 @@
  */
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <ctype.h>
+#include "commonproto.h"
 
+
+#if (!HAVE_STRINGS_H)
 /*
  * By Ian Malcom Brown.
  * Changes by BG: prototypes with const,
  * moved the ++ expressions out of the macro.
  * Only test for the null byte in one string.
  */
-int strcasecmp(const char *str1, const char *str2)
+int32_t strcasecmp(const int8_t *str1, const int8_t *str2)
 {
-    int	c1, c2;
+	int32_t c1, c2;
 
+	do {
+		c1 = *str1++;
+		c2 = *str2++;
+		c1 = tolower(c1);
+		c2 = tolower(c2);
+	} while (c1 == c2 && c1 != 0);
 
-    do {
-	c1 = *str1++;
-	c2 = *str2++;
-	c1 = tolower(c1);
-	c2 = tolower(c2);
-    } while (c1 == c2 && c1 != 0);
-
-    return (c1 - c2);
+	return (c1 - c2);
 }
 
 /*
  * By Bert Gijsbers, derived from Ian Malcom Brown's strcasecmp().
  */
-int strncasecmp(const char *str1, const char *str2, size_t n)
+int32_t strncasecmp(const int8_t *str1, const int8_t *str2, size_t n)
 {
-    int	c1, c2;
+	int32_t c1, c2;
 
-    do {
-	if (n-- <= 0) {
-	    return 0;
-	}
-	c1 = *str1++;
-	c2 = *str2++;
-	c1 = tolower(c1);
-	c2 = tolower(c2);
-    } while (c1 == c2 && c1 != 0);
+	do {
+		if (n-- <= 0) {
+			return 0;
+		}
+		c1 = *str1++;
+		c2 = *str2++;
+		c1 = tolower(c1);
+		c2 = tolower(c2);
+	} while (c1 == c2 && c1 != 0);
 
-    return (c1 - c2);
+	return (c1 - c2);
 }
+#endif //(!HAVE_STRINGS_H)

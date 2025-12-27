@@ -1,8 +1,8 @@
-/* $Id: object.h,v 1.5 2007/09/17 19:54:49 kps Exp $
+/* $Id: object.h,v 1.16 2008/10/12 15:45:14 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -25,30 +25,13 @@
 #ifndef	OBJECT_H
 #define	OBJECT_H
 
-#ifndef SERVERCONST_H
-/* need MAX_TANKS */
+#include "structs.h"
 #include "serverconst.h"
-#endif
-#ifndef KEYS_H
-/* need NUM_KEYS */
 #include "keys.h"
-#endif
-#ifndef BIT_H
-/* need BITV_DECL */
 #include "bit.h"
-#endif
-#ifndef DRAW_H
-/* need wireobj */
 #include "draw.h"
-#endif
-#ifndef ITEM_H
-/* need NUM_ITEMS */
 #include "item.h"
-#endif
-#ifndef CLICK_H
-/* need CLICK */
 #include "click.h"
-#endif
 
 /*
  * Different types of objects, including player.
@@ -75,11 +58,8 @@
  */
 #define OBJ_EXT_ROBOT		(1U<<2)
 
-#define IS_ROBOT_IND(ind)	IS_ROBOT_PTR(Players[ind])
-#define IS_HUMAN_IND(ind)	IS_HUMAN_PTR(Players[ind])
-
-#define IS_ROBOT_PTR(pl)	(BIT((pl)->type_ext,OBJ_EXT_ROBOT)==OBJ_EXT_ROBOT)
-#define IS_HUMAN_PTR(pl)	(!BIT((pl)->type_ext,OBJ_EXT_ROBOT))
+#define Player_is_robot(pl)	(BIT((pl)->type_ext,OBJ_EXT_ROBOT)==OBJ_EXT_ROBOT)
+#define Player_is_human(pl)	(!BIT((pl)->type_ext,OBJ_EXT_ROBOT))
 
 #define Player_by_id(id)	(Players[GetInd[id]])
 #define Player_by_index(ind)	(Players[ind])
@@ -87,11 +67,16 @@
 #define LOCK_NONE		0x00	/* No lock */
 #define LOCK_PLAYER		0x01	/* Locked on player */
 #define LOCK_VISIBLE		0x02	/* Lock information was on HUD */
-					/* computed just before frame shown */
-					/* and client input checked */
+/* computed just before frame shown */
+/* and client input checked */
 #define LOCKBANK_MAX		4	/* Maximum number of locks in bank */
 
 #define NOT_CONNECTED		(-1)
+
+// TODO: temporary macro
+// Returns pointer to the player's connection structure, or NULL if
+// the supplied pointer is invalid or if the player is disconnected.
+#define Player_is_connected(pl)		((pl) ? ((pl)->connp) : NULL)
 
 /*
  * Object position is non-modifiable, except at one place.
@@ -100,9 +85,9 @@
  */
 typedef const struct _objposition objposition_t;
 struct _objposition {
-    int		cx, cy;			/* object position in clicks. */
-    int		x, y;			/* object position in pixels. */
-    int		bx, by;			/* object position in blocks. */
+	int32_t cx, cy; /* object position in clicks. */
+	int32_t x, y; /* object position in pixels. */
+	int32_t bx, by; /* object position in blocks. */
 };
 #define OBJ_X_IN_CLICKS(obj)	((obj)->pos.cx)
 #define OBJ_Y_IN_CLICKS(obj)	((obj)->pos.cy)
@@ -113,59 +98,58 @@ struct _objposition {
 
 typedef struct _object object_t;
 struct _object {
-    byte	color;			/* Color of object */
-    u_byte	dir;			/* Direction of acceleration */
-    int		id;			/* For shots => id of player */
-    u_short	team;			/* Team of player or cannon */
-    objposition_t	pos;			/* World coordinates */
-    ipos_t	prevpos;		/* Object's previous position... */
-    vector_t	vel;
-    vector_t	acc;
-    objposition_t	pos_interp;
-    vector_t	vel_interp;
-    vector_t	acc_interp;
-    DFLOAT	max_speed;
-    DFLOAT	mass;
-    int		type;
-    long	info;			/* Miscellaneous info */
-    long	life;			/* No of ticks left to live */
-    int		count;			/* Misc timings */
-    long	status;
+	int8_t color; /* Color of object */
+	uint8_t dir; /* Direction of acceleration */
+	int32_t id; /* ID of the object */
+	team_t *team; /* Team of player or cannon */
+	objposition_t pos; /* World coordinates */
+	ipos_t prevpos; /* Object's previous position... */
+	vector_t vel;
+	vector_t acc;
+	objposition_t pos_interp;
+	vector_t vel_interp;
+	vector_t acc_interp;
+	DFLOAT max_speed;
+	DFLOAT mass;
+	int32_t type;
+	int32_t info; /* Miscellaneous info */
+	int32_t life; /* No of ticks left to live */
+	int32_t count; /* Misc timings */
+	int32_t status;
 
-    /* up to here all object types (including players!) should be the same. */
+	/* up to here all object types (including players!) should be the same. */
 
-    DFLOAT	turnspeed;		/* for missiles only */
-    long	fuselife;		/* Ticks left when considered fused */
+	DFLOAT turnspeed; /* for missiles only */
+	int32_t fuselife; /* Ticks left when considered fused */
 
-    object_t	*cell_list;		/* linked list for cell lookup */
+	object_t *cell_list; /* linked list for cell lookup */
 
-    int 	owner;			/* Who's object is this ? */
-					/* (spare for id)*/
-    int		treasure;		/* Which treasure does ball belong */
-    DFLOAT	length;			/* Distance between ball and player */
-    DFLOAT	length_interp;
-    int		spread_left;		/* how much spread time left */
-    int		pl_range;		/* distance to player for collision. */
-    int		pl_radius;		/* distance to player for hit. */
+	player_t *owner; /* Whose object is this ? */
 
-    u_byte	size;			/* Size of object (wreckage) */
-    u_byte	rotation;		/* Rotation direction */
+	treasure_t *treasure; /* Which treasure does ball belong */
 
+	DFLOAT length; /* Distance between ball and player */
+	DFLOAT length_interp;
+	int32_t spread_left; /* how much spread time left */
+	int32_t pl_range; /* distance to player for collision. */
+	int32_t pl_radius; /* distance to player for hit. */
+
+	uint8_t size; /* Size of object (wreckage) */
+	uint8_t rotation; /* Rotation direction */
 };
-
 
 /*
  * Fuel structure, used by player
  */
 typedef struct {
-    long	sum;			/* Sum of fuel in all tanks */
-    long	max;			/* How much fuel can you take? */
-    int		current;		/* Number of currently used tank */
-    int		num_tanks;		/* Number of tanks */
-    long	tank[1 + MAX_TANKS];	/* main fixed tank + extra tanks. */
-    long	l1;			/* Fuel critical level */
-    long	l2;			/* Fuel warning level */
-    long	l3;			/* Fuel notify level */
+	int32_t sum; /* Sum of fuel in all tanks */
+	int32_t max; /* How much fuel can you take? */
+	int32_t current; /* Number of currently used tank */
+	int32_t num_tanks; /* Number of tanks */
+	int32_t tank[1 + MAX_TANKS]; /* main fixed tank + extra tanks. */
+	int32_t l1; /* Fuel critical level */
+	int32_t l2; /* Fuel warning level */
+	int32_t l3; /* Fuel notify level */
 } pl_fuel_t;
 
 /*
@@ -176,9 +160,10 @@ typedef struct {
  */
 #define MAX_RECORDED_SHOVES 4
 
+
 typedef struct {
-    int		pusher_id;
-    int		time;
+	player_t *pusher_pl;
+	int32_t time;
 } shove_t;
 
 struct robot_data;
@@ -189,110 +174,108 @@ struct robot_data;
  * this makes it possible to use the same basic operations on both of them
  * (mainly used in update.c).
  */
-typedef struct player player_t;
-struct player {
-    byte	color;			/* Color of object */
-    u_byte	dir;			/* Direction of acceleration */
-    int		id;			/* Unique id of object */
-    u_short	team;			/* What team is the player on? */
-    objposition_t	pos;			/* World coordinates */
-    ipos_t	prevpos;		/* Previous position... */
-    vector_t	vel;			/* Velocity of object */
-    vector_t	acc;			/* Acceleration constant */
-    objposition_t	pos_interp;
-    vector_t	vel_interp;
-    vector_t	acc_interp;
-    DFLOAT	max_speed;		/* Maximum speed of object */
-    DFLOAT	mass;			/* Mass of object (incl. cargo) */
-    int		type;			/* Type of object */
-    long	info;			/* Miscellaneous info */
-    int		life;			/* Zero is dead. One is alive */
-    int		count;			/* Miscellaneous timings */
-    long	status;			/** Status, currently **/
+struct _player {
+	int8_t color; /* Color of object */
+	uint8_t dir; /* Direction of acceleration */
+	int32_t id; /* ID of the player */
+	team_t *team; /* What team is the player on? */
+	objposition_t pos; /* World coordinates */
+	ipos_t prevpos; /* Previous position... */
+	vector_t vel; /* Velocity of object */
+	vector_t acc; /* Acceleration constant */
+	objposition_t pos_interp;
+	vector_t vel_interp;
+	vector_t acc_interp;
+	DFLOAT max_speed; /* Maximum speed of object */
+	DFLOAT mass; /* Mass of object (incl. cargo) */
+	int32_t type; /* Type of object */
+	int32_t info; /* Miscellaneous info */
+	int32_t life; /* Zero is dead. One is alive */
+	int32_t count; /* Miscellaneous timings */
+	int32_t status; /** Status, currently **/
 
-    /* up to here the player type should be the same as an object. */
+	/* up to here the player type should be the same as an object. */
 
-    int		type_ext;		/* extended type info (tank, robot) */
+	int32_t type_ext; /* extended type info (tank, robot) */
 
-    DFLOAT	turnspeed;		/* How fast player acc-turns */
-    DFLOAT	velocity;		/* Absolute speed */
-    DFLOAT	velocity_interp;	
-    int		kills;			/* Number of kills this round */
-    int		deaths;			/* Number of deaths this round */
+	DFLOAT turnspeed; /* How fast player acc-turns */
+	DFLOAT velocity; /* Absolute speed */
+	DFLOAT velocity_interp;
+	int32_t kills; /* Number of kills this round */
+	int32_t deaths; /* Number of deaths this round */
 
-    long	used;			/** Items you use **/
-    long	have;			/** Items you have **/
+	int32_t used; /** Items you use **/
+	int32_t have; /** Items you have **/
 
-    int		shield_time;		/* Shields if no playerShielding */
-    pl_fuel_t	fuel;			/* ship tanks and the stored fuel */
-    DFLOAT	emptymass;		/* Mass of empty ship */
-    DFLOAT	float_dir;		/* Direction, in float var */
-    DFLOAT	turnresistance;		/* How much is lost in % */
-    DFLOAT	turnvel;		/* Current velocity of turn (right) */
-    DFLOAT	turnacc;		/* Current acceleration of turn */
-    long	score;			/* Current score of player */
-    long	prev_score;		/* Last score that has been updated */
-    int		prev_life;		/* Last life that has been updated */
-    shipshape_t	*ship;			/* wire model of ship shape */
-    DFLOAT	power;			/* Force of thrust */
-    DFLOAT	power_s;		/* Saved power fiks */
-    DFLOAT	turnspeed_s;		/* Saved turnspeed */
-    DFLOAT	turnresistance_s;	/* Saved (see above) */
-    int		shots;			/* Number of active shots by player */
+	int32_t shield_time; /* Shields if no playerShielding */
+	pl_fuel_t fuel; /* ship tanks and the stored fuel */
+	DFLOAT emptymass; /* Mass of empty ship */
+	DFLOAT float_dir; /* Direction, in float var */
+	DFLOAT turnresistance; /* How much is lost in % */
+	DFLOAT turnvel; /* Current velocity of turn (right) */
+	DFLOAT turnacc; /* Current acceleration of turn */
+	int32_t score; /* Current score of player */
+	int32_t prev_score; /* Last score that has been updated */
+	int32_t prev_life; /* Last life that has been updated */
+	shipshape_t *ship; /* wire model of ship shape */
+	DFLOAT power; /* Force of thrust */
+	DFLOAT power_s; /* Saved power fiks */
+	DFLOAT turnspeed_s; /* Saved turnspeed */
+	DFLOAT turnresistance_s; /* Saved (see above) */
+	int32_t shots; /* Number of active shots by player */
 
-    int		item[NUM_ITEMS];	/* for each item type how many */
+	int32_t item[NUM_ITEMS]; /* for each item type how many */
 
-    int		shot_max;		/* Maximum number of shots active */
-    int		shot_life;		/* Number of ticks shot will live */
-    DFLOAT	shot_speed;		/* Speed of shots fired by player */
-    long	shot_time;		/* Time of last shot fired by player */
-    int		fs;			/* Connected to fuel station fs */
+	int32_t shot_max; /* Maximum number of shots active */
+	int32_t shot_life; /* Number of ticks shot will live */
+	DFLOAT shot_speed; /* Speed of shots fired by player */
+	int32_t shot_time; /* Time of last shot fired by player */
+	fuel_t *fs; /* Connected to fuel station fs */
 
+	base_t *home_base; /* Pointer to the home base */
+	struct {
+		int32_t flags; /* Flag, what is tagged? */
+		void *object; /* Tagged object pointer */
+		DFLOAT distance; /* Distance to object */
+	} lock;
+	void *lockbank[LOCKBANK_MAX]; /* Saved player locks */
 
-    int		home_base;		/* Num of home base */
-    struct {
-	int	    tagged;		/* Flag, what is tagged? */
-	int	    pl_id;		/* Tagging player id */
-	DFLOAT	    distance;		/* Distance to object */
-    } lock;
-    int		lockbank[LOCKBANK_MAX]; /* Saved player locks */
+	int8_t mychar; /* Special int8_t for player */
+	int8_t prev_mychar; /* Special int8_t for player */
+	int8_t name[MAX_CHARS]; /* Nick-name of player */
+	int8_t realname[MAX_CHARS]; /* Real name of player */
+	int8_t hostname[MAX_CHARS]; /* Hostname of client player uses */
 
-    char	mychar;			/* Special char for player */
-    char	prev_mychar;		/* Special char for player */
-    char	name[MAX_CHARS];	/* Nick-name of player */
-    char	realname[MAX_CHARS];	/* Real name of player */
-    char	hostname[MAX_CHARS];	/* Hostname of client player uses */
-					/* (detaching!) */
-    object_t	*ball;
+	object_t *ball_tmp; /* Ball that is BEING attached (string not solid yet) */
 
-    /*
-     * Pointer to robot private data (dynamically allocated).
-     * Only used in robot code.
-     */
-    struct robot_data	*robot_data_ptr;
+	/*
+	 * Pointer to robot private data (dynamically allocated).
+	 * Only used in robot code.
+	 */
+	struct robot_data *robot_data_ptr;
 
-    /*
-     * A record of who's been pushing me (a circular buffer).
-     */
-    shove_t     shove_record[MAX_RECORDED_SHOVES];
-    int         shove_next;
+	/*
+	 * A record of who's been pushing me (a circular buffer).
+	 */
+	shove_t shove_record[MAX_RECORDED_SHOVES];
+	int32_t shove_next;
 
-    int		conn;			/* connection index, -1 if robot */
-    unsigned	version;		/* XPilot version number of client */
+	connection_t *connp; /* pointer to the connection structure */
 
-    BITV_DECL(last_keyv, NUM_KEYS);	/* Keyboard state */
-    BITV_DECL(prev_keyv, NUM_KEYS);	/* Keyboard state */
+	uint32_t version; /* XPilot version number of client */
 
-    long	frame_last_busy;	/* When player touched keyboard. */
+	BITV_DECL(last_keyv, NUM_KEYS); /* Keyboard state */
+	BITV_DECL(prev_keyv, NUM_KEYS); /* Keyboard state */
 
+	int32_t frame_last_busy; /* When player touched keyboard. */
 
-    int		player_fps;		/* FPS that this player can do */
+	int32_t player_fps; /* FPS that this player can do */
 
-    int		isowner;		/* If player started this server. */
-    int		isoperator;		/* If player has operator privileges. */
-    bool        update_score;           /* score table info needs to be sent */
-    struct ranknode     *rank;		
-    int		oldturn;		/* Use old turn player code */
+	bool isowner; /* If player started this server. */
+	bool isoperator; /* If player has operator privileges. */
+	bool update_score; /* score table info needs to be sent */
+	struct ranknode *rank;
+	bool oldturn; /* Use old turn player code */
 };
 
 #endif

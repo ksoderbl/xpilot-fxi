@@ -1,8 +1,8 @@
-/* $Id: portability.h,v 1.1.1.1 2007/05/20 21:59:11 kps Exp $
+/* $Id: portability.h,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -34,7 +34,6 @@
 
 #define	strncasecmp(__a, __b, __c)	strnicmp(__a, __b, __c)
 
-
 #endif /* _WINDOWS */
 
 /*
@@ -43,7 +42,7 @@
 #ifdef sony_news
 #define setvbuf(A,B,C,D)	setlinebuf(A)
 
-typedef unsigned int    sigset_t;
+typedef uint32_t sigset_t;
 
 #define sigemptyset(set)        (*(set) = 0)
 #define sigfillset(set)         (*(set) = ~(sigset_t)0, 0)
@@ -55,7 +54,7 @@ typedef unsigned int    sigset_t;
 #define SIG_UNBLOCK		2
 #define SIG_SETMASK		3
 
-extern int sigprocmask(int how, const sigset_t *set, sigset_t *oset);
+extern int32_t sigprocmask(int32_t how, const sigset_t *set, sigset_t *oset);
 
 /*
  * Sony NEWS doesn't have sigaction(), using sigvec() instead.
@@ -80,7 +79,7 @@ extern int sigprocmask(int how, const sigset_t *set, sigset_t *oset);
  * So, try to gracefully shutdown just the server thread
  */
 #ifdef	_WINDOWS
-extern	int ServerKilled;
+extern int32_t ServerKilled;
 #define	ServerExit() ServerKilled = TRUE; return;
 #else
 #define	ServerExit() exit(1);
@@ -104,17 +103,17 @@ extern	int ServerKilled;
 /*
  * Prototypes for OS function wrappers in portability.c.
  */
-extern int Get_process_id(void);	/* getpid */
-extern void Get_login_name(char *buf, int size);
+int32_t Get_process_id(void); /* getpid */
+void Get_login_name(int8_t *buf, int32_t size);
 
 /*
  * Prototypes for other (ANSI C library) wrapper functions.
  */
-extern void move_memory(void *dst, void *src, size_t len);
+void move_memory(void *dst, void *src, size_t len);
 
 /*
  * Prototypes for testing if we are running under a certain OS.
  */
-extern int is_this_windows();
+int32_t is_this_windows(void);
 
 #endif /* PORTABILITY_H_INCLUDED */

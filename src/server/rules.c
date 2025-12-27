@@ -1,8 +1,8 @@
-/* $Id: rules.c,v 1.2 2007/09/17 19:54:49 kps Exp $
+/* $Id: rules.c,v 1.6 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -35,19 +35,22 @@
 #include "rules.h"
 #include "bit.h"
 
-char rules_version[] = VERSION;
+int8_t rules_version[] = VERSION;
 
 #define MAX_FUEL                10000
 #define MAX_AUTOPILOT           99
 
-long	KILLING_SHOTS = OBJ_SHOT;
-long	DEF_BITS = 0;
-long	KILL_BITS = (THRUSTING|PLAYING|KILLED|SELF_DESTRUCT|PAUSE);
-long	DEF_HAVE = (OBJ_SHIELD|OBJ_COMPASS|OBJ_REFUEL|OBJ_CONNECTOR|OBJ_SHOT);
-long	DEF_USED = (OBJ_SHIELD|OBJ_COMPASS);
-long	USED_KILL = (OBJ_REFUEL|OBJ_CONNECTOR|OBJ_SHOT);
+/*
+ * Bitmask of object types the robot puts up shield for.
+ */
+int32_t KILLING_SHOTS = OBJ_SHOT;
 
-
+int32_t DEF_BITS = 0;
+int32_t KILL_BITS = (THRUSTING | PLAYING | KILLED | SELF_DESTRUCT | PAUSE);
+int32_t DEF_HAVE = (OBJ_SHIELD | OBJ_COMPASS | OBJ_REFUEL | OBJ_CONNECTOR
+		| OBJ_SHOT);
+int32_t DEF_USED = (OBJ_SHIELD | OBJ_COMPASS);
+int32_t USED_KILL = (OBJ_REFUEL | OBJ_CONNECTOR | OBJ_SHOT);
 
 /*
  * Initializes special items.
@@ -55,11 +58,10 @@ long	USED_KILL = (OBJ_REFUEL|OBJ_CONNECTOR|OBJ_SHOT);
  * second and third parameters are minimum and maximum number
  * of elements one item gives when picked up by a ship.
  */
-static void Init_item(int item)
+static void Init_item(int32_t item)
 {
-    World.items[item].num = 0;
+	World.items[item].num = 0;
 }
-
 
 /*
  * Give (or remove) capabilities of the ships depending upon
@@ -68,47 +70,44 @@ static void Init_item(int item)
  */
 void Set_initial_resources(void)
 {
-    CLR_BIT(DEF_HAVE, OBJ_AUTOPILOT);
+	CLR_BIT(DEF_HAVE, OBJ_AUTOPILOT);
 
-    if (World.items[ITEM_AUTOPILOT].initial > 0)
-	SET_BIT(DEF_HAVE, OBJ_AUTOPILOT);
+	if (World.items[ITEM_AUTOPILOT].initial > 0)
+		SET_BIT(DEF_HAVE, OBJ_AUTOPILOT);
 }
-
 
 /*
  * First time initialization of all global item stuff.
  */
 void Set_world_items(void)
 {
-    Init_item(ITEM_FUEL);
-    Init_item(ITEM_TANK);
-    Init_item(ITEM_AFTERBURNER);
-    Init_item(ITEM_AUTOPILOT);
+	Init_item(ITEM_FUEL);
+	Init_item(ITEM_TANK);
+	Init_item(ITEM_AFTERBURNER);
+	Init_item(ITEM_AUTOPILOT);
 
-    Set_initial_resources();
+	Set_initial_resources();
 }
-
 
 void Set_world_rules(void)
 {
-    static rules_t rules;
+	static rules_t rules;
 
-    rules.mode =
-      ((crashWithPlayer ? CRASH_WITH_PLAYER : 0)
-       | (bounceWithPlayer ? BOUNCE_WITH_PLAYER : 0)
-       | (playerKillings ? PLAYER_KILLINGS : 0)
-       | (playerShielding ? PLAYER_SHIELDING : 0)
-       | (limitedLives ? LIMITED_LIVES : 0)
-       | (teamPlay ? TEAM_PLAY : 0)
-       | (edgeWrap ? WRAP_PLAY : 0));
-    rules.lives = worldLives;
-    World.rules = &rules;
+	rules.mode = ((crashWithPlayer ? CRASH_WITH_PLAYER : 0)
+			| (bounceWithPlayer ? BOUNCE_WITH_PLAYER : 0)
+			| (playerKillings ? PLAYER_KILLINGS : 0)
+			| (playerShielding ? PLAYER_SHIELDING : 0)
+			| (limitedLives ? LIMITED_LIVES : 0)
+			| (teamPlay ? TEAM_PLAY : 0) | (edgeWrap ? WRAP_PLAY
+			: 0));
+	rules.lives = worldLives;
+	World.rules = &rules;
 
-    if (!BIT(World.rules->mode, PLAYER_KILLINGS))
-	CLR_BIT(KILLING_SHOTS, OBJ_SHOT);
-    if (!BIT(World.rules->mode, PLAYER_SHIELDING))
-	CLR_BIT(DEF_HAVE, OBJ_SHIELD);
+	if (!BIT(World.rules->mode, PLAYER_KILLINGS))
+		CLR_BIT(KILLING_SHOTS, OBJ_SHOT);
+	if (!BIT(World.rules->mode, PLAYER_SHIELDING))
+		CLR_BIT(DEF_HAVE, OBJ_SHIELD);
 
-    DEF_USED &= DEF_HAVE;
+	DEF_USED &= DEF_HAVE;
 }
 

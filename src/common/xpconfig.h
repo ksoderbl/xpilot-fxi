@@ -1,8 +1,8 @@
-/* $Id: xpconfig.h,v 1.1.1.1 2007/05/20 21:59:10 kps Exp $
+/* $Id: xpconfig.h,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -25,6 +25,8 @@
 #ifndef XPCONFIG_H
 #define XPCONFIG_H
 
+#include <stdint.h>
+
 #ifdef MOD2
 #error "MOD2 already defined - xpconfig.h should be included before const.h"
 #endif
@@ -33,7 +35,6 @@
  * two's complement negative numbers.
  */
 /* #define MOD2(x, m)	mod(x, m) */
-
 
 /*
  * The following macros decide the speed of the game and
@@ -61,20 +62,19 @@
 
 #define	xpprintf	printf
 
-char *Conf_datadir(void);
-char *Conf_defaults_file_name(void);
-char *Conf_password_file_name(void);
-char *Conf_mapdir(void);
-char *Conf_default_map(void);
-char *Conf_servermotdfile(void);
-char *Conf_localmotdfile(void);
-char *Conf_logfile(void);
-char *Conf_ship_file(void);
-char *Conf_mapdir(void);
-char *Conf_localguru(void);
-char *Conf_contactaddress(void);
-char *Conf_robotfile(void);
-char *Conf_zcat_ext(void);
-char *Conf_zcat_format(void);
+int8_t *Conf_datadir(void);
+int8_t *Conf_defaults_file_name(void);
+int8_t *Conf_password_file_name(void);
+int8_t *Conf_mapdir(void);
+int8_t *Conf_default_map(void);
+int8_t *Conf_servermotdfile(void);
+int8_t *Conf_localmotdfile(void);
+int8_t *Conf_logfile(void);
+int8_t *Conf_ship_file(void);
+int8_t *Conf_localguru(void);
+int8_t *Conf_contactaddress(void);
+int8_t *Conf_robotfile(void);
+int8_t *Conf_zcat_ext(void);
+int8_t *Conf_zcat_format(void);
 
 #endif /* XPCONFIG_H */

@@ -1,8 +1,8 @@
-/* $Id: types.h,v 1.2 2007/06/03 21:12:44 kps Exp $
+/* $Id: types.h,v 1.6 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -27,8 +27,8 @@
 
 #include <sys/types.h>
 
-typedef signed char	byte;
-typedef unsigned char	u_byte;
+// TODO: check other archs
+#include <stdint.h>
 
 /*
  * On some systems an enum is smaller than an int.
@@ -40,11 +40,16 @@ typedef unsigned char	u_byte;
 
 #define bool	int
 
-typedef	float	DFLOAT;
+typedef float DFLOAT;
 
-typedef struct { DFLOAT x, y; }	vector_t;
-typedef vector_t		position_t;
-typedef struct { int x, y; }	ivec_t;
-typedef ivec_t			ipos_t;
+typedef struct {
+	DFLOAT x, y;
+} vector_t;
+
+typedef vector_t position_t;
+typedef struct {
+	int32_t x, y;
+} ivec_t;
+typedef ivec_t ipos_t;
 
 #endif

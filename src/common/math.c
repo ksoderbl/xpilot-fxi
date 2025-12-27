@@ -1,8 +1,8 @@
-/* $Id: math.c,v 1.1.1.1 2007/05/20 21:59:10 kps Exp $
+/* $Id: math.c,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -32,84 +32,74 @@
 #include "error.h"
 #include "commonproto.h"
 
+int8_t math_version[] = VERSION;
 
-char math_version[] = VERSION;
+DFLOAT tbl_sin[TABLE_SIZE];
+DFLOAT tbl_cos[TABLE_SIZE];
 
-
-DFLOAT		tbl_sin[TABLE_SIZE];
-DFLOAT		tbl_cos[TABLE_SIZE];
-
-int ON(char *optval);
-int OFF(char *optval);
-int f2i(DFLOAT f);
+int32_t ON(int8_t *optval);
+int32_t OFF(int8_t *optval);
+int32_t f2i(DFLOAT f);
 DFLOAT findDir(DFLOAT x, DFLOAT y);
-void Make_table(void);
 
-int ON(char *optval)
+int32_t ON(int8_t *optval)
 {
-    return (strncasecmp(optval, "true", 4) == 0
-	    || strncasecmp(optval, "on", 2) == 0
-	    || strncasecmp(optval, "yes", 3) == 0);
+	return (strncasecmp(optval, "true", 4) == 0 || strncasecmp(optval,
+			"on", 2) == 0 || strncasecmp(optval, "yes", 3) == 0);
 }
 
-
-int OFF(char *optval)
+int32_t OFF(int8_t *optval)
 {
-    return (strncasecmp(optval, "false", 5) == 0
-	    || strncasecmp(optval, "off", 3) == 0
-	    || strncasecmp(optval, "no", 2) == 0);
+	return (strncasecmp(optval, "false", 5) == 0 || strncasecmp(optval,
+			"off", 3) == 0 || strncasecmp(optval, "no", 2) == 0);
 }
 
-
-int mod(int x, int y)
+int32_t mod(int32_t x, int32_t y)
 {
-    if (x >= y || x < 0)
-	x = x - y*(x/y);
+	if (x >= y || x < 0)
+		x = x - y * (x / y);
 
-    if (x < 0)
-	x += y;
+	if (x < 0)
+		x += y;
 
-    return x;
+	return x;
 }
 
-
-int f2i(DFLOAT f)
+int32_t f2i(DFLOAT f)
 {
-    return (f < 0) ? -(int)(0.5f - f) : (int)(f + 0.5f);
+	return (f < 0) ? -(int32_t) (0.5f - f) : (int32_t) (f + 0.5f);
 }
 
 DFLOAT findDir(DFLOAT x, DFLOAT y)
 {
-    DFLOAT angle;
+	DFLOAT angle;
 
-    if (x != 0.0 || y != 0.0)
-	angle = atan2(y, x) / (2 * PI);
-    else
-	angle = 0.0;
+	if (x != 0.0 || y != 0.0)
+		angle = atan2(y, x) / (2 * PI);
+	else
+		angle = 0.0;
 
-    if (angle < 0)
-	angle++;
-    return angle * RES;
+	if (angle < 0)
+		angle++;
+	return angle * RES;
 }
-
 
 double rfrac(void)
 {
-    /*
-     * Return a pseudo-random value in the range { 0.0 <= x < 1.0 }.
-     * Use randomMT() which returns a 32 bit PRN and multiply by 1/(1<<32).
-     */
-    return (double) randomMT() * 0.00000000023283064365386962890625;
+	/*
+	 * Return a pseudo-random value in the range { 0.0 <= x < 1.0 }.
+	 * Use randomMT() which returns a 32 bit PRN and multiply by 1/(1<<32).
+	 */
+	return (double) randomMT() * 0.00000000023283064365386962890625;
 }
-
 
 void Make_table(void)
 {
-    int i;
+	int32_t i;
 
-    for (i = 0; i < TABLE_SIZE; i++) {
-	tbl_sin[i] = sin(i * (2.0 * PI / TABLE_SIZE));
-	tbl_cos[i] = cos(i * (2.0 * PI / TABLE_SIZE));
-    }
+	for (i = 0; i < TABLE_SIZE; i++) {
+		tbl_sin[i] = sin(i * (2.0 * PI / TABLE_SIZE));
+		tbl_cos[i] = cos(i * (2.0 * PI / TABLE_SIZE));
+	}
 }
 

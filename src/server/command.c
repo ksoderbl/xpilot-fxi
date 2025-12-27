@@ -1,8 +1,8 @@
-/* $Id: command.c,v 1.7 2007/10/21 23:26:16 kps Exp $
+/* $Id: command.c,v 1.18 2008/08/26 20:51:06 rotunda_pk Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      BjÃ¸rn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -37,15 +37,16 @@
 #include "proto.h"
 #include "error.h"
 #include "netserver.h"
-#include "commonproto.h"
 #include "score.h"
 #include "rank.h"
+#include "parser.h"
+#include "commonproto.h"
 
 
-char command_version[] = VERSION;
+int8_t command_version[] = VERSION;
 extern bool limitedRoundsGameOver;
 
-
+extern connection_t *Conn;
 
 /*
  * Look if any player's name is exactly 'str',
@@ -56,124 +57,77 @@ extern bool limitedRoundsGameOver;
  * and a string describing the error is stored in
  * 'errorstr_p' if that is not NULL.
  */
-player_t *Get_player_by_name(const char *str,
-			     int *error_p, const char **errorstr_p)
+player_t *Get_player_by_name(const int8_t *str, int32_t *error_p,
+		const int8_t **errorstr_p)
 {
-    int i, id;
-    player_t *found_pl = NULL, *pl;
-    size_t len;
+	int32_t i, id;
+	player_t *found_pl = NULL, *pl;
+	size_t len;
 
-    if (str == NULL || (len = strlen(str)) == 0)
-	goto match_none;
+	if (str == NULL || (len = strlen(str)) == 0)
+		goto match_none;
 
-    /* Get player by id */
-    id = atoi(str);
-    if (id > 0) {
-	found_pl = Player_by_id(id);
-	if (!found_pl)
-	    goto match_none;
-	return found_pl;
-    }
-
-    /* Look for an exact match on player nickname. */
-    for (i = 0; i < NumPlayers; i++) {
-	pl = Player_by_index(i);
-	if (!strcasecmp(pl->name, str))
-	    return pl;
-    }
-
-    /* Look if 'str' matches beginning of only one nick. */
-    for (i = 0; i < NumPlayers; i++) {
-	pl = Player_by_index(i);
-
-	if (!strncasecmp(pl->name, str, len)) {
-	    if (found_pl)
-		goto match_several;
-	    found_pl = pl;
-	    continue;
+	/* Get player by id */
+	id = atoi(str);
+	if (id > 0) {
+		found_pl = Player_by_id(id);
+		if (!found_pl)
+			goto match_none;
+		return found_pl;
 	}
-    }
-    if (found_pl)
-	return found_pl;
 
-    /*
-     * Check what players' name 'str' is a substring of (case insensitively).
-     */
-    for (i = 0; i < NumPlayers; i++) {
-	int j;
-
-	pl = Player_by_index(i);
-
-	for (j = 0; j < 1 + (int)strlen(pl->name) - (int)len; j++) {
-	    if (!strncasecmp(pl->name + j, str, len)) {
-		if (found_pl)
-		    goto match_several;
-		found_pl = pl;
-		break;
-	    }
-	}
-    }
-    if (found_pl)
-	return found_pl;
-
- match_none:
-    if (error_p != NULL)
-	*error_p = -1;
-    if (errorstr_p != NULL)
-	*errorstr_p = "Name does not match any player.";
-    return NULL;
-
- match_several:
-    if (error_p != NULL)
-	*error_p = -2;
-    if (errorstr_p != NULL)
-	*errorstr_p = "Name matches several players.";
-    return NULL;
-}
-
-
-
-
-static void Send_info_about_player(player_t * pl)
-{
-    int			i;
-
-    for (i = 0; i < NumPlayers; i++) {
-	if (Players[i]->conn != NOT_CONNECTED) {
-	    Send_player(Players[i]->conn, pl->id);
-	    Send_score(Players[i]->conn, pl->id, pl->score, pl->life,
-		       pl->mychar);
-	    Send_base(Players[i]->conn, pl->id, pl->home_base);
-	}
-    }
-}
-
-
- 
-static void Set_swapper_state(player_t *pl)
-{
-    int ind = GetInd[pl->id];
-
-    if (BIT(pl->have, OBJ_BALL)) {
-	Detach_ball(ind, -1);
-    }
-    if (BIT(World.rules->mode, LIMITED_LIVES)) {
-	int i;
-
+	/* Look for an exact match on player nickname. */
 	for (i = 0; i < NumPlayers; i++) {
-	    if (!TEAM(ind, i) && !BIT(Players[i]->status, PAUSE)) {
-		/* put team swapping player waiting mode. */
-		if (pl->mychar == ' ') {
-		    pl->mychar = 'W';
-		}
-		pl->prev_life = pl->life = 0;
-		SET_BIT(pl->status, GAME_OVER | PLAYING);
-		CLR_BIT(pl->status, SELF_DESTRUCT);
-		pl->count = -1;
-		break;
-	    }
+		pl = Player_by_index(i);
+		if (!strcasecmp(pl->name, str))
+			return pl;
 	}
-    }
+
+	/* Look if 'str' matches beginning of only one nick. */
+	for (i = 0; i < NumPlayers; i++) {
+		pl = Player_by_index(i);
+
+		if (!strncasecmp(pl->name, str, len)) {
+			if (found_pl)
+				goto match_several;
+			found_pl = pl;
+			continue;
+		}
+	}
+	if (found_pl)
+		return found_pl;
+
+	/*
+	 * Check what players' name 'str' is a substring of (case insensitively).
+	 */
+	for (i = 0; i < NumPlayers; i++) {
+		int32_t j;
+
+		pl = Player_by_index(i);
+
+		for (j = 0; j < 1 + (int32_t) strlen(pl->name) - (int32_t) len; j++) {
+			if (!strncasecmp(pl->name + j, str, len)) {
+				if (found_pl)
+					goto match_several;
+				found_pl = pl;
+				break;
+			}
+		}
+	}
+	if (found_pl)
+		return found_pl;
+
+	match_none: if (error_p != NULL)
+		*error_p = -1;
+	if (errorstr_p != NULL)
+		*errorstr_p = "Name does not match any player.";
+	return NULL;
+
+	match_several: if (error_p != NULL)
+		*error_p = -2;
+	if (errorstr_p != NULL)
+		*errorstr_p = "Name matches several players.";
+	return NULL;
 }
 
 #define CMD_RESULT_SUCCESS		0
@@ -181,822 +135,804 @@ static void Set_swapper_state(player_t *pl)
 #define CMD_RESULT_NOT_OPERATOR		(-2)
 #define CMD_RESULT_NO_NAME		(-3)
 
-
-static int Cmd_help(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_team(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_version(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_lock(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_password(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_pause(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_reset(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_set(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_kick(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_queue(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_advance(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_get(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_stats(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_plinfo(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_addr(char *arg, player_t *pl, int oper, char *msg);
-static int Cmd_oldturn(char *arg, player_t *pl, int oper, char *msg);
+static int32_t Cmd_help(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_team(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_version(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_lock(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_password(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_pause(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_reset(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_set(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_kick(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_queue(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_advance(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_get(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_stats(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_plinfo(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_addr(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
+static int32_t Cmd_oldturn(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
 
 typedef struct {
-    const char		*name;
-    const char		*abbrev;
-    const char		*help;
-    int			oper_only;
-    int			(*cmd)(char *arg, player_t *pl, int oper, char *msg);
+	const int8_t *name;
+	const int8_t *abbrev;
+	const int8_t *help;
+	int32_t oper_only;
+	int32_t (*cmd)(int8_t *arg, player_t *pl, bool oper, int8_t *msg);
 } Command_info;
-
 
 /*
  * A list of all the commands sorted alphabetically.
  */
-static Command_info commands[] = {
-    {
-	"advance",
-	"ad",
-	"/advance <name of player in the queue>. "
-	"Move the player to the front of the queue.  (operator)",
-	1,
-	Cmd_advance
-    },
-    {
-	"get",
-	"g",
-	"/get <option>.  Gets a server option.",
-	0,
-	Cmd_get
-    },
-    {
-	"help",
-	"h",
-	"Print command list.  /help <command> gives more info.",
-	0,
-	Cmd_help
-    },
-    {
-	"kick",
-	"k",
-	"/kick <player name or ID number>.  Remove a player from game.  (operator)",
-	1,
-	Cmd_kick
-    },
-    {
-	"lock",
-	"l",
-	"Just /lock tells lock status.  /lock 1 locks, /lock 0 unlocks.  (operator)",
-	0,      /* checked in the function */
-	Cmd_lock
-    },
-    {
-	"password",
-	"pas",
-	"/password <string>.  If string matches -password option "
-	"gives operator status.",
-	0,
-	Cmd_password
-    },
-    {
-	"pause",
-	"pau",
-	"/pause <player name or ID number>.  Pauses player.  (operator)",
-	1,
-	Cmd_pause
-    },
-    {
-	"queue",
-	"q",
-	"/queue.  Show the names of players waiting to enter.",
-	0,
-	Cmd_queue
-    },
-    {
-	"reset",
-	"r",
-	"Just /reset re-starts the round. "
-	"/reset.  Resets all scores to 0.  (operator)",
-	1,
-	Cmd_reset
-    },
-    {
-	"set",
-	"set",
-	"/set <option> <value>.  Sets a server option.  (operator)",
-	1,
-	Cmd_set
-    },
-    {
-	"team",
-	"t",
-	"/team <team number> swaps you to given team.",
-	0,
-	Cmd_team
-    },
-    {
-	"version",
-	"v",
-	"Print server version.",
-	0,
-	Cmd_version
-    },
-    {
-        "stats",
-        "st",
-        "/stats <player name or ID number>.  Show player ranking info.",
-        0,
-        Cmd_stats
-    },
-    {
-	"plinfo",
-	"pl",
-	"/plinfo <player name or ID number>.  Show misc. player info.",
-	0,
-	Cmd_plinfo
-    },
-    {
-	"addr",
-	"addr",
-	"/addr <player name or ID number>. Show IP-address of player."
-	"(operator)",
-	1,
-	Cmd_addr
-    },
-    {
-	"oldturn",
-	"oldturn",
-	"/oldturn  Use old turning code. /oldturn 1 enables. /oldturn 0 disables.",
-	0,
-	Cmd_oldturn
-     },
-};
-
-
+static Command_info
+		commands[] =
+			{
+						{
+								"advance",
+								"ad",
+								"/advance <name of player in the queue>. "
+									"Move the player to the front of the queue.  (operator)",
+								1, Cmd_advance },
+						{
+								"get",
+								"g",
+								"/get <option>.  Gets a server option.",
+								0, Cmd_get },
+						{
+								"help",
+								"h",
+								"Print command list.  /help <command> gives more info.",
+								0, Cmd_help },
+						{
+								"kick",
+								"k",
+								"/kick <player name or ID number>.  Remove a player from game.  (operator)",
+								1, Cmd_kick },
+						{
+								"lock",
+								"l",
+								"Just /lock tells lock status.  /lock 1 locks, /lock 0 unlocks.  (operator)",
+								0, /* checked in the function */
+								Cmd_lock },
+						{
+								"password",
+								"pas",
+								"/password <string>.  If string matches -password option "
+									"gives operator status.",
+								0, Cmd_password },
+						{
+								"pause",
+								"pau",
+								"/pause <player name or ID number>.  Pauses player.  (operator)",
+								1, Cmd_pause },
+						{
+								"queue",
+								"q",
+								"/queue.  Show the names of players waiting to enter.",
+								0, Cmd_queue },
+						{
+								"reset",
+								"r",
+								"Just /reset re-starts the round. "
+									"/reset.  Resets all scores to 0.  (operator)",
+								1, Cmd_reset },
+						{
+								"set",
+								"set",
+								"/set <option> <value>.  Sets a server option.  (operator)",
+								1, Cmd_set },
+						{
+								"team",
+								"t",
+								"/team <team number> swaps you to given team.",
+								0, Cmd_team },
+						{
+								"version",
+								"v",
+								"Print server version.",
+								0, Cmd_version },
+						{
+								"stats",
+								"st",
+								"/stats <player name or ID number>.  Show player ranking info.",
+								0, Cmd_stats },
+						{
+								"plinfo",
+								"pl",
+								"/plinfo <player name or ID number>.  Show misc. player info.",
+								0, Cmd_plinfo },
+						{
+								"addr",
+								"addr",
+								"/addr <player name or ID number>. Show IP-address of player."
+									"(operator)",
+								1, Cmd_addr },
+						{
+								"oldturn",
+								"oldturn",
+								"/oldturn  Use old turning code. /oldturn 1 enables. /oldturn 0 disables.",
+								0, Cmd_oldturn }, };
 
 /*
  * cmd parameter has no leading slash.
  */
-void Handle_player_command(player_t *pl, char *cmd)
+void Handle_player_command(player_t *pl, int8_t *cmd)
 {
-    int i, result;
-    char *args, msg[MSG_LEN];
+	int32_t i, result;
+	int8_t *args, msg[MSG_LEN];
 
-    if (!*cmd) {
-	strlcpy(msg,
-		"No command given.  Type /help for help.  [*Server reply*]",
-		sizeof(msg));
-	Set_player_message(pl, msg);
-	return;
-    }
+	if (!*cmd) {
+		strlcpy(
+				msg,
+				"No command given.  Type /help for help.  [*Server reply*]",
+				sizeof(msg));
+		Set_player_message(pl, msg);
+		return;
+	}
 
-    args = strchr(cmd + 1, ' ');
-    if (!args)
-	/* point to end of string. */
-	args = cmd + strlen(cmd);
-    else {
-	/* zero terminate cmd and advance 1 byte. */
-	*args++ = '\0';
-	while (isspace(*args))
-	    args++;
-    }
+	args = strchr(cmd + 1, ' ');
+	if (!args)
+		/* point to end of string. */
+		args = cmd + strlen(cmd);
+	else {
+		/* zero terminate cmd and advance 1 byte. */
+		*args++ = '\0';
+		while (isspace(*args))
+			args++;
+	}
 
-    for (i = 0; i < NELEM(commands); i++) {
-	size_t len1 = strlen(commands[i].abbrev);
-	size_t len2 = strlen(cmd);
+	for (i = 0; i < NELEM(commands); i++) {
+		size_t len1 = strlen(commands[i].abbrev);
+		size_t len2 = strlen(cmd);
 
-	if (!strncasecmp(cmd, commands[i].name, MAX(len1, len2)))
-	    break;
-    }
+		if (!strncasecmp(cmd, commands[i].name, MAX(len1, len2)))
+			break;
+	}
 
-    if (i == NELEM(commands)) {
-	snprintf(msg, sizeof(msg),
-		 "Unknown command '%s'.  [*Server reply*]", cmd);
-	Set_player_message(pl, msg);
-	return;
-    }
+	if (i == NELEM(commands)) {
+		snprintf(msg, sizeof(msg),
+				"Unknown command '%s'.  [*Server reply*]", cmd);
+		Set_player_message(pl, msg);
+		return;
+	}
 
-    msg[0] = '\0';
-    result = (*commands[i].cmd)(args, pl, pl->isoperator, msg /*, sizeof(msg)*/);
-    switch (result) {
-    case CMD_RESULT_SUCCESS:
-	break;
+	msg[0] = '\0';
+	result
+			= (*commands[i].cmd)(args, pl, pl->isoperator, msg /*, sizeof(msg)*/);
+	switch (result) {
+	case CMD_RESULT_SUCCESS:
+		break;
 
-    case CMD_RESULT_ERROR:
-	if (msg[0] == '\0')
-	    strlcpy(msg, "Error.", sizeof(msg));
-	break;
+	case CMD_RESULT_ERROR:
+		if (msg[0] == '\0')
+			strlcpy(msg, "Error.", sizeof(msg));
+		break;
 
-    case CMD_RESULT_NOT_OPERATOR:
-	if (msg[0] == '\0')
-	    strlcpy(msg,
-		    "You need operator status to use this command.",
-		    sizeof(msg));
-	break;
+	case CMD_RESULT_NOT_OPERATOR:
+		if (msg[0] == '\0')
+			strlcpy(
+					msg,
+					"You need operator status to use this command.",
+					sizeof(msg));
+		break;
 
-    case CMD_RESULT_NO_NAME:
-	if (msg[0] == '\0')
-	    strlcpy(msg,
-		    "You must give a player name as an argument.",
-		    sizeof(msg));
-	break;
+	case CMD_RESULT_NO_NAME:
+		if (msg[0] == '\0')
+			strlcpy(
+					msg,
+					"You must give a player name as an argument.",
+					sizeof(msg));
+		break;
 
-    default:
-	strlcpy(msg, "Bug.", sizeof(msg));
-	break;
-    }
+	default:
+		strlcpy(msg, "Bug.", sizeof(msg));
+		break;
+	}
 
-    if (msg[0]) {
-	strlcat(msg, " [*Server reply*]", sizeof(msg));
-	Set_player_message(pl, msg);
-    }
+	if (msg[0]) {
+		strlcat(msg, " [*Server reply*]", sizeof(msg));
+		Set_player_message(pl, msg);
+	}
 }
 
-
-
-static int Cmd_advance(char *arg, player_t *pl, int oper, char *msg)
+static int32_t Cmd_advance(int8_t *arg, player_t *pl, int32_t oper, int8_t *msg)
 {
-    int			result;
+	int32_t result;
 
-    if (!oper) {
-	return CMD_RESULT_NOT_OPERATOR;
-    }
-
-    if (!arg || !*arg) {
-	return CMD_RESULT_NO_NAME;
-    }
-
-    result = Queue_advance_player(arg, msg);
-
-    if (result < 0) {
-	return CMD_RESULT_ERROR;
-    }
-
-    return CMD_RESULT_SUCCESS;
-}
-
-static int Cmd_queue(char *arg, player_t *pl, int oper, char *msg)
-{
-    int			result;
-
-    result = Queue_show_list(msg);
-
-    if (result < 0) {
-	return CMD_RESULT_ERROR;
-    }
-
-    return CMD_RESULT_SUCCESS;
-}
-
-
-static int Cmd_team(char *arg, player_t *pl, int oper, char *msg)
-{
-    int			i;
-    int			team;
-    int			swap_allowed;
-    char		*arg2;
-
-    /*
-     * Assume nothing will be said or done.
-     */
-    msg[0] = '\0';
-    swap_allowed = false;
-    team = pl->team;
-
-    if (!BIT(World.rules->mode, TEAM_PLAY)) {
-	sprintf(msg, "No team play going on.");
-    }
-    else if (pl->team >= MAX_TEAMS) {
-	sprintf(msg, "You do not currently have a team.");
-    }
-    else if (!arg) {
-	sprintf(msg, "No team specified.");
-    }
-    else if (!isdigit(*arg)) {
-	sprintf(msg, "Invalid team specification.");
-    }
-    else {
-	team = strtoul(arg, &arg2, 0);
-	if (arg2 && *arg2) {
-	    const char *errorstr;
-	    size_t size = MSG_LEN;
-
-	    if (!pl->isoperator) {
-		sprintf(msg,
-			"You need operator status to swap other players.");
+	if (!oper) {
 		return CMD_RESULT_NOT_OPERATOR;
-	    }
-	    while (isspace(*arg2))
-		arg2++;
-	    pl = Get_player_by_name(arg2, NULL, &errorstr);
-	    if (!pl) {
-		strlcpy(msg, errorstr, size);
+	}
+
+	if (!arg || !*arg) {
+		return CMD_RESULT_NO_NAME;
+	}
+
+	result = Queue_advance_player(arg, msg);
+
+	if (result < 0) {
 		return CMD_RESULT_ERROR;
-	    }
 	}
 
-	for (i = 0 ; i < MAX_TEAMS ; i++) {
-	    /* Can't queue to two teams at once. */
-	    if (World.teams[i].SwapperId == pl->id) {
-		World.teams[i].SwapperId = -1;
-	    }
+	return CMD_RESULT_SUCCESS;
+}
+
+static int32_t Cmd_queue(int8_t *arg, player_t *pl, int32_t oper, int8_t *msg)
+{
+	int32_t result;
+
+	result = Queue_show_list(msg);
+
+	if (result < 0) {
+		return CMD_RESULT_ERROR;
 	}
 
-	if (team < 0 || team >= MAX_TEAMS) {
-	    sprintf(msg, "Team %d is not a valid team.", team);
+	return CMD_RESULT_SUCCESS;
+}
+
+static int32_t Cmd_team(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
+{
+	team_t *team_ptr = NULL;
+	int32_t i;
+	bool swap_allowed;
+	int8_t *arg2;
+
+	/*
+	 * Assume nothing will be said or done.
+	 */
+	msg[0] = '\0';
+	swap_allowed = false;
+
+	if (!BIT(World.rules->mode, TEAM_PLAY)) {
+		sprintf(msg, "No team play going on.");
 	}
-	else if (team == pl->team) {
-	    sprintf(msg, "You already are on team %d.", team);
+	else if (pl->team == NULL) {
+		sprintf(msg, "You do not currently have a team.");
 	}
-	else if (World.teams[team].NumBases == 0) {
-	    sprintf(msg, "There are no bases for team %d on this map.", team);
+	else if (!arg) {
+		sprintf(msg, "No team specified.");
 	}
-	else if (reserveRobotTeam && team == robotTeam) {
-	    sprintf(msg, "You cannot join the robot team on this server.");
+	else if (!isdigit(*arg)) {
+		sprintf(msg, "Invalid team specification.");
 	}
-	else if (World.teams[team].NumBases <= World.teams[team].NumMembers) {
-	    i = World.teams[pl->team].SwapperId;
-	    while (i != -1) {
-		if ((i = Players[GetInd[i]]->team) != team) {
-		    i = World.teams[i].SwapperId;
+	else {
+		/* Retrieve the team number from player's command line */
+		int32_t team = strtoul(arg, (char **)(&arg2), 0);
+
+		if (arg2 && *arg2) {
+			const int8_t *errorstr;
+			size_t size = MSG_LEN;
+
+			if (!pl->isoperator) {
+				sprintf(msg,
+						"You need operator status to swap other players.");
+
+				return CMD_RESULT_NOT_OPERATOR;
+			}
+
+			while (isspace(*arg2)) {
+				arg2++;
+			}
+
+			pl = Get_player_by_name(arg2, NULL, &errorstr);
+			if (!pl) {
+				strlcpy(msg, errorstr, size);
+				return CMD_RESULT_ERROR;
+			}
+		}
+
+		/* Dequeue us from swapping to any team first */
+		for (i = 0; i < MAX_TEAMS; i++) {
+			if (World.teams[i].Swapper == pl) {
+				World.teams[i].Swapper = NULL;
+			}
+		}
+
+		/* Attempt to retrieve the pointer to team structure */
+		if (team >= 0 && team < MAX_TEAMS) {
+			team_ptr = &World.teams[team];
+		}
+
+		/* Here we know where we want to swap to, but not whether
+		 * is it possible yet
+		 */
+
+		if (!team_ptr) {
+			sprintf(msg, "Team %d is not a valid team.", team);
+		}
+		else if (team_ptr == pl->team) {
+			sprintf(msg, "You already are on team %d.", team_ptr->Num);
+		}
+		else if (team_ptr->NumBases == 0) {
+			sprintf(
+					msg,
+					"There are no bases for team %d on this map.",
+					team_ptr->Num);
+		}
+		else if (reserveRobotTeam && team_ptr->Num == robotTeam) {
+			sprintf(msg,
+					"You cannot join the robot team on this server.");
+		}
+
+		/* Check if the destination team is not already full.
+		 * Perhaps we need to queue the player?
+		 */
+		else if (team_ptr->NumBases <= team_ptr->NumMembers) {
+			player_t *pl2;
+
+			/* Player, who is waiting to swap to the team we are
+			 * currently on.
+			 */
+			pl2 = pl->team->Swapper;
+
+			/* If two teams are full and one player from each
+			 * team wants to swap to the opposite team, we
+			 * perform the exchange.
+			 */
+			if ((pl2 != NULL) && (pl2->team == team_ptr)) {
+				Players_swap_each_other(pl, pl2);
+
+				sprintf(msg, "Some players swapped teams.");
+				Set_message(msg);
+				strcpy(msg, "");
+
+				return CMD_RESULT_SUCCESS;
+			}
+
+			/* Swap a paused player away from the full team */
+			for (i = NumPlayers - 1; i >= 0; i--) {
+				pl2 = Players[i];
+				if (Player_is_connected(pl2) && BIT(pl2->status, PAUSE)
+						&& (pl2->team == team_ptr)) {
+					Players_swap_each_other(pl, pl2);
+
+					//TEAM_SCORE(pl2->team, -(pl->score));
+					//TEAM_SCORE(pl->team, -(pl2->score));
+					//TEAM_SCORE(pl2->team, pl2->score);
+					//TEAM_SCORE(pl->team, pl->score);
+					sprintf(
+							msg,
+							"%s has swapped with paused %s.",
+							pl->name, pl2->name);
+					Set_message(msg);
+					strcpy(msg, "");
+
+					return CMD_RESULT_SUCCESS;
+				}
+			}
+
+			/* If we got this far, that means the swap couldn't
+			 * be performed. Add us to the queue.
+			 */
+			sprintf(msg, "You are queued for swap to team %d.",
+					team_ptr->Num);
+			team_ptr->Swapper = pl;
+
+			return CMD_RESULT_SUCCESS;
+		}
+
+		/* If someone was queued to swap to the team we are going
+		 * to leave now (there is enough room in the destination
+		 * team), perform the operation.
+		 */
+		else if (pl->team->Swapper) {
+			Players_swap_each_other(pl, pl->team->Swapper);
+
+			sprintf(msg, "Some players swapped teams.");
+			Set_message(msg);
+			strcpy(msg, "");
+
+			return CMD_RESULT_SUCCESS;
 		}
 		else {
-		    /* Found a cycle, now change the teams */
-		    int xbase= pl->home_base, xteam = pl->team, xbase2, xteam2;
-		    player_t *pl2 = pl;
-
-		    do {
-			pl2 = Players[GetInd[World.teams[xteam].SwapperId]];
-			World.teams[xteam].SwapperId = -1;
-			xbase2 = pl2->home_base;
-			xteam2 = pl2->team;
-			pl2->team = xteam;
-			pl2->home_base = xbase;
-			//TEAM_SCORE(xteam2, -(pl2->score));
-			//TEAM_SCORE(pl2->team, pl2->score);
-			Set_swapper_state(pl2);
-			Send_info_about_player(pl2);
-			/* This can send a huge amount of data if several
-			   players swap. Unfortunately all player data, even
-			   shipshape, has to be resent to change the team of
-			   a player. This should probably be changed somehow
-			   to prevent disturbing other players. */
-			xbase = xbase2;
-			xteam = xteam2;
-		    } while (xteam != team);
-		    xteam = pl->team;
-		    pl->team = team;
-		    pl->home_base = xbase;
-		    //TEAM_SCORE(xteam, -(pl->score));
-		    //TEAM_SCORE(pl->team, pl->score);
-		    Set_swapper_state(pl);
-		    Send_info_about_player(pl);
-		    sprintf(msg, "Some players swapped teams.");
-		    Set_message(msg);
-		    strcpy(msg, "");
-		    return CMD_RESULT_SUCCESS;
+			swap_allowed = true;
 		}
-	    }
-	    /* Swap a paused player away from the full team */
-	    for (i = NumPlayers - 1; i >= 0; i--) {
-		player_t *pl2 = Players[i];
-		if (pl2->conn != NOT_CONNECTED
-		    && BIT(pl2->status, PAUSE)
-		    && (pl2->team == team)) {
-		    pl2->team = pl->team;
-		    pl->team = team;
-		    team = pl2->home_base;
-		    pl2->home_base = pl->home_base;
-		    pl->home_base = team;
-		    //TEAM_SCORE(pl2->team, -(pl->score));
-		    //TEAM_SCORE(pl->team, -(pl2->score));
-		    //TEAM_SCORE(pl2->team, pl2->score);
-		    //TEAM_SCORE(pl->team, pl->score);
-		    Set_swapper_state(pl2);
-		    Set_swapper_state(pl);
-		    Send_info_about_player(pl2);
-		    Send_info_about_player(pl);
-		    sprintf(msg, "%s has swapped with paused %s.",
-			    pl->name, pl2->name);
-		    Set_message(msg);
-		    strcpy(msg, "");
-		    return CMD_RESULT_SUCCESS;
-		}
-	    }
-	    sprintf(msg,"You are queued for swap to team %d.", team);
-	    World.teams[team].SwapperId = pl->id;
-	    return CMD_RESULT_SUCCESS;
 	}
-	else {
-	    swap_allowed = true;
-	}
-    }
 
-    if (swap_allowed != true) {
+	if (swap_allowed) {
+		/* Handle an ordinary one-way swap here */
+		sprintf(msg, "%s has swapped to team %d.", pl->name, team_ptr->Num);
+		Set_message(msg);
+
+		pl->team->NumMembers--;
+		pl->team = team_ptr;
+		pl->team->NumMembers++;
+
+		Set_swapper_state(pl);
+		Pick_startpos(pl);
+		Send_info_about_player(pl);
+
+		// TODO: this is a lame way of not letting the same message
+		// be displayed in top message field; improve this
+		strcpy(msg, "");
+
+		return CMD_RESULT_SUCCESS;
+	}
+
 	return CMD_RESULT_ERROR;
-    }
-
-    sprintf(msg, "%s has swapped to team %d.", pl->name, team);
-    Set_message(msg);
-    World.teams[pl->team].NumMembers--;
-    pl->team = team;
-    World.teams[pl->team].NumMembers++;
-    Set_swapper_state(pl);
-    Pick_startpos(GetInd[pl->id]);
-    Send_info_about_player(pl);
-    strcpy(msg, "");
-
-    return CMD_RESULT_SUCCESS;
 }
 
-static int Cmd_kick(char *arg, player_t *pl, int oper, char *msg)
+static int32_t Cmd_kick(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
 {
-    player_t *kicked_pl;
-    const char *errorstr;
-    size_t size = MSG_LEN;
+	player_t *kicked_pl;
+	const int8_t *errorstr;
+	size_t size = MSG_LEN;
 
-    if (!oper) {
-	return CMD_RESULT_NOT_OPERATOR;
-    }
+	if (!oper) {
+		return CMD_RESULT_NOT_OPERATOR;
+	}
 
-    if (!arg || !*arg) {
-	return CMD_RESULT_NO_NAME;
-    }
+	if (!arg || !*arg) {
+		return CMD_RESULT_NO_NAME;
+	}
 
-    kicked_pl = Get_player_by_name(arg, NULL, &errorstr);
-    if (kicked_pl) {
-	snprintf(msg, size, "%s kicked %s out! [*Server notice*]",
-		 pl->name, kicked_pl->name);
-	if (kicked_pl->conn == NOT_CONNECTED) {
-	    Delete_player(GetInd[kicked_pl->id]);
+	kicked_pl = Get_player_by_name(arg, NULL, &errorstr);
+	if (kicked_pl) {
+		snprintf(msg, size, "%s kicked %s out! [*Server notice*]",
+				pl->name, kicked_pl->name);
+		if (Player_is_connected(kicked_pl)) {
+			Delete_player(kicked_pl);
+		}
+		else {
+			Destroy_connection(kicked_pl->connp, "kicked out");
+		}
+		Set_message(msg);
+		strlcpy(msg, "", size);
+		return CMD_RESULT_SUCCESS;
+	}
+	strlcpy(msg, errorstr, size);
+
+	return CMD_RESULT_ERROR;
+}
+
+static int32_t Cmd_version(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
+{
+	sprintf(msg, "XPilot version %s.", VERSION);
+	return CMD_RESULT_SUCCESS;
+}
+
+static int32_t Cmd_help(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
+{
+	int32_t i;
+
+	if (!*arg) {
+		strcpy(msg, "Commands: ");
+		for (i = 0; i < NELEM(commands); i++) {
+			strcat(msg, commands[i].name);
+			strcat(msg, " ");
+		}
 	}
 	else {
-	    Destroy_connection(kicked_pl->conn, "kicked out");
+		for (i = 0; i < NELEM(commands); i++) {
+			if (!strncasecmp(arg, commands[i].name, strlen(
+					commands[i].abbrev))) {
+				break;
+			}
+		}
+		if (i == NELEM(commands)) {
+			sprintf(msg, "No help for nonexistent command '%s'.",
+					arg);
+		}
+		else {
+			strcpy(msg, commands[i].help);
+		}
 	}
-	Set_message(msg);
-	strlcpy(msg, "", size);
+
 	return CMD_RESULT_SUCCESS;
-    }
-    strlcpy(msg, errorstr, size);
-
-    return CMD_RESULT_ERROR;
 }
 
-
-static int Cmd_version(char *arg, player_t *pl, int oper, char *msg)
+static int32_t Cmd_reset(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
 {
-    sprintf(msg, "XPilot version %s.", VERSION);
-    return CMD_RESULT_SUCCESS;
-}
+	int32_t i;
 
-
-static int Cmd_help(char *arg, player_t *pl, int oper, char *msg)
-{
-    int			i;
-
-    if (!*arg) {
-	strcpy(msg, "Commands: ");
-	for(i = 0; i < NELEM(commands); i++) {
-	    strcat(msg, commands[i].name);
-	    strcat(msg, " ");
+	if (!oper) {
+		return CMD_RESULT_NOT_OPERATOR;
 	}
-    }
-    else {
-	for (i = 0; i < NELEM(commands); i++) {
-	    if (!strncasecmp(arg, commands[i].name,
-			     strlen(commands[i].abbrev))) {
+
+	if (arg && !strcasecmp(arg, "all")) {
+		for (i = NumPlayers - 1; i >= 0; i--) {
+			Players[i]->score = 0;
+		}
+		Reset_all_players();
+		roundsPlayed = 0;
+		sprintf(msg, " < Total reset by %s! >", pl->name);
+		Set_message(msg);
+		strcpy(msg, "");
+	}
+	else {
+		Reset_all_players();
+
+		sprintf(msg, " < Round reset by %s! >", pl->name);
+		Set_message(msg);
+		strcpy(msg, "");
+	}
+
+	limitedRoundsGameOver = false;
+	return CMD_RESULT_SUCCESS;
+}
+
+static int32_t Cmd_password(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
+{
+	if (!password || !arg || strcmp(arg, password)) {
+		strcpy(msg, "Wrong.");
+		if (pl->isoperator) {
+			NumOperators--;
+			pl->isoperator = false;
+			strcat(msg, "  You lost operator status.");
+		}
+	}
+	else {
+		if (!pl->isoperator) {
+			NumOperators++;
+			pl->isoperator = true;
+		}
+		strcpy(msg, "You got operator status.");
+	}
+	return CMD_RESULT_SUCCESS;
+}
+
+static int32_t Cmd_lock(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
+{
+	int32_t new_lock;
+
+	if (!arg || !*arg) {
+		sprintf(msg, "The game is currently %s.", game_lock ? "locked"
+				: "unlocked");
+		return CMD_RESULT_SUCCESS;
+	}
+
+	if (!oper) {
+		return CMD_RESULT_NOT_OPERATOR;
+	}
+
+	if (!strcmp(arg, "1")) {
+		new_lock = 1;
+	}
+	else if (!strcmp(arg, "0")) {
+		new_lock = 0;
+	}
+	else {
+		sprintf(msg, "Invalid argument '%s'.  Specify either 0 or 1.",
+				arg);
+		return CMD_RESULT_ERROR;
+	}
+
+	if (new_lock == game_lock) {
+		sprintf(msg, "Game is already %s.", game_lock ? "locked"
+				: "unlocked");
+	}
+	else {
+		game_lock = new_lock;
+		sprintf(msg, " < The game has been %s by %s! >",
+				game_lock ? "locked" : "unlocked", pl->name);
+		Set_message(msg);
+		strcpy(msg, "");
+	}
+
+	return CMD_RESULT_SUCCESS;
+}
+
+static int32_t Cmd_set(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
+{
+	int32_t i;
+	int8_t *option;
+	int8_t *value;
+
+	if (!oper) {
+		return CMD_RESULT_NOT_OPERATOR;
+	}
+
+	/*
+	 * Second argument of second strtok is " " instead of ""
+	 * which allows setting string options to values that contain spaces.
+	 */
+	if (!arg || !(option = strtok(arg, " ")) || !(value = strtok(NULL, ""))) {
+
+		sprintf(msg, "Usage: /set option value.");
+		return CMD_RESULT_ERROR;
+	}
+
+	i = Tune_option(option, value);
+	if (i == 1) {
+		if (!strcasecmp(option, "password"))
+			sprintf(msg, "Operation successful.");
+		else {
+			int8_t value[MAX_CHARS];
+			Get_option_value(option, value, sizeof(value));
+			sprintf(msg, " < Option %s set to %s by %s. >", option,
+					value, pl->name);
+			Set_message(msg);
+			strcpy(msg, "");
+
+			return CMD_RESULT_SUCCESS;
+		}
+	}
+	else if (i == 0) {
+		sprintf(msg, "Invalid value.");
+	}
+	else if (i == -1) {
+		sprintf(msg, "This option cannot be changed at runtime.");
+	}
+	else if (i == -2) {
+		sprintf(msg, "No option named '%s'.", option);
+	}
+	else {
+		sprintf(msg, "Error.");
+	}
+
+	return CMD_RESULT_ERROR;
+}
+
+static int32_t Cmd_pause(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
+{
+	player_t *pl2;
+	const int8_t *errorstr;
+	size_t size = MSG_LEN;
+
+	if (!oper) {
+		return CMD_RESULT_NOT_OPERATOR;
+	}
+
+	if (!arg || !*arg) {
+		return CMD_RESULT_NO_NAME;
+	}
+
+	pl2 = Get_player_by_name(arg, NULL, &errorstr);
+	if (!pl2) {
+		strlcpy(msg, errorstr, size);
+		return CMD_RESULT_ERROR;
+	}
+
+	if (Player_is_connected(pl2)) {
+		if (BIT(pl2->status, PLAYING | PAUSE | GAME_OVER | KILLED)
+				== PLAYING) {
+			Kill_player(pl2, false);
+		}
+		Pause_player(pl2, true);
+		snprintf(msg, size, "%s was paused by %s. [*Server notice*]",
+				pl2->name, pl->name);
+		Set_message(msg);
+		strlcpy(msg, "", size);
+		return CMD_RESULT_SUCCESS;
+	}
+	else {
+		snprintf(msg, size, "Robots can't be paused.");
+		return CMD_RESULT_ERROR;
+	}
+
+	return CMD_RESULT_SUCCESS;
+}
+
+static int32_t Cmd_get(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
+{
+	int8_t value[MAX_CHARS];
+	int32_t i;
+
+	if (!arg || !*arg) {
+		strcpy(msg, "Usage: /get option.");
+		return CMD_RESULT_ERROR;
+	}
+
+	if (!strcasecmp(arg, "password") || !strcasecmp(arg, "mapData")) {
+		strcpy(msg, "Cannot retrieve that option.");
+		return CMD_RESULT_ERROR;
+	}
+
+	i = Get_option_value(arg, value, sizeof(value));
+
+	switch (i) {
+	case 1:
+		sprintf(msg, "The value of %s is %s.", arg, value);
+		return CMD_RESULT_SUCCESS;
+	case -2:
+		sprintf(msg, "No option named %s.", arg);
 		break;
-	    }
+	case -3:
+		sprintf(msg, "Cannot show the value of this option.");
+		break;
+	case -4:
+		sprintf(msg, "No value has been set for option %s.", arg);
+		break;
+	default:
+		strcpy(msg, "Generic error.");
+		break;
 	}
-	if (i == NELEM(commands)) {
-	    sprintf(msg, "No help for nonexistent command '%s'.", arg);
+
+	return CMD_RESULT_ERROR;
+}
+
+static int32_t Cmd_stats(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
+{
+	/*    UNUSED_PARAM(pl); UNUSED_PARAM(oper);*/
+	if (!arg || !*arg)
+		return CMD_RESULT_NO_NAME;
+
+	if (!Rank_get_stats(arg, msg)) {
+		sprintf(msg, "Player \"%s\" doesn't have ranking stats.", arg);
+		return CMD_RESULT_ERROR;
+	}
+	return CMD_RESULT_SUCCESS;
+}
+
+static int32_t Cmd_plinfo(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
+{
+	const int8_t *errorstr;
+	player_t *pl2;
+	size_t size = MSG_LEN;
+
+	if (!arg || !*arg)
+		return CMD_RESULT_NO_NAME;
+
+	pl2 = Get_player_by_name(arg, NULL, &errorstr);
+	if (!pl2) {
+		strlcpy(msg, errorstr, size);
+		return CMD_RESULT_ERROR;
+	}
+
+	snprintf(msg, size,
+			"%-15s Ver: 0x%x MaxFPS: %d Turnspeed: %.2f Turnres: %.2f"
+			/*"RTT: %i ms RTT_dev: %i ms"*/, pl2->name,
+			pl2->version, pl2->player_fps, pl2->turnspeed,
+			pl2->turnresistance);
+	/*(int32_t)((pl2->conn->rtt_smoothed >> 3) * timePerFrame * 1000),
+	 (int32_t)((pl2->conn->rtt_dev >> 2) * timePerFrame * 1000));*/
+
+	return CMD_RESULT_SUCCESS;
+}
+
+static int32_t Cmd_addr(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
+{
+	player_t *pl2 = NULL;
+	const int8_t *errorstr;
+	size_t size = MSG_LEN;
+
+	/*UNUSED_PARAM(pl);*/
+
+	if (!oper)
+		return CMD_RESULT_NOT_OPERATOR;
+
+	if (!arg || !*arg)
+		return CMD_RESULT_NO_NAME;
+
+	pl2 = Get_player_by_name(arg, NULL, &errorstr);
+	if (pl2) {
+		const int8_t *addr = Player_get_addr(pl2);
+
+		if (addr == NULL)
+			snprintf(msg, size, "Unable to get address for %s.",
+					pl2->name);
+		else
+			snprintf(msg, size, "%s plays from: %s.", pl2->name,
+					addr);
 	}
 	else {
-	    strcpy(msg, commands[i].help);
+		strlcpy(msg, errorstr, size);
+		return CMD_RESULT_ERROR;
 	}
-    }
 
-    return CMD_RESULT_SUCCESS;
-}
-
-
-static int Cmd_reset(char *arg, player_t *pl, int oper, char *msg)
-{
-    int			i;
-
-    if (!oper) {
-	return CMD_RESULT_NOT_OPERATOR;
-    }
-
-    if (arg && !strcasecmp(arg, "all")) {
-	for (i = NumPlayers - 1; i >= 0; i--) {
-	    Players[i]->score = 0;
-	}
-	Reset_all_players();
-	roundsPlayed = 0;
-	sprintf(msg, " < Total reset by %s! >", pl->name);
-	Set_message(msg);
-	strcpy(msg, "");
-    }
-    else {
-	Reset_all_players();
-
-	sprintf(msg, " < Round reset by %s! >", pl->name);
-	Set_message(msg);
-	strcpy(msg, "");
-    }
-
-    limitedRoundsGameOver = false;
-    return CMD_RESULT_SUCCESS;
-}
-
-
-static int Cmd_password(char *arg, player_t *pl, int oper, char *msg)
-{
-    if (!password || !arg || strcmp(arg, password)) {
-	strcpy(msg, "Wrong.");
-	if (pl->isoperator) {
-	    NumOperators--;
-	    pl->isoperator = 0;
-	    strcat(msg, "  You lost operator status.");
-	}
-    }
-    else {
-	if (!pl->isoperator) {
-	    NumOperators++;
-	    pl->isoperator = 1;
-	}
-	strcpy(msg, "You got operator status.");
-    }
-    return CMD_RESULT_SUCCESS;
-}
-
-
-static int Cmd_lock(char *arg, player_t *pl, int oper, char *msg)
-{
-    int			new_lock;
-
-    if (!arg || !*arg) {
-	sprintf(msg, "The game is currently %s.",
-		game_lock ? "locked" : "unlocked");
 	return CMD_RESULT_SUCCESS;
-    }
-
-    if (!oper) {
-	return CMD_RESULT_NOT_OPERATOR;
-    }
-
-    if (!strcmp(arg, "1")) {
-	new_lock = 1;
-    }
-    else if (!strcmp(arg, "0")) {
-	new_lock = 0;
-    }
-    else {
-	sprintf(msg, "Invalid argument '%s'.  Specify either 0 or 1.", arg);
-	return CMD_RESULT_ERROR;
-    }
-
-    if (new_lock == game_lock) {
-	sprintf(msg, "Game is already %s.",
-		game_lock ? "locked" : "unlocked");
-    }
-    else {
-	game_lock = new_lock;
-	sprintf(msg, " < The game has been %s by %s! >",
-		game_lock ? "locked" : "unlocked",
-		pl->name);
-	Set_message(msg);
-	strcpy(msg, "");
-    }
-
-    return CMD_RESULT_SUCCESS;
 }
 
-
-static int Cmd_set(char *arg, player_t *pl, int oper, char *msg)
+static int32_t Cmd_oldturn(int8_t *arg, player_t *pl, bool oper, int8_t *msg)
 {
-    int			i;
-    char		*option;
-    char		*value;
+	if (!arg || !*arg) {
+		sprintf(msg, "You are currently using %s turn code.",
+				pl->oldturn ? "old" : "new");
+		return CMD_RESULT_SUCCESS;
+	}
 
-    if (!oper) {
-	return CMD_RESULT_NOT_OPERATOR;
-    }
-
-    /*
-     * Second argument of second strtok is " " instead of ""
-     * which allows setting string options to values that contain spaces.
-     */
-    if (!arg
-	|| !(option = strtok(arg, " "))
-	|| !(value = strtok(NULL, ""))) {
-
-	sprintf(msg, "Usage: /set option value.");
-	return CMD_RESULT_ERROR;
-    }
-
-    i = Tune_option(option, value);
-    if (i == 1) {
-	if (!strcasecmp(option, "password"))
-	    sprintf(msg, "Operation successful.");
+	if (!strcmp(arg, "1")) {
+		pl->oldturn = true;
+	}
+	else if (!strcmp(arg, "0")) {
+		pl->oldturn = false;
+	}
 	else {
-	    char value[MAX_CHARS];
-	    Get_option_value(option, value, sizeof(value));
-	    sprintf(msg, " < Option %s set to %s by %s. >",
-		    option, value, pl->name);
-	    Set_message(msg);
-	    strcpy(msg, "");
-	    
-	    return CMD_RESULT_SUCCESS;
+		sprintf(msg, "Invalid argument '%s'.  Specify either 0 or 1.",
+				arg);
+		return CMD_RESULT_ERROR;
 	}
-    }
-    else if (i == 0) {
-	sprintf(msg, "Invalid value.");
-    }
-    else if (i == -1) {
-	sprintf(msg, "This option cannot be changed at runtime.");
-    }
-    else if (i == -2) {
-	sprintf(msg, "No option named '%s'.", option);
-    }
-    else {
-	sprintf(msg, "Error.");
-    }
 
-    return CMD_RESULT_ERROR;
-}
+	sprintf(msg, "You are now using %s turn code.", pl->oldturn ? "old"
+			: "new");
 
-
-static int Cmd_pause(char *arg, player_t *pl, int oper, char *msg)
-{
-    const char *errorstr;
-    size_t size = MSG_LEN;
-    player_t *pl2;
-    int i;
-
-    if (!oper) {
-	return CMD_RESULT_NOT_OPERATOR;
-    }
-
-    if (!arg || !*arg) {
-	return CMD_RESULT_NO_NAME;
-    }
-
-    pl2 = Get_player_by_name(arg, NULL, &errorstr);
-    if (!pl2) {
-	strlcpy(msg, errorstr, size);
-	return CMD_RESULT_ERROR;
-    }
-
-    i = GetInd[pl2->id];
-    if (pl2->conn != NOT_CONNECTED) {
-	if (BIT(pl2->status, PLAYING | PAUSE | GAME_OVER | KILLED)
-	    == PLAYING) {
-	    Kill_player(i, false);
-	}
-	Pause_player(i, 1);
-	snprintf(msg, size, "%s was paused by %s. [*Server notice*]",
-		 pl2->name, pl->name);
-	Set_message(msg);
-	strlcpy(msg, "", size);
 	return CMD_RESULT_SUCCESS;
-    }
-    else {
-	snprintf(msg, size, "Robots can't be paused.");
-	return CMD_RESULT_ERROR;
-    }
-
-    return CMD_RESULT_SUCCESS;
-}
-
-static int Cmd_get(char *arg, player_t *pl, int oper, char *msg)
-{
-    char value[MAX_CHARS];
-    int i;
-
-    if (!arg || !*arg) {
-	strcpy(msg, "Usage: /get option.");
-	return CMD_RESULT_ERROR;
-    }
-
-    if (!strcasecmp(arg, "password") ||
-	!strcasecmp(arg, "mapData")) {
-	strcpy(msg, "Cannot retrieve that option.");
-	return CMD_RESULT_ERROR;
-    }
-
-    i = Get_option_value(arg, value, sizeof(value));
-
-    switch (i) {
-    case 1:
-	sprintf(msg, "The value of %s is %s.", arg, value);
-	return CMD_RESULT_SUCCESS;
-    case -2:
-	sprintf(msg, "No option named %s.", arg);
-	break;
-    case -3:
-	sprintf(msg, "Cannot show the value of this option.");
-	break;
-    case -4:
-	sprintf(msg, "No value has been set for option %s.", arg);
-	break;
-    default:
-	strcpy(msg, "Generic error.");
-	break;
-    }
-
-    return CMD_RESULT_ERROR;
-}
-
-static int Cmd_stats(char *arg, player_t *pl, int oper, char *msg)
-{
-  /*    UNUSED_PARAM(pl); UNUSED_PARAM(oper);*/   
-    if (!arg || !*arg)   
-        return CMD_RESULT_NO_NAME;
-        
-    if (!Rank_get_stats(arg, msg)) {
-        sprintf(msg, "Player \"%s\" doesn't have ranking stats.", arg);
-        return CMD_RESULT_ERROR;
-    }
-    return CMD_RESULT_SUCCESS;
-}
-
-static int Cmd_plinfo(char *arg, player_t *pl, int oper, char *msg)
-{
-    const char *errorstr;
-    player_t *pl2;
-    size_t size = MSG_LEN;
-
-    if (!arg || !*arg)
-	return CMD_RESULT_NO_NAME;
-
-    pl2 = Get_player_by_name(arg, NULL, &errorstr);
-    if (!pl2) {
-	strlcpy(msg, errorstr, size);
-	return CMD_RESULT_ERROR;
-    }
-
-    snprintf(msg, size,
-	     "%-15s Ver: 0x%x MaxFPS: %d Turnspeed: %.2f Turnres: %.2f"
-	     /*"RTT: %i ms RTT_dev: %i ms"*/,
-	     pl2->name, pl2->version,
-	     pl2->player_fps, pl2->turnspeed, pl2->turnresistance);
-    /*(int)((pl2->conn->rtt_smoothed >> 3) * timePerFrame * 1000),
-      (int)((pl2->conn->rtt_dev >> 2) * timePerFrame * 1000));*/
-
-    return CMD_RESULT_SUCCESS;
-}
-
-static int Cmd_addr(char *arg, player_t *pl, int oper, char *msg)
-{
-    player_t *pl2 = NULL;
-    const char *errorstr;
-    size_t size = MSG_LEN;
-
-    /*UNUSED_PARAM(pl);*/
-
-    if (!oper)
-	return CMD_RESULT_NOT_OPERATOR;
-
-    if (!arg || !*arg)
-	return CMD_RESULT_NO_NAME;
-
-    pl2 = Get_player_by_name(arg, NULL, &errorstr);
-    if (pl2) {
-	const char *addr = Player_get_addr(pl2);
-
-	if (addr == NULL)
-	    snprintf(msg, size, "Unable to get address for %s.", pl2->name);
-	else
-	    snprintf(msg, size, "%s plays from: %s.", pl2->name, addr);
-    } else {
-	strlcpy(msg, errorstr, size);
-	return CMD_RESULT_ERROR;
-    }
-
-    return CMD_RESULT_SUCCESS;
-}
-
-static int Cmd_oldturn(char *arg, player_t *pl, int oper, char *msg)
-{
-    if (!arg || !*arg) {
-	sprintf(msg, "You are currently using %s turn code.",
-		pl->oldturn ? "old" : "new");
-	return CMD_RESULT_SUCCESS;
-    }
-
-    if (!strcmp(arg, "1")) {
-	pl->oldturn = 1;
-    }
-    else if (!strcmp(arg, "0")) {
-	pl->oldturn = 0;
-    }
-    else {
-	sprintf(msg, "Invalid argument '%s'.  Specify either 0 or 1.", arg);
-	return CMD_RESULT_ERROR;
-    }
-
-    sprintf(msg, "You are now using %s turn code.",
-	    pl->oldturn ? "old" : "new");
-
-    return CMD_RESULT_SUCCESS;
 }
