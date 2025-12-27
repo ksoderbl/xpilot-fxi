@@ -1,4 +1,4 @@
-/* $Id: global.h,v 1.3 2007/02/09 23:23:35 pgma Exp $
+/* $Id: global.h,v 1.7 2007/03/15 21:04:04 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -54,7 +54,7 @@ typedef struct {
 /*
  * Global data.
  */
-#define FPS		gameSpeed
+#define FPS		intGameSpeed
 
 
 /*#define NumObjs		(ObjCount + 0)*/
@@ -86,7 +86,6 @@ extern int		fireRepeatRate;
 extern long		DEF_BITS, KILL_BITS, DEF_HAVE, DEF_USED, USED_KILL;
 extern int		GetInd[];
 extern bool		RawMode;
-extern bool		NoQuit;
 extern bool		logRobots;
 extern long		main_loops;
 extern long		main_loops_slow;
@@ -108,9 +107,7 @@ extern bool		playerKillings;
 extern bool		playerShielding;
 extern bool		playerStartsShielded;
 extern bool		shotsWallBounce;
-extern bool		ballsWallBounce;
 extern bool		ballCollisions;
-extern bool		ballSparkCollisions;
 extern bool		sparksWallBounce;
 extern bool		debrisWallBounce;
 extern bool		cloakedExhaust;
@@ -139,17 +136,6 @@ extern bool		edgeWrap;
 extern bool		edgeBounce;
 extern bool		extraBorder;
 
-extern DFLOAT		shotKillScoreMult;
-extern DFLOAT		tankKillScoreMult;
-extern DFLOAT		runoverKillScoreMult;
-extern DFLOAT		ballKillScoreMult;
-extern DFLOAT		explosionKillScoreMult;
-extern DFLOAT		shoveKillScoreMult;
-extern DFLOAT		crashScoreMult;
-extern DFLOAT		selfKillScoreMult;
-extern DFLOAT		selfDestructScoreMult;
-extern DFLOAT		unownedKillScoreMult;
-
 extern bool		updateScores;
 extern bool		allowShipShapes;
 
@@ -171,7 +157,6 @@ extern DFLOAT		maxBallConnectorRatio;
 extern DFLOAT		ballConnectorLength;
 extern bool		connectorIsString;
 
-extern bool		allowViewing;
 extern int		game_lock;
 
 extern char		*motdFileName;
@@ -216,7 +201,8 @@ extern unsigned		SPACE_BLOCKS;
 
 extern int 	frameDivisor;
 extern int	fps;
-extern int	gameSpeed;
+extern int	intGameSpeed;
+extern DFLOAT	gameSpeed;
 extern char	*rankFileName;
 extern char	*rankWebpageFileName;
 

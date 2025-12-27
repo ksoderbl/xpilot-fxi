@@ -1,4 +1,4 @@
-/* $Id: option.c,v 1.1.1.1 2007/01/21 16:41:22 kps Exp $
+/* $Id: option.c,v 1.2 2007/03/03 11:28:46 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -945,21 +945,21 @@ static void Options_parse_FPS(void)
     char	*fpsstr;
     optOrigin	value_origin;
 
-    fpsstr = Option_get_value("gameSpeed", &value_origin);
+    fpsstr = Option_get_value("intGameSpeed", &value_origin);
     if (fpsstr != NULL) {
 	int		frames;
 
 	if (Convert_string_to_int(fpsstr, &frames) != TRUE) {
-	    warn("Invalid gameSpeed specification '%s' in %s.",
+	    warn("Invalid intGameSpeed specification '%s' in %s.",
 		fpsstr, Origin_name(value_origin));
 	}
 	else {
-	    gameSpeed = frames;
+	    intGameSpeed = frames;
 	}
     }
 
     if (FPS <= 0) {
-	fatal("Can't run with gamespeed %d, should be positive\n",
+	fatal("Can't run with intGameSpeed %d, should be positive\n",
 	    FPS);
     }
 

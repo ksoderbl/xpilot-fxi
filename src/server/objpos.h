@@ -1,4 +1,4 @@
-/* $Id: objpos.h,v 1.1.1.1 2007/01/21 16:41:22 kps Exp $
+/* $Id: objpos.h,v 1.3 2007/03/08 19:47:12 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -25,12 +25,10 @@
 #define OBJPOS_H
 
 void Object_position_set_clicks(object *obj, int cx, int cy);
-void Object_position_set_pixels(object *obj, DFLOAT x, DFLOAT y);
-void Object_position_init_pixels(object *obj, DFLOAT x, DFLOAT y);
+void Object_position_init_clicks(object *obj, int cx, int cy);
 void Player_position_restore(player *pl);
 void Player_position_set_clicks(player *pl, int cx, int cy);
-void Player_position_set_pixels(player *pl, DFLOAT x, DFLOAT y);
-void Player_position_init_pixels(player *pl, DFLOAT x, DFLOAT y);
+void Player_position_init_clicks(player *pl, int cx, int cy);
 void Player_position_limit(player *pl);
 void Player_position_debug(player *pl, const char *msg);
 

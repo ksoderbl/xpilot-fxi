@@ -1,4 +1,4 @@
-/* $Id: object.h,v 1.1.1.1 2007/01/21 16:41:22 kps Exp $
+/* $Id: object.h,v 1.2 2007/03/08 20:32:00 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -164,11 +164,6 @@ typedef struct {
     long	l3;			/* Fuel notify level */
 } pl_fuel_t;
 
-struct _visibility {
-    int		canSee;
-    long	lastChange;
-};
-
 /*
  * Shove-information.
  *
@@ -277,8 +272,6 @@ struct player {
      */
     shove_t     shove_record[MAX_RECORDED_SHOVES];
     int         shove_next;
-
-    struct _visibility *visibility;
 
     int		conn;			/* connection index, -1 if robot */
     unsigned	version;		/* XPilot version number of client */

@@ -1,4 +1,4 @@
-/* $Id: shot.c,v 1.1.1.1 2007/01/21 16:41:27 kps Exp $
+/* $Id: shot.c,v 1.5 2007/03/18 22:08:32 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -38,6 +38,7 @@
 #include "error.h"
 
 char shot_version[] = VERSION;
+extern int frame_cycle;
 
 /***********************
  * Functions for shots.
@@ -77,8 +78,8 @@ void Make_treasure_ball(int treasure)
 {
     object *ball;
     treasure_t *t = &(World.treasures[treasure]);
-   DFLOAT	x = (t->pos.x + 0.5) * BLOCK_SZ,
-		y = (t->pos.y * BLOCK_SZ) + 10;
+    int cx = (t->pos.x + 0.5) * BLOCK_CLICKS;
+    int cy = (t->pos.y * BLOCK_CLICKS) + 10 * CLICK;
 
     if (t->have) {
 	xpprintf ("%s Failed Make_treasure_ball(treasure=%d):\n", showtime(), treasure);
@@ -98,7 +99,7 @@ void Make_treasure_ball(int treasure)
     ball->acc.x = 0;
     ball->acc.y = 0;
     ball->dir = 0;
-    Object_position_init_pixels(ball, x, y);
+    Object_position_init_clicks(ball, cx, cy);
     ball->id = ball->owner = -1;
     ball->team = t->team;
     ball->type = OBJ_BALL;
@@ -119,9 +120,9 @@ void Fire_normal_shots(int ind)
     int			life, fuse = 0, lock = 0, status = 0, pl_range = 0, pl_radius = 0;
     DFLOAT		turnspeed = 0, max_speed = SPEED_LIMIT, angle;
     vector		mv;
-    position		shotpos;
+    clpos_t		shotpos;
     object              *shot = Obj[NumObjs];
-    DFLOAT x, y;
+    int cx, cy;
     u_short team        = pl->team;
     DFLOAT speed        = pl->shot_speed;
     int type = OBJ_SHOT;
@@ -137,10 +138,8 @@ void Fire_normal_shots(int ind)
     if (pl->shots >= pl->shot_max || BIT(pl->used, OBJ_SHIELD))
 	return;
 
-    x = pl->pos.x + pl->ship->m_gun[pl->dir].x;
-    y = pl->pos.y + pl->ship->m_gun[pl->dir].y;
-
-
+    cx = pl->pos.cx + FLOAT_TO_CLICK(pl->ship->m_gun[pl->dir].x);
+    cy = pl->pos.cy + FLOAT_TO_CLICK(pl->ship->m_gun[pl->dir].y);
 
     if (NumObjs >= MAX_TOTAL_SHOTS)
 	return;
@@ -177,32 +176,39 @@ void Fire_normal_shots(int ind)
     shot->owner     = -1;
     shot->color     = (pl ? pl->color : WHITE);
     
-    shotpos.x       = x;
-    shotpos.y       = y;
+    shotpos.cx = cx;
+    shotpos.cy = cy;
 
     NumObjs++;
     
-    shotpos.x = WRAP_XPIXEL(shotpos.x);
-    shotpos.y = WRAP_YPIXEL(shotpos.y);
-    if (shotpos.x < 0 || shotpos.x >= World.width
-	|| shotpos.y < 0 || shotpos.y >= World.height) {
+    shotpos.cx = WRAP_XCLICK(shotpos.cx);
+    shotpos.cy = WRAP_YCLICK(shotpos.cy);
+    if (shotpos.cx < 0 || shotpos.cx >= World.cwidth
+	|| shotpos.cy < 0 || shotpos.cy >= World.cheight) {
       NumObjs--;
       return;            /* this is necessary or the game will crash sometimes -pgm */
     }
     
-    Object_position_init_pixels(shot, shotpos.x, shotpos.y);
-    
-         
+    if (frame_cycle == 0)
+      Object_position_init_clicks(shot, shotpos.cx, shotpos.cy);
+    else
+      Object_position_init_clicks_interpolation(shot, shotpos.cx, shotpos.cy);
+
     mv.x = mv.y = shot->acc.x = shot->acc.y = 0;
     
     shot->vel.x     = mv.x + (pl ? pl->vel.x : 0.0) + tcos(dir) * speed;
     shot->vel.y     = mv.y + (pl ? pl->vel.y : 0.0) + tsin(dir) * speed;
+    
+    /* for shooting at interpolated frames, also update intermediate velocity */
+    if (frame_cycle != 0){
+      shot->vel_interp.x = shot->vel.x;
+      shot->vel_interp.y = shot->vel.y;
+    }
+    
     shot->status    = status;
     shot->dir       = dir;
     shot->pl_range  = pl_range;
     shot->pl_radius = pl_radius;
-   
-    
 }
 
 /* Removes shot from array */

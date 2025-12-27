@@ -1,4 +1,4 @@
-/* $Id: walls.h,v 1.1.1.1 2007/01/21 16:41:26 kps Exp $
+/* $Id: walls.h,v 1.3 2007/03/04 18:06:45 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -84,18 +84,15 @@ typedef struct {
     const move_info_t	*mip;
     move_crash_t	crash;
     move_bounce_t	bounce;
-    clpos		pos;
+    clpos_t		pos;
     vector		vel;
-    clvec		todo;
-    clvec		done;
+    clvec_t		todo;
+    clvec_t		done;
     int			dir;
     int			treasure;
 } move_state_t;
 
 struct move_parameters {
-    click_t		click_width;		/* Map width in clicks */
-    click_t		click_height;		/* Map width in clicks */
-
     int			max_shielded_angle;	/* max player bounce angle */
     int			max_unshielded_angle;	/* max player bounce angle */
 

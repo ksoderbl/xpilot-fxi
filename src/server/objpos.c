@@ -1,4 +1,4 @@
-/* $Id: objpos.c,v 1.1.1.1 2007/01/21 16:41:22 kps Exp $
+/* $Id: objpos.c,v 1.5 2007/03/18 22:08:32 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -35,16 +35,20 @@
 
 char objpos_version[] = VERSION;
 
+#define TESTING 1
+
 void Object_position_set_clicks(object *obj, int cx, int cy)
 {
     struct _objposition		*pos = (struct _objposition *)&obj->pos;
 
-    if (cx < 0 || cx >= PIXEL_TO_CLICK(World.width) || 
-	cy < 0 || cy >= PIXEL_TO_CLICK(World.height)) {
+#ifdef TESTING
+    if (cx < 0 || cx >= World.cwidth || 
+	cy < 0 || cy >= World.cheight) {
 	printf("BUG!  Illegal object position %d,%d\n", cx, cy);
 	*(double *)(-1) = 4321.0;
 	abort();
     }
+#endif
     pos->cx = cx;
     pos->x = CLICK_TO_PIXEL(cx);
     pos->bx = pos->x / BLOCK_SZ;
@@ -57,13 +61,15 @@ void Object_position_set_clicks(object *obj, int cx, int cy)
 void Object_position_set_clicks_interpolation(object *obj, int cx, int cy)
 {
     struct _objposition         *pos = (struct _objposition *)&obj->pos_interp;
-    if (cx < 0 || cx >= PIXEL_TO_CLICK(World.width) || 
-	cy < 0 || cy >= PIXEL_TO_CLICK(World.height)) {
+
+#ifdef TESTING
+    if (cx < 0 || cx >= World.cwidth || 
+	cy < 0 || cy >= World.cheight) {
 	printf("BUG!  Illegal object position interpolation %d,%d\n", cx, cy);
 	*(double *)(-1) = 4321.0;
 	abort();
     }
-    
+#endif
 
     pos->cx = cx;
     pos->x = CLICK_TO_PIXEL(cx);
@@ -73,46 +79,33 @@ void Object_position_set_clicks_interpolation(object *obj, int cx, int cy)
     pos->by = pos->y / BLOCK_SZ;
 }
 
-
-
-
-
-void Object_position_set_pixels(object *obj, DFLOAT x, DFLOAT y)
+void Object_position_init_clicks(object *obj, int cx, int cy)
 {
-    Object_position_set_clicks(obj, FLOAT_TO_CLICK(x), FLOAT_TO_CLICK(y));
-}
-
-void Object_position_set_pixels_interpolation(object *obj, DFLOAT x, DFLOAT y)
-{
-    Object_position_set_clicks_interpolation(obj, FLOAT_TO_CLICK(x), FLOAT_TO_CLICK(y));
-}
-
-
-
-void Object_position_init_pixels(object *obj, DFLOAT x, DFLOAT y)
-{
-    Object_position_set_clicks(obj, FLOAT_TO_CLICK(x), FLOAT_TO_CLICK(y));
+    Object_position_set_clicks(obj, cx, cy);
     Object_position_remember(obj);
 }
 
-void Object_position_init_pixels_interpolation(object *obj, DFLOAT x, DFLOAT y)
+void Object_position_init_clicks_interpolation(object *obj, int cx, int cy)
 {
-    Object_position_set_clicks_interpolation(obj, FLOAT_TO_CLICK(x), FLOAT_TO_CLICK(y));
+    Object_position_set_clicks_interpolation(obj, cx, cy);
+    Object_position_set_clicks(obj, cx, cy);
+    Object_position_remember(obj);
 }
-
 
 void Player_position_restore(player *pl)
 {
-    Player_position_set_pixels(pl, pl->prevpos.x, pl->prevpos.y);
+    Player_position_set_clicks(pl,
+			       PIXEL_TO_CLICK(pl->prevpos.x),
+			       PIXEL_TO_CLICK(pl->prevpos.y));
 }
 
 void Player_position_set_clicks(player *pl, int cx, int cy)
 {
     struct _objposition		*pos = (struct _objposition *)&pl->pos;
 
-#if 0
-    if (cx < 0 || cx >= PIXEL_TO_CLICK(World.width) || 
-	cy < 0 || cy >= PIXEL_TO_CLICK(World.height)) {
+#ifdef TESTING
+    if (cx < 0 || cx >= World.cwidth || 
+	cy < 0 || cy >= World.cheight) {
 	printf("BUG!  Illegal player position %d,%d\n", cx, cy);
 	*(double *)(-1) = 4321.0;
 	abort();
@@ -130,6 +123,15 @@ void Player_position_set_clicks(player *pl, int cx, int cy)
 void Player_position_set_clicks_interpolation(player *pl, int cx, int cy)
 {
     struct _objposition		*pos = (struct _objposition *)&pl->pos_interp;
+
+#ifdef TESTING
+    if (cx < 0 || cx >= World.cwidth || 
+	cy < 0 || cy >= World.cheight) {
+	printf("BUG!  Illegal player position interpolation %d,%d\n", cx, cy);
+	*(double *)(-1) = 4321.0;
+	abort();
+    }
+#endif
     pos->cx = cx;
     pos->x = CLICK_TO_PIXEL(cx);
     pos->bx = pos->x / BLOCK_SZ;
@@ -138,31 +140,21 @@ void Player_position_set_clicks_interpolation(player *pl, int cx, int cy)
     pos->by = pos->y / BLOCK_SZ;
 }
 
-
-
-
-
-
-void Player_position_set_pixels(player *pl, DFLOAT x, DFLOAT y)
+void Player_position_init_clicks(player *pl, int cx, int cy)
 {
-    Player_position_set_clicks(pl, FLOAT_TO_CLICK(x), FLOAT_TO_CLICK(y));
-}
-
-void Player_position_init_pixels(player *pl, DFLOAT x, DFLOAT y)
-{
-    Player_position_set_clicks(pl, FLOAT_TO_CLICK(x), FLOAT_TO_CLICK(y));
+    Player_position_set_clicks(pl, cx, cy);
     Player_position_remember(pl);
 }
 
 void Player_position_limit(player *pl)
 {
-    int			x = pl->pos.x, ox = x;
-    int			y = pl->pos.y, oy = y;
+    int			cx = pl->pos.cx, ox = cx;
+    int			cy = pl->pos.cy, oy = cy;
 
-    LIMIT(x, 0, World.width - 1);
-    LIMIT(y, 0, World.height - 1);
-    if (x != ox || y != oy) {
-	Player_position_set_clicks(pl, PIXEL_TO_CLICK(x), PIXEL_TO_CLICK(y));
+    LIMIT(cx, 0, World.cwidth - 1);
+    LIMIT(cy, 0, World.cheight - 1);
+    if (cx != ox || cy != oy) {
+	Player_position_set_clicks(pl, cx, cy);
     }
 }
 

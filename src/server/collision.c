@@ -1,4 +1,4 @@
-/* $Id: collision.c,v 1.1.1.1 2007/01/21 16:41:16 kps Exp $
+/* $Id: collision.c,v 1.2 2007/03/11 16:28:36 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -449,6 +449,7 @@ static void PlayerCollision(void)
 		    sprintf(msg, "%s and %s crashed.",
 			    pl->name, Players[j]->name);
 		    Set_message(msg);
+#define crashScoreMult 0.33
 		    sc = (int)floor(Rate(Players[j]->score, pl->score)
 				    * crashScoreMult);
 		    sc2 = (int)floor(Rate(pl->score, Players[j]->score)
@@ -460,8 +461,7 @@ static void PlayerCollision(void)
 		    sprintf(msg, "%s ran over %s.",
 			    pl->name, Players[j]->name);
 		    Set_message(msg);
-			sc = (int)floor(Rate(pl->score, Players[j]->score)
-					* runoverKillScoreMult);
+			sc = (int)floor(Rate(pl->score, Players[j]->score));
 			Score_players(i_tank_owner, sc, Players[j]->name,
 				      j, -sc, pl->name);
 		  }
@@ -472,8 +472,7 @@ static void PlayerCollision(void)
 		    sprintf(msg, "%s ran over %s.",
 			    Players[j]->name, pl->name);
 		    Set_message(msg);
-		    sc = (int)floor(Rate(Players[j]->score, pl->score)
-				    * runoverKillScoreMult);
+		    sc = (int)floor(Rate(Players[j]->score, pl->score));
 		    Score_players(j_tank_owner, sc, pl->name,
 				  i, -sc, Players[j]->name);
 		  }
@@ -670,8 +669,7 @@ static void PlayerObjectCollision(int ind)
 			  OBJ_Y_IN_BLOCKS(pl),
 			  Players[killer]->name);
 		} else {
-		    sc = (int)floor(Rate(Players[killer]->score, pl->score)
-			       * ballKillScoreMult);
+		    sc = (int)floor(Rate(Players[killer]->score, pl->score));
 		    Score_players(killer, sc, pl->name,
 				  ind, -sc, Players[killer]->name);
 		}
@@ -710,8 +708,7 @@ static void PlayerObjectCollision(int ind)
 			      OBJ_Y_IN_BLOCKS(pl),
 			      (killer == -1) ? "[Explosion]" : pl->name);
 		    } else {
-			sc = (int)floor(Rate(Players[killer]->score, pl->score)
-				   * explosionKillScoreMult);
+			sc = (int)floor(Rate(Players[killer]->score, pl->score));
 			Score_players(killer, sc, pl->name,
 				      ind, -sc, Players[killer]->name);
 		    }
@@ -779,8 +776,7 @@ static void PlayerObjectCollision(int ind)
 			      Players[killer]->name);
 		    } else {
 			Rank_add_kill(killer);
-			sc = (int)floor(Rate(Players[killer]->score, pl->score)
-				   * shotKillScoreMult);
+			sc = (int)floor(Rate(Players[killer]->score, pl->score));
 			Score_players(killer, sc, pl->name,
 				      ind, -sc, Players[killer]->name);
 		    }

@@ -1,4 +1,4 @@
-/* $Id: frame.c,v 1.3 2007/02/11 17:46:59 pgma Exp $
+/* $Id: frame.c,v 1.7 2007/03/08 20:32:00 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -97,7 +97,8 @@ static unsigned		debris_num[DEBRIS_TYPES],
 static debris_t		*fastshot_ptr[DEBRIS_TYPES * 2];
 static unsigned		fastshot_num[DEBRIS_TYPES * 2],
 			fastshot_max[DEBRIS_TYPES * 2];
-int gameSpeed;
+int intGameSpeed;
+DFLOAT gameSpeed;
 
 /*
  * Macro to make room in a given dynamic array for new elements.
@@ -316,8 +317,7 @@ static int Frame_status(int conn, int ind)
 	lock_id = pl->lock.pl_id;
 	lock_ind = GetInd[lock_id];
 	
-	if ((pl->visibility[lock_ind].canSee || TEAM(ind, lock_ind))
-	    && BIT(Players[lock_ind]->status, PLAYING|GAME_OVER) == PLAYING
+	if (BIT(Players[lock_ind]->status, PLAYING|GAME_OVER) == PLAYING
 	    && (playersOnRadar
 		|| inview(Players[lock_ind]->pos.x, Players[lock_ind]->pos.y))
 	    && pl->lock.distance != 0) {
@@ -582,25 +582,20 @@ static void Frame_ships(int conn, int ind)
 	continue;
       }
       
-      /* Don't transmit information if fighter is invisible */
-      if (pl->visibility[i].canSee
-	  || i == ind
-	    || TEAM(i, ind)) {
-	/*
-	 * Transmit ship information
-	 */
-	Send_ship(conn,
-		  pl_posx,
-		  pl_posy,
-		  pl_i->id,
-		  pl_i->dir,
-		  BIT(pl_i->used, OBJ_SHIELD) != 0,
-		  0 != 0,
-		  0 != 0,
-		  0 != 0,
-		  0 != 0
-		  );
-      }
+      /*
+       * Transmit ship information
+       */
+      Send_ship(conn,
+		pl_posx,
+		pl_posy,
+		pl_i->id,
+		pl_i->dir,
+		BIT(pl_i->used, OBJ_SHIELD) != 0,
+		0 != 0,
+		0 != 0,
+		0 != 0,
+		0 != 0
+		);
       
       if (BIT(pl_i->used, OBJ_REFUEL)) {
 	if (inview(World.fuel[pl_i->fs].pix_pos.x,
@@ -646,7 +641,7 @@ static void Frame_radar(int conn, int ind)
 	    if (Players[i]->conn == conn
 		|| BIT(Players[i]->status, PLAYING|PAUSE|GAME_OVER) != PLAYING
 		|| (!TEAM(i, ind)
-		    && (!playersOnRadar || !pl->visibility[i].canSee))) {
+		    && (!playersOnRadar))) {
 		continue;
 	    }
 	    x = Players[i]->pos.x;
@@ -654,7 +649,7 @@ static void Frame_radar(int conn, int ind)
 	    if (BIT(pl->used, OBJ_COMPASS)
 		&& BIT(pl->lock.tagged, LOCK_PLAYER)
 		&& GetInd[pl->lock.pl_id] == i
-		&& frame_loops % 5 >= 3) {
+		&& ((frame_loops / frameDivisor) % 5 >= 3)) {
 		continue;
 	    }
 	    s = 3;
@@ -718,7 +713,7 @@ void Frame_update(void)
     struct timeval tv1;
     if (++frame_loops >= LONG_MAX)	/* Used for misc. timing purposes */
 	frame_loops = 0;
-
+    
     Frame_shuffle();
 
     for (i = 0; i < NumPlayers; i++) {
@@ -728,28 +723,6 @@ void Frame_update(void)
 	    continue;
 	}
      
-	if (BIT(pl->status, PAUSE|GAME_OVER)
-	    && !allowViewing
-	    && !pl->isowner) {
-	    /*
-	     * Lower the frame rate for non-playing players
-	     * to reduce network load.
-	     * Owner always gets full framerate even if paused.
-	     * With allowViewing on, everyone gets full framerate.
-	     */
-	    if (BIT(pl->status, PAUSE)) {
-		if (frame_loops & 0x03) {
-		    continue;
-		}
-	    } else {
-		if (frame_loops & 0x01) {
-		    continue;
-		}
-	    }
-	}
-
-
-
 	
         /*
          * kps - with this implementation player fps can never
@@ -762,7 +735,7 @@ void Frame_update(void)
 
             while (fps > player_fps * divisor)
                 divisor *= 2;
-
+	    
             if ((frame_cycle % divisor) != 0)
 	      continue;
         }
@@ -792,7 +765,7 @@ void Frame_update(void)
 	//printf("start:%e %d\n",timeval_to_seconds(tv1));
       
 	if (Send_start_of_frame(conn) == -1) {
-	    continue;
+	  continue;
 	}
 
 	/*
@@ -811,8 +784,8 @@ void Frame_update(void)
 		    ((BIT(World.rules->mode, TEAM_PLAY)
 		      && pl->team != TEAM_NOT_SET)
 		     //  && pl->team == Players[GetInd[pl->lock.pl_id]]->team)
-		    || pl->isowner
-		    || allowViewing))) {
+		     || pl->isowner
+		     ))) {
 		ind = GetInd[pl->lock.pl_id];
 	    } else {
 		ind = i;

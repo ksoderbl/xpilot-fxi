@@ -1,4 +1,4 @@
-/* $Id: proto.h,v 1.1.1.1 2007/01/21 16:41:23 kps Exp $
+/* $Id: proto.h,v 1.2 2007/03/06 18:30:29 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -126,7 +126,7 @@ void Make_treasure_ball(int treasure);
 int Punish_team(int ind, int t_destroyed, int t_target);
 void Delete_shot(int ind);
 void Make_debris(
-	    /* pos.x, pos.y   */ DFLOAT  x,          DFLOAT y,
+	    /* pos.cx, pos.cy */ int    cx,          int cy,
 	    /* vel.x, vel.y   */ DFLOAT  velx,       DFLOAT vely,
 	    /* owner id       */ int    id,
 	    /* owner team     */ u_short team,
@@ -141,7 +141,7 @@ void Make_debris(
 	    /* min,max life   */ int    min_life,   int    max_life
 	    );
 void Make_wreckage(
-	    /* pos.x, pos.y   */ DFLOAT x,          DFLOAT y,
+	    /* pos.cx, pos.cy */ int cx,            int cy,
 	    /* vel.x, vel.y   */ DFLOAT velx,       DFLOAT vely,
 	    /* owner id       */ int    id,
 	    /* owner team     */ u_short team,
@@ -372,35 +372,6 @@ void Fire_laser(int ind);
 void Fire_general_laser(int ind, unsigned short team, DFLOAT x, DFLOAT y, int dir,
 			modifiers mods);
 void do_lose_item(int ind);
-void Make_debris(
-	    /* pos.x, pos.y   */ DFLOAT  x,          DFLOAT y,
-	    /* vel.x, vel.y   */ DFLOAT  velx,       DFLOAT vely,
-	    /* owner id       */ int    id,
-	    /* owner team     */ unsigned short team,
-	    /* type           */ int    type,
-	    /* mass           */ DFLOAT  mass,
-	    /* status         */ long   status,
-	    /* color          */ int    color,
-	    /* radius         */ int    radius,
-	    /* min,max debris */ int    min_debris, int    max_debris,
-	    /* min,max dir    */ int    min_dir,    int    max_dir,
-	    /* min,max speed  */ DFLOAT  min_speed,  DFLOAT  max_speed,
-	    /* min,max life   */ int    min_life,   int    max_life
-	    );
-void Make_wreckage(
-	    /* pos.x, pos.y   */ DFLOAT x,          DFLOAT y,
-	    /* vel.x, vel.y   */ DFLOAT velx,       DFLOAT vely,
-	    /* owner id       */ int    id,
-	    /* owner team     */ unsigned short team,
-	    /* min,max mass   */ DFLOAT min_mass,   DFLOAT max_mass,
-	    /* total mass     */ DFLOAT total_mass,
-	    /* status         */ long   status,
-	    /* color          */ int    color,
-	    /* max wreckage   */ int    max_wreckage,
-	    /* min,max dir    */ int    min_dir,    int    max_dir,
-	    /* min,max speed  */ DFLOAT min_speed,  DFLOAT max_speed,
-	    /* min,max life   */ int    min_life,   int    max_life
-	    );
 void Make_item(int px, int py,
 	       int vx, int vy,
 	       int item, int num_per_pack,

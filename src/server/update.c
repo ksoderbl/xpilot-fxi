@@ -1,4 +1,4 @@
-/* $Id: update.c,v 1.2 2007/02/09 23:23:35 pgma Exp $
+/* $Id: update.c,v 1.5 2007/03/18 22:08:32 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -113,6 +113,18 @@ void Update_objects_interpolation(void)
   player *pl;
   object *obj;
   int player_fps;
+
+  if (fireRepeatRate > 0) {
+    for (i = 0; i < NumPlayers; i++) {
+      pl = Players[i];
+      if (BIT(pl->used, OBJ_SHOT)) {
+	Fire_normal_shots(i);
+      }
+    }
+  }
+  
+
+
   for (i = 0; i < NumObjs; i++) {
     obj = Obj[i];
     if (BIT(obj->type, OBJ_BALL)) {
@@ -122,7 +134,7 @@ void Update_objects_interpolation(void)
     Move_object_interpolation(i);
   }
 
- /* printf("interp:%d %d\n", main_loops, frame_loops);*/
+  /* printf("interp:%d %d\n", main_loops, frame_loops); */
   
   for (i = 0; i < NumPlayers; i++){
     pl = Players[i];
@@ -300,10 +312,6 @@ void Update_objects(void)
 	 */
 	if (BIT(pl->used, OBJ_SHIELD))
 	    Add_fuel(&(pl->fuel), (long)ED_SHIELD);
-
-
-	for (j = 0; j < NumPlayers; j++)
-	  pl->visibility[j].canSee = 1;
 
 	if (BIT(pl->used, OBJ_REFUEL)) {
 	    if ((Wrap_length(pl->pos.x - World.fuel[pl->fs].pix_pos.x,

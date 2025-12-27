@@ -1,4 +1,4 @@
-/* $Id: cmdline.c,v 1.3 2007/02/09 23:23:35 pgma Exp $
+/* $Id: cmdline.c,v 1.7 2007/03/15 21:04:04 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -65,8 +65,6 @@ int		fireRepeatRate;		/* Frames per autorepeat fire (0=off) */
 
 bool		RawMode;		/* Let robots live even if there */
 					/* are no players logged in */
-bool		NoQuit;			/* Don't quit even if there are */
-					/* no human players playing */
 bool		logRobots;		/* log robots coming and going */
 char		*mapFileName;		/* Name of mapfile... */
 char		*mapData;		/* Raw map data... */
@@ -86,9 +84,7 @@ bool		playerStartsShielded;	/* Players start with shields up? */
 bool		shotsWallBounce;	/* Do shots bounce off walls? */
 bool		sparksWallBounce;	/* Do sparks bounce off walls? */
 bool		debrisWallBounce;	/* Do sparks bounce off walls? */
-bool		ballsWallBounce;	/* Do balls bounce off walls? */
 bool		ballCollisions;		/* Do balls participate in colls.? */
-bool		ballSparkCollisions;	/* Do sparks push balls around? */
 DFLOAT		maxObjectWallBounceSpeed;	/* max object bounce speed */
 DFLOAT		maxShieldedWallBounceSpeed;	/* max shielded bounce speed */
 DFLOAT		maxUnshieldedWallBounceSpeed; /* max unshielded bounce speed */
@@ -118,16 +114,6 @@ char		*scoreTableFileName;	/* Name of score table file */
 char		*adminMessageFileName;	/* Name of admin message file */
 int		adminMessageFileSizeLimit;/* Limit on admin message file size */
 
-DFLOAT		shotKillScoreMult;
-DFLOAT		runoverKillScoreMult;
-DFLOAT		ballKillScoreMult;
-DFLOAT		explosionKillScoreMult;
-DFLOAT		shoveKillScoreMult;
-DFLOAT		crashScoreMult;
-DFLOAT		selfKillScoreMult;
-DFLOAT		selfDestructScoreMult;
-DFLOAT		unownedKillScoreMult;
-
 bool		allowShipShapes;
 
 bool		playersOnRadar;		/* Are players visible on radar? */
@@ -135,7 +121,6 @@ bool		playersOnRadar;		/* Are players visible on radar? */
 bool		reportToMetaServer;	/* Send status to meta-server? */
 bool		searchDomainForXPilot;	/* Do a DNS lookup for XPilot.domain? */
 char		*denyHosts;		/* Computers which are denied service */
-bool		allowViewing;		/* Are players allowed to watch others? */
 
 bool		teamAssign;		/* Assign player to team if not set? */
 bool		teamImmunity;		/* Is team immune from player action */
@@ -464,17 +449,6 @@ static option_desc options[] = {
 	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
     },
     {
-	"noQuit",
-	"noQuit",
-	"false",
-	&NoQuit,
-	valBool,
-	tuner_dummy,
-	"Does the server wait for new human players to show up\n"
-	"after all players have left.\n",
-	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
-    },
-    {
 	"logRobots",
 	"logRobots",
 	"true",
@@ -638,16 +612,6 @@ static option_desc options[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
-	"ballsWallBounce",
-	"ballsWallBounce",
-	"yes",
-	&ballsWallBounce,
-	valBool,
-	Move_init,
-	"Do balls bounce off walls?\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
 	"ballCollisions",
 	"ballCollisions",
 	"no",
@@ -656,16 +620,6 @@ static option_desc options[] = {
 	tuner_dummy,
 	"Can balls collide with other objects?\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-	"ballSparkCollisions",
-	"ballSparkCollisions",
-	"yes",
-	&ballSparkCollisions,
-	valBool,
-	tuner_dummy,
-	"Can balls be blown around by exhaust? (Needs ballCollisions too)\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE	
     },
     {
 	"sparksWallBounce",
@@ -1086,13 +1040,23 @@ static option_desc options[] = {
 	OPT_COMMAND | OPT_DEFAULTS
     },
     {
-	"gameSpeed",
-	"gameSpeed",
+	"intGameSpeed",
+	"intGameSpeed",
 	"12",
-	&gameSpeed,
+	&intGameSpeed,
 	valInt,
 	tuner_dummy,
 	"The number of timings per second the server uses for timing purposes.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
+	"gameSpeed",
+	"gameSpeed",
+	"12.0",
+	&gameSpeed,
+	valReal,
+	tuner_gamespeed,
+	"The number of ticks per second for timing purposes.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
@@ -1116,97 +1080,6 @@ static option_desc options[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
-	"shotKillScoreMult",
-	"shotKillScoreMult",
-	"1.0",
-	&shotKillScoreMult,
-	valReal,
-	tuner_dummy,
-	"Multiplication factor to scale score for shot kills.\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-        "runoverKillScoreMult",
-        "runoverKillScoreMult",
-        "0.33",
-        &runoverKillScoreMult,
-        valReal,
-        tuner_dummy,
-        "Multiplication factor to scale score for player runovers.\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-        "ballKillScoreMult",
-        "ballKillScoreMult",
-        "1.0",
-        &ballKillScoreMult,
-        valReal,
-        tuner_dummy,
-        "Multiplication factor to scale score for ball kills.\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-        "explosionKillScoreMult",
-        "explosionKillScoreMult",
-        "0.33",
-        &explosionKillScoreMult,
-        valReal,
-        tuner_dummy,
-        "Multiplication factor to scale score for explosion kills.\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-        "shoveKillScoreMult",
-        "shoveKillScoreMult",
-        "0.5",
-        &shoveKillScoreMult,
-        valReal,
-        tuner_dummy,
-        "Multiplication factor to scale score for shove kills.\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-        "crashScoreMult",
-        "crashScoreMult",
-        "0.33",
-        &crashScoreMult,
-        valReal,
-        tuner_dummy,
-        "Multiplication factor to scale score for player crashes.\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-	"selfKillScoreMult",
-	"selfKillScoreMult",
-	"0.5",
-	&selfKillScoreMult,
-	valReal,
-	tuner_dummy,
-	"Multiplication factor to scale score for killing yourself.\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-	"selfDestructScoreMult",
-	"selfDestructScoreMult",
-	"0",
-	&selfDestructScoreMult,
-	valReal,
-	tuner_dummy,
-	"Multiplication factor to scale score for self-destructing.\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-	"unownedKillScoreMult",
-	"unownedKillScoreMult",
-	"0.5",
-	&unownedKillScoreMult,
-	valReal,
-	tuner_dummy,
-	"Multiplication factor to scale score for being killed by asteroids\n"
-	"or other objects without an owner.\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
 	"initialFuel",
 	"initialFuel",
 	"800",
@@ -1224,16 +1097,6 @@ static option_desc options[] = {
 	valInt,
 	Set_initial_resources,
 	"How many afterburners players start with.\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-	"allowViewing",
-	"allowViewing",
-	"false",
-	&allowViewing,
-	valBool,
-	tuner_dummy,
-	"Are players allowed to watch any other player while paused, waiting or dead?\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {

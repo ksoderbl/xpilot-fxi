@@ -1,4 +1,4 @@
-/* $Id: click.h,v 1.1.1.1 2007/01/21 16:41:17 kps Exp $
+/* $Id: click.h,v 1.3 2007/03/04 18:06:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -50,29 +50,29 @@
 #define WRAP_XCLICK(x_)	\
 	(BIT(World.rules->mode, WRAP_PLAY) \
 	    ? ((x_) < 0 \
-		? (x_) + mp.click_width \
-		: ((x_) >= mp.click_width \
-		    ? (x_) - mp.click_width \
+		? (x_) + World.cwidth \
+		: ((x_) >= World.cwidth \
+		    ? (x_) - World.cwidth \
 		    : (x_))) \
 	    : (x_))
 
 #define WRAP_YCLICK(y_)	\
 	(BIT(World.rules->mode, WRAP_PLAY) \
 	    ? ((y_) < 0 \
-		? (y_) + mp.click_height \
-		: ((y_) >= mp.click_height \
-		    ? (y_) - mp.click_height \
+		? (y_) + World.cheight \
+		: ((y_) >= World.cheight \
+		    ? (y_) - World.cheight \
 		    : (y_))) \
 	    : (y_))
 
 typedef int click_t;
 
 typedef struct {
-    click_t		x, y;
-} clpos;
+    click_t		cx, cy;
+} clpos_t;
 
 typedef struct {
-    click_t		x, y;
-} clvec;
+    click_t		cx, cy;
+} clvec_t;
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: play.c,v 1.1.1.1 2007/01/21 16:41:22 kps Exp $
+/* $Id: play.c,v 1.2 2007/03/06 18:30:29 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -128,7 +128,7 @@ int Punish_team(int ind, int t_destroyed, int t_target)
 
 /* Create debris particles */
 void Make_debris(
-    /* pos.x, pos.y   */ DFLOAT  x,          DFLOAT y,
+    /* pos.cx, pos.cy */ int    cx,          int cy,
     /* vel.x, vel.y   */ DFLOAT  velx,       DFLOAT vely,
     /* owner id       */ int    id,
     /* owner team     */ u_short team,
@@ -146,13 +146,9 @@ void Make_debris(
     object		*debris;
     int			i, num_debris, life;
 
-    if (BIT(World.rules->mode, WRAP_PLAY)) {
-	if (x < 0) x += World.width;
-	else if (x >= World.width) x -= World.width;
-	if (y < 0) y += World.height;
-	else if (y >= World.height) y -= World.height;
-    }
-    if (x < 0 || x >= World.width || y < 0 || y >= World.height) {
+    cx = WRAP_XCLICK(cx);
+    cy = WRAP_YCLICK(cy);
+    if (cx < 0 || cx >= World.cwidth || cy < 0 || cy >= World.cheight) {
 	return;
     }
     if (max_life < min_life)
@@ -185,7 +181,7 @@ void Make_debris(
 	debris->id = id;
 	debris->team = team;
 	debris->owner = -1;
-	Object_position_init_pixels(debris, x, y);
+	Object_position_init_clicks(debris, cx, cy);
 	dir = MOD2(min_dir + (int)(rfrac() * (max_dir - min_dir)), RES);
 	dirplus = MOD2(dir + 1, RES);
 	diroff = rfrac();

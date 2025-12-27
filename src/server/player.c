@@ -1,4 +1,4 @@
-/* $Id: player.c,v 1.1.1.1 2007/01/21 16:41:22 kps Exp $
+/* $Id: player.c,v 1.3 2007/03/08 20:32:00 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -139,9 +139,9 @@ void Go_home(int ind)
 
     pl->dir = dir;
     pl->float_dir = dir;
-    Player_position_init_pixels(pl,
-				(x + 0.5) * BLOCK_SZ + vx,
-				(y + 0.5) * BLOCK_SZ + vy);
+    Player_position_init_clicks(pl,
+				(x + 0.5) * BLOCK_CLICKS,
+				(y + 0.5) * BLOCK_CLICKS);
     pl->vel.x = vx;
     pl->vel.y = vy;
     pl->velocity = velo;
@@ -159,10 +159,6 @@ void Go_home(int ind)
 	}
     }
     CLR_BIT(pl->status, THRUSTING);
-    for (i = 0; i < NumPlayers; i++) {
-	pl->visibility[i].lastChange = 0;
-	Players[i]->visibility[ind].lastChange = 0;
-    }
 
     if (IS_ROBOT_PTR(pl)) {
 	Robot_go_home(ind);
@@ -364,12 +360,10 @@ int Init_player(int ind, wireobj *ship)
 
 
 static player			*playerArray;
-static struct _visibility	*visibilityArray;
 
 void Alloc_players(int number)
 {
     player *p;
-    struct _visibility *t;
     int i;
 
 
@@ -379,12 +373,7 @@ void Alloc_players(int number)
     /* Allocate space for all entries, all player structs */
     p = playerArray = (player *) calloc(number, sizeof(player));
 
-    /* Allocate space for all visibility arrays, n arrays of n entries */
-    t = visibilityArray =
-	(struct _visibility *) calloc(number * number,
-				      sizeof(struct _visibility));
-
-    if (!Players || !playerArray || !visibilityArray) {
+    if (!Players || !playerArray) {
 	error("Not enough memory for Players.");
 	exit(1);
     }
@@ -394,9 +383,6 @@ void Alloc_players(int number)
 
     for (i = 0; i < number; i++) {
 	Players[i] = p++;
-	Players[i]->visibility = t;
-	/* Advance to next block/array */
-	t += number;
     }
 }
 
@@ -410,7 +396,6 @@ void Free_players(void)
 	Players = NULL;
 
 	free(playerArray);
-	free(visibilityArray);
     }
 }
 

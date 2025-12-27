@@ -1,4 +1,4 @@
-/* $Id: server.c,v 1.2 2007/02/09 23:23:35 pgma Exp $
+/* $Id: server.c,v 1.5 2007/03/03 12:25:14 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -168,11 +168,9 @@ int main(int argc, char **argv)
 	End_game();
     }
 
-    if (NoQuit) {
-      signal(SIGHUP, SIG_IGN);
-    } else {
-      signal(SIGHUP, Handle_signal);
-    }
+   
+    signal(SIGHUP, SIG_IGN);
+    
     signal(SIGTERM, Handle_signal);
     signal(SIGINT, Handle_signal);
     signal(SIGPIPE, SIG_IGN);
@@ -252,7 +250,7 @@ void Main_loop(void)
     
   }
   
-  checkPlayers();
+
   Queue_loop();
 #if 0
   if (frame_cycle == 0){
@@ -267,23 +265,9 @@ void Main_loop(void)
 
 
 
-void checkPlayers(void){
-  if (!NoQuit
-      && NumPlayers == NumRobots + NumPseudoPlayers
-      && !login_in_progress
-      && !NumQueuedPlayers) {
-    
-    if (!NoPlayersEnteredYet) {
-      End_game();
-    }
-    if (serverTime + 5*60 < time(NULL)) {
-      error("First player has yet to show his butt, I'm bored... Bye!");
-      Log_game("NOSHOW");
-      End_game();
-    }
-  }
+
   
-}
+
 
 
 static inline double timeval_to_seconds(struct timeval tv)
@@ -558,26 +542,21 @@ static void Handle_signal(int sig_no)
     switch (sig_no) {
 
     case SIGHUP:
-	if (NoQuit) {
-	    signal(SIGHUP, SIG_IGN);
-	    return;
-	}
-	error("Caught SIGHUP, terminating.");
-	End_game();
-	break;
+      signal(SIGHUP, SIG_IGN);
+      return;
     case SIGINT:
-	error("Caught SIGINT, terminating.");
-	End_game();
-	break;
+      error("Caught SIGINT, terminating.");
+      End_game();
+      break;
     case SIGTERM:
-	error("Caught SIGTERM, terminating.");
-	End_game();
-	break;
-
+      error("Caught SIGTERM, terminating.");
+      End_game();
+      break;
+      
     default:
-	error("Caught unkown signal: %d", sig_no);
-	End_game();
-	break;
+      error("Caught unkown signal: %d", sig_no);
+      End_game();
+      break;
     }
     _exit(sig_no);	/* just in case */
 }

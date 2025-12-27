@@ -1,4 +1,4 @@
-/* $Id: robotdef.c,v 1.1.1.1 2007/01/21 16:41:24 kps Exp $
+/* $Id: robotdef.c,v 1.2 2007/03/08 20:32:00 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -744,30 +744,7 @@ static bool Check_robot_hunt(int ind)
 
 static bool Detect(int ind, int j)
 {
-    player *pl = Players[ind],
-	   *ship = Players[j];
-    int dx, dy;
-
-    if (pl->visibility[j].canSee)
-	return true;		/* trivial */
-
-    dx = ship->pos.x - pl->pos.x, dx = WRAP_DX(dx);
-    dy = ship->pos.y - pl->pos.y, dy = WRAP_DY(dy);
-    if (sqr(dx) + sqr(dy) > sqr(VISIBILITY_DISTANCE))
-	return false;		/* can't detect ships beyond visual range */
-
-    if (BIT(ship->status, THRUSTING))
-	return true;
-
-    if (BIT(ship->used, OBJ_SHOT|
-			OBJ_REFUEL|
-			OBJ_CONNECTOR))
-	return true;
-
-    if (BIT(ship->have, OBJ_BALL))
-	return true;
-
-    return false;		/* the sky seems clear.. */
+    return true;		/* trivial */
 }
 
 /*

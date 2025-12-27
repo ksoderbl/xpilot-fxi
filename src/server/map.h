@@ -1,4 +1,4 @@
-/* $Id: map.h,v 1.1.1.1 2007/01/21 16:41:19 kps Exp $
+/* $Id: map.h,v 1.2 2007/03/04 18:06:45 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -103,6 +103,7 @@ typedef struct {
     int		x, y;		/* Size of world in blocks */
     int		diagonal;	/* Diagonal length in blocks */
     int		width, height;	/* Size of world in pixels (optimization) */
+    int		cwidth, cheight;/* Size of world in clicks (optimization) */
     int		hypotenuse;	/* Diagonal length in pixels (optimization) */
     rules_t	*rules;
     char	name[MAX_CHARS];

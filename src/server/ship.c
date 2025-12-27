@@ -1,4 +1,4 @@
-/* $Id: ship.c,v 1.1.1.1 2007/01/21 16:41:26 kps Exp $
+/* $Id: ship.c,v 1.2 2007/03/06 18:30:29 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -55,8 +55,8 @@ void Thrust(int ind)
 					? (keep_rand)
 					: (keep_rand = rand())) & 0x03);
     int			tot_sparks = (int)((pl->power * 0.15) + this_rand + 1);
-    DFLOAT		x = pl->pos.x + pl->ship->engine[pl->dir].x;
-    DFLOAT		y = pl->pos.y + pl->ship->engine[pl->dir].y;
+    int		cx = pl->pos.cx + FLOAT_TO_CLICK(pl->ship->engine[pl->dir].x);
+    int		cy = pl->pos.cy + FLOAT_TO_CLICK(pl->ship->engine[pl->dir].y);
     int			afterburners, alt_sparks;
 
     afterburners = pl->item[ITEM_AFTERBURNER];
@@ -65,7 +65,7 @@ void Thrust(int ind)
 		    : 0;
 
     Make_debris(
-	/* pos.x, pos.y   */ x, y,
+	/* pos.cx, pos.cy */ cx, cy,
 	/* vel.x, vel.y   */ pl->vel.x, pl->vel.y,
 	/* owner id       */ pl->id,
 	/* owner team	  */ pl->team,
@@ -81,7 +81,7 @@ void Thrust(int ind)
 	);
 
     Make_debris(
-	/* pos.x, pos.y   */ x, y,
+	/* pos.cx, pos.cy */ cx, cy,
 	/* vel.x, vel.y   */ pl->vel.x, pl->vel.y,
 	/* owner id       */ pl->id,
 	/* owner team	  */ pl->team,
@@ -278,7 +278,7 @@ void Update_tanks(pl_fuel_t *ft)
 
 
 void Make_wreckage(
-    /* pos.x, pos.y     */ DFLOAT x,            DFLOAT y,
+    /* pos.cx, pos.cy   */ int    cx,           int cy,
     /* vel.x, vel.y     */ DFLOAT velx,         DFLOAT vely,
     /* owner id         */ int    id,
     /* owner team	*/ u_short team,
@@ -299,13 +299,9 @@ void Make_wreckage(
     if (!useWreckage) {
 	return;
     }
-    if (BIT(World.rules->mode, WRAP_PLAY)) {
-	if (x < 0) x += World.width;
-	else if (x >= World.width) x -= World.width;
-	if (y < 0) y += World.height;
-	else if (y >= World.height) y -= World.height;
-    }
-    if (x < 0 || x >= World.width || y < 0 || y >= World.height) {
+    cx = WRAP_XCLICK(cx);
+    cy = WRAP_YCLICK(cy);
+    if (cx < 0 || cx >= World.cwidth || cy < 0 || cy >= World.cheight) {
 	return;
     }
     if (max_life < min_life)
@@ -339,7 +335,7 @@ void Make_wreckage(
 	wreckage->type = OBJ_WRECKAGE;
 
 	/* Position */
-	Object_position_init_pixels(wreckage, x, y);
+	Object_position_init_clicks(wreckage, cx, cy);
 
 	/* Direction */
 	dir = MOD2(min_dir + (int)(rfrac() * MOD2(max_dir - min_dir, RES)), RES);
@@ -403,7 +399,7 @@ void Explode_fighter(int ind)
     max_debris >>= 1;
 
     Make_debris(
-	/* pos.x, pos.y   */ pl->pos.x, pl->pos.y,
+	/* pos.cx, pos.cy */ pl->pos.cx, pl->pos.cy,
 	/* vel.x, vel.y   */ pl->vel.x, pl->vel.y,
 	/* owner id       */ pl->id,
 	/* owner team	  */ pl->team,
@@ -421,7 +417,7 @@ void Explode_fighter(int ind)
     if ( !BIT(pl->status, KILLED) )
 	return;
     Make_wreckage(
-	/* pos.x, pos.y     */ pl->pos.x, pl->pos.y,
+	/* pos.cx, pos.cy   */ pl->pos.cx, pl->pos.cy,
 	/* vel.x, vel.y     */ pl->vel.x, pl->vel.y,
 	/* owner id         */ pl->id,
 	/* owner team	    */ pl->team,
