@@ -619,7 +619,7 @@ static void Give_best_player_bonus(int average_score,
     char		msg[MSG_LEN];
 
 
-    if (num_best_players == 0) {
+    if (best_ratio == 0) {
 	sprintf(msg, "There is no Deadly Player");
     }
     else if (num_best_players == 1) {
@@ -1151,7 +1151,7 @@ void Delete_player(int ind)
     if (pl->rank) { 
       Rank_save_score(pl);
       if (NumPlayers == NumRobots + NumPseudoPlayers) {
-	/*printf("Rank_save\n");*/
+	printf("Rank_save\n");
 	Rank_write_webpage();
 	Rank_write_rankfile();
       }

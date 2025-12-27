@@ -3,7 +3,7 @@
 numRounds: 0
 robots:0
 emcsreprogrammines:yes
-playerminimumstartfuel:500
+playerminimumstartfuel:600
 emcsreprogrammines:yes
 
 limitedlives : yes
@@ -123,7 +123,7 @@ itememergencythrustprob : 0.2
 itemtractorbeamprob : 0.7
 itemautopilotprob : 0.0
 itememergencyshieldprob : 0.6
-initialfuel : 1000
+initialfuel : 600
 initialtanks : 0
 initialecms : 0
 initialmines : 0

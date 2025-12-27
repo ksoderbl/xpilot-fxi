@@ -11,6 +11,18 @@ This distribution is based on the old xpilot-fix series, but here we
 have a new autoconfig package, and a cleaned up distribution.
 
 
+Note that the technical performance of xpilot playing is heavily 
+dependent on proper equipment, both hardware and software.
+Having a good link is only one of the several factors that affects
+quality of gameplay seriously. It cannot be stressed enough that 
+a high quality mouse and mousepad is essential for top performance. 
+It's a part of the goodness of an xpilot player to be able to assess
+and use best equipment, so I will not reveal here which equipment
+is known to be the best. As a clue, I can reveal that playing
+on a Linux system with a logitech optical mouse is certainly not
+among the best combinations. 
+
+
 *** NOTE: Support for anything other than Blood's style
     maps & dodgers has been totally removed (useless). In 
     particular, targets, cannons, items, wormholes and weapons 
@@ -23,14 +35,14 @@ have a new autoconfig package, and a cleaned up distribution.
     for server performance, and make it a canonical and clean
     distribution for a professional Blood's music player. It
     is also meant a research platform for making even better
-    servers with new a revolutionary techniques. Unfortunately,
+    servers with new and revolutionary techniques. Unfortunately,
     not many even bother to notice the improvements it brings,
     but I hope that some day there will pop up a few exceptionally
     talented players who will realize the value of it. If not,
     the author has at least and at last one decent server for his 
     own use.
     This release is meant to be used with Linux 2.4, 2.6,
-    FreeBSD, Digital Unix, and nothing else.
+    FreeBSD, Digital Unix, and perhaps IRIX and Solaris.
 ***
 
 
@@ -212,16 +224,30 @@ unsymmetricity it introduces.. so don't use 16 2/3 fps on a 50 fps server!
 - connector maxratio was increased from 0.30 to 0.32, because the ship
   moves on the average faster than before, so to support faster moves
   the connector must not snap as easily as before; this will not make
-  records for ballruns faster though, but only average ballruns will be 
-  faster
+  records for ballruns faster though, but only ballruns on the average 
+  will be faster
 - fixed the ballpopping, it now shows correctly also on interpolated frames
 - fixed the viewing, works now to view all players
 - fixed a bug from 1.2.2: the shots routine can cause a server crash if the
   shots appear outside the map area
 
+1.3.2fxi:
+- fixed the configure.ac script for FreeBSD to find expat library if 
+  system keeps it installed in a non-standard place
+- fixed the walls with Virus' turnqueue hack (should work better now
+  with no steering loss)
+- fixed rank to save scores when player exits
+- fixed the treasure bug which was the result of the popping fix of 1.3.1
+- fixed the limited rounds game to work; ugly hacks in 4.3.0 code was
+  removed and cleaned up somewhat
+- added xpping utility under contrib, not finished
+- kps fix for server crash when someone quits (fxi-fix.diff)
+- fixed the loss in steering bug (this improvement still needs rethinking)
 
-TODO
 ----
+PROBLEMS
+- rank code isnt still working (using old find player routine)
+
 
 2.x.xfinal
 - rewrite packet protocol, delete unused stuff in packets

@@ -170,6 +170,8 @@ void Update_objects(void)
     /*
      * Update robots.
      */
+
+    if (frame_cycle == 0)
     Robot_update();
 
     /*

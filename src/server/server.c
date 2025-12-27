@@ -86,6 +86,8 @@ time_t			serverTime = 0;
 
 extern int		login_in_progress;
 extern int		NumQueuedPlayers;
+extern bool             limitedRoundsGameOver;
+extern int              received_packets;
 int frameDivisor;
 int internalFps;
 int frame_cycle = 0;
@@ -204,6 +206,8 @@ void Main_loop(void)
   main_loops++;
   
   //printf("mainloop: %e\n",timeval_to_seconds(tv1));
+
+  //printf("%d\n",received_packets);
   
   if (frame_cycle == frameDivisor)
     frame_cycle = 0;
@@ -695,6 +699,7 @@ void Game_Over(void)
     }
     Rank_write_webpage();
     Rank_write_rankfile();
+    limitedRoundsGameOver = true;
 }
 
 

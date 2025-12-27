@@ -40,14 +40,14 @@
 
 
 char command_version[] = VERSION;
-
+extern bool limitedRoundsGameOver;
 
 
 
 int Get_player_index_by_name(char *name)
 {
-    int			i, j, len;
-
+    int i, id, j, len;
+    
     if (!name || !*name) {
 	return -1;
     }
@@ -84,6 +84,9 @@ int Get_player_index_by_name(char *name)
 
     return j;
 }
+
+
+
 
 
 static void Send_info_about_player(player * pl)
@@ -518,7 +521,6 @@ static int Cmd_reset(char *arg, player *pl, int oper, char *msg)
 	}
 	Reset_all_players();
 	roundsPlayed = 0;
-
 	sprintf(msg, " < Total reset by %s! >", pl->name);
 	Set_message(msg);
 	strcpy(msg, "");
@@ -531,6 +533,7 @@ static int Cmd_reset(char *arg, player *pl, int oper, char *msg)
 	strcpy(msg, "");
     }
 
+    limitedRoundsGameOver = false;
     return CMD_RESULT_SUCCESS;
 }
 

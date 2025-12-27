@@ -1,6 +1,6 @@
-/* $Id: shipshape.c,v 5.4 2001/05/25 02:47:49 dik Exp $
+/* $Id: shipshape.c,v 1.5 1999/12/13 01:25:57 bert Exp $
  *
- * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
+ * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
@@ -24,10 +24,9 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
-#include <errno.h>
 #include <ctype.h>
+
 #include <math.h>
 
 #include "version.h"
@@ -39,9 +38,8 @@
 char shipshape_version[] = VERSION;
 
 
-
 static int	debugShapeParsing = 0;
-static int	verboseShapeParsing;
+static int	verboseShapeParsing = 0;
 static int	shapeLimits;
 
 static int	Get_shape_keyword(char *keyw);
@@ -49,12 +47,12 @@ extern void	Make_table(void);
 
 void Rotate_point(position pt[RES])
 {
-  int			i;
-    
-  for (i = 1; i < RES; i++) {
-    pt[i].x = tcos(i) * pt[0].x - tsin(i) * pt[0].y;
+    int			i;
+
+    for (i = 1; i < RES; i++) {
+	pt[i].x = tcos(i) * pt[0].x - tsin(i) * pt[0].y;
 	pt[i].y = tsin(i) * pt[0].x + tcos(i) * pt[0].y;
-  }
+    }
 }
 
 static void Rotate_ship(wireobj *w)
@@ -142,12 +140,74 @@ wireobj *Default_ship(void)
     return &sh;
 }
 
+typedef struct {
+    int todo, done;
+    unsigned char pt[32][32];
+    ipos chk[32*32];
+} grid_t;
+
+/*
+ * Functions to simplify limit-checking for ship points.
+ */
+static void Grid_reset(grid_t *grid_p)
+{
+    memset(grid_p, 0, sizeof(grid_t));
+}
+
+static void Grid_set_value(grid_t *grid_p, int x, int y, int value)
+{
+    assert(! (x < -15 || x > 15 || y < -15 || y > 15));
+    grid_p->pt[x + 15][y + 15] = value;
+}
+
+static int Grid_get_value(grid_t *grid_p, int x, int y)
+{
+    if (x < -15 || x > 15 || y < -15 || y > 15)
+	return 2;
+    return grid_p->pt[x + 15][y + 15];
+}
+
+static void Grid_add(grid_t *grid_p, int x, int y)
+{
+    Grid_set_value(grid_p, x, y, 2);
+    grid_p->chk[grid_p->todo].x = x + 15;
+    grid_p->chk[grid_p->todo].y = y + 15;
+    grid_p->todo++;
+}
+
+static ipos Grid_get(grid_t *grid_p)
+{
+    ipos pos;
+
+    pos.x = (int)grid_p->chk[grid_p->done].x - 15;
+    pos.y = (int)grid_p->chk[grid_p->done].y - 15;
+    grid_p->done++;
+
+    return pos;
+}
+
+static bool Grid_is_ready(grid_t *grid_p)
+{
+    return (grid_p->done >= grid_p->todo) ? true : false;
+}
+
+static bool Grid_point_is_outside_ship(grid_t *grid_p, ipos pt)
+{
+    int value = Grid_get_value(grid_p, pt.x, pt.y);
+
+    if (value == 2)
+	return true;
+    return false;
+}
+
+
 static int shape2wire(char *ship_shape_str, wireobj *w)
 {
 /*
  * Macros to simplify limit-checking for ship points.
  * Until XPilot goes C++.
  */
+#if 0
 #define GRID_PT(x,y)	grid.pt[(x)+15][(y)+15]
 #define GRID_ADD(x,y)	(GRID_PT(x, y) = 2, \
 			 grid.chk[grid.todo][0] = (x) + 15, \
@@ -161,13 +221,9 @@ static int shape2wire(char *ship_shape_str, wireobj *w)
 #define GRID_RESET()	(memset(grid.pt, 0, sizeof grid.pt), \
 			 grid.done = 0, \
 			 grid.todo = 0)
+#endif
 
-    struct grid_t {
-	int		todo, done;
-	unsigned char	pt[32][32];
-	unsigned char	chk[32*32][2];
-    } grid;
-
+    grid_t		grid;
     int 		i, j, x, y, dx, dy,
 			inx, iny, max,
 			ofNum, ofLeft, ofRight,		/* old format */
@@ -241,7 +297,7 @@ static int shape2wire(char *ship_shape_str, wireobj *w)
 	}
 	for (teststr = &buf[++i]; (buf[i] = str[i]) != '\0'; i++) {
 	    if (buf[i] == ')' ) {
-		buf[i++] = '\0';
+		buf[++i] = '\0';
 		break;
 	    }
 	}
@@ -463,15 +519,17 @@ static int shape2wire(char *ship_shape_str, wireobj *w)
 
 	case 8:		/* Keyword is 'name' */
 #ifdef	_NAMEDSHIPS
-	    w->name = xp_strdup(teststr);
-	    /* w->name[strlen(w->name)-1] = '\0'; */
+	    w->name = (char*)malloc(strlen(teststr)+1);
+	    strcpy(w->name, teststr);
+	    w->name[strlen(w->name)-1] = '\0';
 #endif
 	    break;
 
 	case 9:		/* Keyword is 'author' */
 #ifdef	_NAMEDSHIPS
-	    w->author = xp_strdup(teststr);
-	    /* w->author[strlen(w->author)-1] = '\0'; */
+	    w->author = (char*)malloc(strlen(teststr)+1);
+	    strcpy(w->author, teststr);
+	    w->author[strlen(w->author)-1] = '\0';
 #endif
 	    break;
 
@@ -797,14 +855,14 @@ static int shape2wire(char *ship_shape_str, wireobj *w)
 	 * on the outside of the shape are marked.  Thusly for each
 	 * special point can be determined if it is outside the shape.
 	 */
-	GRID_RESET();
+	Grid_reset(&grid);
 
 	/* Draw the ship outline first. */
 	for (i = 0; i < w->num_points; i++) {
 	    j = i + 1;
 	    if (j == w->num_points) j = 0;
 
-	    GRID_PT(pt[i].x, pt[i].y) = 1;
+	    Grid_set_value(&grid, pt[i].x, pt[i].y, 1);
 
 	    dx = pt[j].x - pt[i].x;
 	    dy = pt[j].y - pt[i].y;
@@ -812,13 +870,13 @@ static int shape2wire(char *ship_shape_str, wireobj *w)
 		if (dx > 0) {
 		    for (x = pt[i].x + 1; x < pt[j].x; x++) {
 			y = pt[i].y + (dy * (x - pt[i].x)) / dx;
-			GRID_PT(x, y) = 1;
+			Grid_set_value(&grid, x, y, 1);
 		    }
 		}
 		else {
 		    for (x = pt[j].x + 1; x < pt[i].x; x++) {
 			y = pt[j].y + (dy * (x - pt[j].x)) / dx;
-			GRID_PT(x, y) = 1;
+			Grid_set_value(&grid, x, y, 1);
 		    }
 		}
 	    }
@@ -826,13 +884,13 @@ static int shape2wire(char *ship_shape_str, wireobj *w)
 		if (dy > 0) {
 		    for (y = pt[i].y + 1; y < pt[j].y; y++) {
 			x = pt[i].x + (dx * (y - pt[i].y)) / dy;
-			GRID_PT(x, y) = 1;
+			Grid_set_value(&grid, x, y, 1);
 		    }
 		}
 		else {
 		    for (y = pt[j].y + 1; y < pt[i].y; y++) {
 			x = pt[j].x + (dx * (y - pt[j].y)) / dy;
-			GRID_PT(x, y) = 1;
+			Grid_set_value(&grid, x, y, 1);
 		    }
 		}
 	    }
@@ -841,19 +899,25 @@ static int shape2wire(char *ship_shape_str, wireobj *w)
 	/* Check the borders of the grid for blank points. */
 	for (y = -15; y <= 15; y++) {
 	    for (x = -15; x <= 15; x += (y == -15 || y == 15) ? 1 : 2*15) {
-		if (GRID_PT(x, y) == 0) {
-		    GRID_ADD(x, y);
-		}
+		if (Grid_get_value(&grid, x, y) == 0)
+		    Grid_add(&grid, x, y);
 	    }
 	}
 
 	/* Check from the borders of the grid to the centre. */
-	while (!GRID_READY()) {
-	    GRID_GET(x, y);
-	    if (x <  15 && GRID_PT(x + 1, y) == 0) GRID_ADD(x + 1, y);
-	    if (x > -15 && GRID_PT(x - 1, y) == 0) GRID_ADD(x - 1, y);
-	    if (y <  15 && GRID_PT(x, y + 1) == 0) GRID_ADD(x, y + 1);
-	    if (y > -15 && GRID_PT(x, y - 1) == 0) GRID_ADD(x, y - 1);
+	while (!Grid_is_ready(&grid)) {
+	    ipos pos = Grid_get(&grid);
+
+	    x = pos.x;
+	    y = pos.y;
+	    if (x <  15 && Grid_get_value(&grid, x + 1, y) == 0)
+		Grid_add(&grid, x + 1, y);
+	    if (x > -15 && Grid_get_value(&grid, x - 1, y) == 0)
+		Grid_add(&grid, x - 1, y);
+	    if (y <  15 && Grid_get_value(&grid, x, y + 1) == 0)
+		Grid_add(&grid, x, y + 1);
+	    if (y > -15 && Grid_get_value(&grid, x, y - 1) == 0)
+		Grid_add(&grid, x, y - 1);
 	}
 
 	/*
@@ -861,91 +925,85 @@ static int shape2wire(char *ship_shape_str, wireobj *w)
 	 * engine position outside the ship, so this check not used for those.
 	 */
 
-	if (GRID_CHK(m_gun.x, m_gun.y)) {
-	    if (verboseShapeParsing) {
-		xpprintf("Main gun outside ship\n");
-	    }
+	if (Grid_point_is_outside_ship(&grid, m_gun)) {
+	    if (verboseShapeParsing)
+		xpprintf("Main gun (at (%d,%d)) is outside ship.\n",
+			 m_gun.x, m_gun.y);
 	    invalid++;
 	}
 	for (i = 0; i < w->num_l_gun; i++) {
-	    if (GRID_CHK(l_gun[i].x, l_gun[i].y)) {
-		if (verboseShapeParsing) {
-		    xpprintf("Left gun %d outside ship\n", i);
-		}
+	    if (Grid_point_is_outside_ship(&grid, l_gun[i])) {
+		if (verboseShapeParsing)
+		    xpprintf("Left gun at (%d,%d) is outside ship.\n",
+			     l_gun[i].x, l_gun[i].y);
 		invalid++;
 	    }
 	}
 	for (i = 0; i < w->num_r_gun; i++) {
-	    if (GRID_CHK(r_gun[i].x, r_gun[i].y)) {
-		if (verboseShapeParsing) {
-		    xpprintf("Right gun %d outside ship\n", i);
-		}
+	    if (Grid_point_is_outside_ship(&grid, r_gun[i])) {
+		if (verboseShapeParsing)
+		    xpprintf("Right gun at (%d,%d) is outside ship.\n",
+			     r_gun[i].x, r_gun[i].y);
 		invalid++;
 	    }
 	}
 	for (i = 0; i < w->num_l_rgun; i++) {
-	    if (GRID_CHK(l_rgun[i].x, l_rgun[i].y)) {
-		if (verboseShapeParsing) {
-		    xpprintf("Left rear gun %d outside ship\n", i);
-		}
+	    if (Grid_point_is_outside_ship(&grid, l_rgun[i])) {
+		if (verboseShapeParsing)
+		    xpprintf("Left rear gun at (%d,%d) is outside ship.\n",
+			     l_rgun[i].x, l_rgun[i].y);
 		invalid++;
 	    }
 	}
 	for (i = 0; i < w->num_r_rgun; i++) {
-	    if (GRID_CHK(r_rgun[i].x, r_rgun[i].y)) {
-		if (verboseShapeParsing) {
-		    xpprintf("Right rear gun %d outside ship\n", i);
-		}
+	    if (Grid_point_is_outside_ship(&grid, r_rgun[i])) {
+		if (verboseShapeParsing)
+		    xpprintf("Right rear gun at (%d,%d) is outside ship.\n",
+			     r_rgun[i].x, r_rgun[i].y);
 		invalid++;
 	    }
 	}
 	for (i = 0; i < w->num_m_rack; i++) {
-	    if (GRID_CHK(m_rack[i].x, m_rack[i].y)) {
-		if (verboseShapeParsing) {
-		    xpprintf("Missile rack %d outside ship\n", i);
-		}
+	    if (Grid_point_is_outside_ship(&grid, m_rack[i])) {
+		if (verboseShapeParsing)
+		    xpprintf("Missile rack at (%d,%d) is outside ship.\n",
+			     m_rack[i].x, m_rack[i].y);
 		invalid++;
 	    }
 	}
 	for (i = 0; i < w->num_l_light; i++) {
-	    if (GRID_CHK(l_light[i].x, l_light[i].y)) {
-		if (verboseShapeParsing) {
-		    xpprintf("Left light %d outside ship\n", i);
-		}
+	    if (Grid_point_is_outside_ship(&grid, l_light[i])) {
+		if (verboseShapeParsing)
+		    xpprintf("Left light at (%d,%d) is outside ship.\n",
+			     l_light[i].x, l_light[i].y);
 		invalid++;
 	    }
 	}
 	for (i = 0; i < w->num_r_light; i++) {
-	    if (GRID_CHK(r_light[i].x, r_light[i].y)) {
-		if (verboseShapeParsing) {
-		    xpprintf("Right light %d outside ship\n", i);
-		}
+	    if (Grid_point_is_outside_ship(&grid, r_light[i])) {
+		if (verboseShapeParsing)
+		    xpprintf("Right light at (%d,%d) is outside ship.\n",
+			     r_light[i].x, r_light[i].y);
 		invalid++;
 	    }
 	}
-	if (GRID_CHK(engine.x, engine.y)) {
-	    if (verboseShapeParsing) {
-		xpprintf("Engine outside of ship\n");
-	    }
+
+	if (Grid_point_is_outside_ship(&grid, engine)) {
+	    if (verboseShapeParsing)
+		xpprintf("Engine (at (%d,%d)) is outside ship.\n",
+			 engine.x, engine.y);
 	    invalid++;
 	    /* this could happen in case of an old format ship shape. */
 	    if (shape_version == 0x3100 && invalid == 1) {
-		/* move engine until it is legal. */
-		for (x = -15, y = 0; x <= 15; x++) {
-		    if (!GRID_CHK(x, y)) {
-			engine.x = x;
-			engine.y = y;
-			invalid--;
-			break;
-		    }
-		}
+		/* kps - just return error */
+		return -1;
 	    }
 	}
 
 	if (debugShapeParsing) {
 	    for (i = -15; i <= 15; i++) {
 		for (j = -15; j <= 15; j++) {
-		    switch (GRID_PT(j, i)) {
+		    switch (Grid_get_value(&grid, j, i)) {
 		    case 0: putchar(' '); break;
 		    case 1: putchar('*'); break;
 		    case 2: putchar('.'); break;

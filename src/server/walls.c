@@ -606,7 +606,7 @@ static void Move_segment(move_state_t *ms)
     case TREASURE:
 
       if (block_type == TREASURE) {
-	if (mi->treasure_crashes && mi->obj->life != 0) {
+	if (mi->treasure_crashes) {
 		/*
 		 * Test if the movement is within the upper half of
 		 * the treasure, which is the upper half of a circle.
@@ -643,7 +643,8 @@ static void Move_segment(move_state_t *ms)
 		if (mi->obj->type != OBJ_BALL) {
 		    return;
 		}
-
+		
+		/* replace */
 		if (ms->treasure == mi->obj->treasure) {
 		    /*
 		     * Ball has been replaced back in the hoop from whence
@@ -664,24 +665,31 @@ static void Move_segment(move_state_t *ms)
 			ms->crash = NotACrash;
 			break;
 		    }
-
-		    mi->obj->life = 0;
-		    SET_BIT(mi->obj->status, (NOEXPLOSION|RECREATE));
-
-		    SCORE(GetInd[pl->id], 5,
+		    
+		    /* replace - check also that obj->life isn't 0 for ball -pgm */
+		    if (mi->obj->life !=0){
+		      
+		      mi->obj->life = 0;
+		      SET_BIT(mi->obj->status, (NOEXPLOSION|RECREATE));
+		      
+		      SCORE(GetInd[pl->id], 5,
 			  tt->pos.x, tt->pos.y, "Treasure: ");
-		    sprintf(msg, " < %s (team %d) has replaced the treasure >",
+		      sprintf(msg, " < %s (team %d) has replaced the treasure >",
 			    pl->name, pl->team);
-		    Set_message(msg);
-		    Rank_saved_ball(pl);
-		    break;
+		      Set_message(msg);
+		      Rank_saved_ball(pl);
+		      break;
+		    }
 		}
 		if (mi->obj->owner == -1) {
 		    mi->obj->life = 0;
 		    return;
 		}
-		if (World.treasures[ms->treasure].team ==
-			Players[GetInd[mi->obj->owner]]->team) {
+		
+		/* cash - check also that obj->life isn't 0 for ball -pgm */
+		if ((World.treasures[ms->treasure].team ==
+		    Players[GetInd[mi->obj->owner]]->team) &&
+		    (mi->obj->life != 0)){
 		  player *pl = NULL, *pl2 = NULL;
 		  int n, enemies = 0;
 		  pl = Players[GetInd[mi->obj->owner]];
@@ -2353,7 +2361,8 @@ void Turn_player(int ind)
     }
 
     if (blocked) {
-	pl->float_dir = (DFLOAT) pl->dir;
+      /* turnqueue */
+      /*pl->float_dir = (DFLOAT) pl->dir;*/
     }
 
     if (crash != -1) {

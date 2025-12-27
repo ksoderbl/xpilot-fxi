@@ -269,7 +269,7 @@ static const char *Rank_get_logout_message(ranknode_t *rank)
       pl = Players[ind];
       if (BIT(pl->status, PAUSE))
 	snprintf(msg, sizeof(msg), "paused");
-      else
+      else 
 	snprintf(msg, sizeof(msg), "playing");
     }
     else

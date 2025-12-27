@@ -1112,10 +1112,13 @@ int Input(void)
 			input_reliable[MAX_SELECT_FD];
     connection_t	*connp;
     char		msg[MSG_LEN];
+    printf("hhu\n");
+    fflush(stdout);
     for (i = 0; i < max_connections; i++) {
 	connp = &Conn[i];
 	if (connp->state == CONN_FREE) {
 	    continue;
+	printf("huhu\n");
 	}
 	if (connp->start + connp->timeout * FPS < main_loops) {
 	  printf("huhu\n");
@@ -2003,7 +2006,6 @@ int Send_reliable(int ind)
 	}
     }
     else if (connp->retransmit_at_loop != 0) {
-	printf("jje\n");
 	/*
 	 * Timeout.
 	 * Either our packet or the acknowledgement got lost,

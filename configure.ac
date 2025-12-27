@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([XPilot], 1.3.1fxi, foo@bar.com, xpilot)
+AC_INIT([XPilot], 1.3.2fxi, foo@bar.com, xpilot)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(src/client/xpilot.c)
 
@@ -23,7 +23,7 @@ AC_SUBST([XP_COPYRIGHTDATE])
 XP_COPYRIGHT="Copyright © $XP_COPYRIGHTDATE by $XP_AUTHORS"
 AC_SUBST([XP_COPYRIGHT])
 
-AC_SUBST([XP_RELEASEDATE],["Aug 11, 2005"])
+AC_SUBST([XP_RELEASEDATE],["Feb 21, 2006"])
 AC_SUBST([XP_DATADIR],"$prefix/share/xpilot")
 
 
@@ -67,32 +67,6 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_PROG_INSTALL
 
-dnl  Checks for libraries.
-dnl kps - these should be cleaned up and not use the autoconf internal
-dnl shell variables.
-AC_CHECK_LIB(m, cos)
-if test x$ac_cv_lib_m_cos != xyes; then
-	AC_MSG_ERROR([*** Math library not found!])
-fi
-AC_CHECK_LIB(expat, XML_ParserCreate)
-if test x$ac_cv_lib_expat_XML_ParserCreate != xyes; then
-        AC_MSG_ERROR([*** Required library Expat not found!])
-fi  
-
-AC_PATH_X
-AC_PATH_XTRA
-if test x$no_x == xyes; then
-	AC_MSG_ERROR([*** Couldn't find X headers or libraries!])
-fi
-
-dnl kps - Hack to link with libXext if DBE or MBX is configured
-if test x$enable_dbe = xyes || test x$enable_mbx = xyes; then
-	X_EXTENSIONS_LIB="-lXext"
-else
-	X_EXTENSIONS_LIB=
-fi
-AC_SUBST(X_EXTENSIONS_LIB)
-
 dnl Figure out which math library to use
 dnl (borrowed from from http://www.libsdl.org/opengl/SDLgears-1.0.2.tar.gz)
 case "$target" in
@@ -119,6 +93,34 @@ case "$target" in
         SYS_GL_LIBS="-lGL -lGLU"
         ;;
 esac
+
+dnl  Checks for libraries.
+dnl kps - these should be cleaned up and not use the autoconf internal
+dnl shell variables.
+AC_CHECK_LIB(m, cos)
+if test x$ac_cv_lib_m_cos != xyes; then
+	AC_MSG_ERROR([*** Math library not found!])
+fi
+AC_CHECK_LIB(expat, XML_ParserCreate)
+if test x$ac_cv_lib_expat_XML_ParserCreate != xyes; then
+        AC_MSG_ERROR([*** Required library Expat not found!])
+fi  
+
+AC_PATH_X
+AC_PATH_XTRA
+if test x$no_x == xyes; then
+	AC_MSG_ERROR([*** Couldn't find X headers or libraries!])
+fi
+
+dnl kps - Hack to link with libXext if DBE or MBX is configured
+if test x$enable_dbe = xyes || test x$enable_mbx = xyes; then
+	X_EXTENSIONS_LIB="-lXext"
+else
+	X_EXTENSIONS_LIB=
+fi
+AC_SUBST(X_EXTENSIONS_LIB)
+
+
 
 dnl  Checks for header files.
 dnl AC_HEADER_STDC
@@ -261,4 +263,3 @@ AC_CONFIG_FILES([ \
 	src/server/Makefile \
 	])
 AC_OUTPUT
-

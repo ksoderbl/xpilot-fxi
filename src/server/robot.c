@@ -776,7 +776,7 @@ static void Robot_create(void)
 
     robot->fuel.l1 = 100 * FUEL_SCALE_FACT;
     robot->fuel.l2 = 200 * FUEL_SCALE_FACT;
-    robot->fuel.l3 = 500 * FUEL_SCALE_FACT;
+    robot->fuel.l3 = 300 * FUEL_SCALE_FACT;
 
     Pick_startpos(NumPlayers);
 
