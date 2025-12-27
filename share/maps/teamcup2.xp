@@ -89,8 +89,8 @@ roguemineprob:0.02
 limitedlives : yes
 mapwidth : 100
 mapheight : 100
-mapname : Xpilot-Tournament Map (Blood's Music)
-mapauthor : "Patrick Kenny - pkenny@eecs.umich.edu"
+mapname : Xpilot-Tournament Map V1.05 (Blood's Music)
+mapauthor : "Patrick Kenny, Coppa"
 edgewrap : yes
 teamplay : yes
 oneplayeronly : no
@@ -131,14 +131,14 @@ mapData: \multiline: EndOfMapdata
                       xxxxxxxxxxxxx                  qxxx      xxxxxxxxxw                qxs        
                       axxxxxxxxxxxs               q#xxxxx      xxxxxxxxxx                xx         
                          axxxxxxxx    4        qxxxxxxxxx      xxxxxxxxxs               qxs         
-                          axxxxxxxw  q#w     qxxxxxxxxxxxw     xxxxxxxxx                xx          
-                          qxxxxxxxxxxxxx    qxxxxxxxxxxxxx     xxxs  axs                as          
-                         qxxxxxxxxxxxxxxw   xxxxxxxxxxxxxxw    axs                                  
-                      q#xxxxx#xxxxxxxxxxx   xxxxxxxxxxxxxxx                                         
+                          axxxxxxxw  q#w     qxxxxxxxxxxxw     xxxxxxxxx                xs          
+                          qxxxxxxxxxxxxx    qxxxxxxxxxxxxx     xxxs  axs                            
+                         qxxxxxxxxxxxxxxw   xxxxxxxxxxxxxx     axs                                  
+                      q#xxxxx#xxxxxxxxxxx   xxxxxxxxxxxxxxw                                         
                       xxxxxs  axxxxxxxxxx   axxxxxx#xxxxxxxw                                        
                       axxxs    axxxxxxxxs     axxxs    axxx#                                        
-                       a#s      a#xxxxx#       #xx      axxxw                                       
-                                   axxxx      qxxx       axxs                                       
+                       a#s      a#xxxxx#       #xx      axxx                                        
+                                   axxxx      qxxx       axs                                        
                                     axxs      xxxs                                                  
                                               a#s                                                   
                                                                                                     
@@ -154,19 +154,19 @@ mapData: \multiline: EndOfMapdata
                      qxxxxxxxxxxxw     axxxxxxxxxxs                               xxx#     axxxxxx  
                      xxxxxxxxxxxxx         axxxxx#             qxw                axxs      axxxxx  
                      axx#xs  axxxxw         axxxxs           qxxxxw        qw                axxxx  
-       qxxw                   xxxxxxw        axxs            axxxxxw      qxx                 axxxw 
-       axxxw                  xxxxxxx                          axxxx      xxs                   axx 
-          ax                  axxxxxs                          qxxxs     qxx                     #x 
+       qxxw                   xxxxxw         axxs            axxxxxw      qxx                 axxxw 
+       axxxw                  xxxxxx                           axxxx      xxs                   axx 
+          ax                  axxxxs                           qxxxs     qxx                     #x 
            a        qxxxw      a#s                            qxxxs      axs                     as 
                     #xxxxw                  qxxxxw            axxs                                  
           qw        axxxxxw                qxxxxxxw                                                 
        axxxs         axxxxxw              qxxxxxxxx          qxs                                    
-        xxs           axxxxx           qxxxxxxxxxxs          xxw                                    
-        xx             axxs            #xxxxxxxxxs           axxw                                   
-#       as                             axxxxxxxx#             axx                                 qx
+        axs           axxxxx           qxxxxxxxxxxs          xxw                                    
+                       axxs            #xxxxxxxxxs           axxw                                   
+#                                      axxxxxxxx#             axx                                 qx
 x                                        axxxxxxxw             axw                          qxxw qxx
-s                                         axxxxxxx              axxw                       qxxxxxxxx
-                    q#w                      axxxs               axxw                      #xxxxxxxx
+x                                         axxxxxxx              axxw                       qxxxxxxxx
+s                   q#w                      axxxs               axxw                      #xxxxxxxx
                     xxxw                                                             qw    axxxxxxxs
                    qxxxxw                                                            xxw    axxxxxs 
                   qxxxxxxw                                         axxw              xxxw    xxxs   
@@ -177,12 +177,12 @@ s                                         axxxxxxx              axxw            
       axxxx     a#s     a#xxxxxxxxxs       xxxxxx#xw    axxxxxs                               #xxw  
        #xx#              axxxxxxs          #xxxxxxxxw       as                                axx#  
        axxx               axxxxx           xxxxxxxxxxxxw                                       axs  
-        xxs                axxxx           axxxxxxxxxxxxw              qxw                          
-        as                  axx#            axxxxxxxxxxxxxw   *        xxxw                         
-                   xxw       axs             axxxxxxxxxxxxxw           axxxw                        
-                   axx                        axxxxxxxxxxxxxw  qx         ax                        
-                    ax                         axxxxxxxxxxxxxxxxs          xw                       
-                                                xxxxxxxxxxxxxxs            xxw      qxx             
+        axs                axxxx           axxxxxxxxxxxxw              qxw                          
+                            axx#            axxxxxxxxxxxxxw   *        xxxw                         
+                    xxw      axs             axxxxxxxxxxxxxw           axxxw                        
+                    axxw                      axxxxxxxxxxxxxw  qx         ax                        
+                     axx                       axxxxxxxxxxxxxxxxs          xw                       
+                      as                        xxxxxxxxxxxxxxs            xxw      qxx             
                                                 #xxxxxxxxxxxs              xxxw  qxxxxx             
                                                 xxxxxxxxxxxx               axxxx#xxxxxs             
                                                qxxxxxxxxxxxx                     axxxx              

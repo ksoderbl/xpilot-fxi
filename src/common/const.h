@@ -172,10 +172,6 @@ extern DFLOAT		tbl_cos[];
 #define VISIBILITY_DISTANCE	1000.0
 #define WARNING_DISTANCE	(VISIBILITY_DISTANCE*0.8)
 #define BALL_RADIUS		10
-#define MISSILE_LEN		15
-#define SMART_SHOT_LEN		12
-#define HEAT_SHOT_LEN		15
-#define TORPEDO_LEN		18
 
 #define TEAM_NOT_SET		0xffff
 #define TEAM_NOT_SET_STR	"4095"

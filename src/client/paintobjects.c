@@ -344,14 +344,14 @@ static void Paint_missiles()
 	    x = missile_ptr[i].x;
 	    y = missile_ptr[i].y;
 	    dir = missile_ptr[i].dir;
-	    len = MISSILE_LEN;
-	    if (missile_ptr[i].len > 0) {
-		len = missile_ptr[i].len;
-	    }
+	    //len = MISSILE_LEN;
+	    //if (missile_ptr[i].len > 0) {
+	    //	len = missile_ptr[i].len;
+	    //}
 
-	    if (wrap(&x, &y)) {
-		Gui_paint_missile(x, y, len, dir);
-	    }
+	    //if (wrap(&x, &y)) {
+	    //	Gui_paint_missile(x, y, len, dir);
+	    //}
 	}
 	Gui_paint_missiles_end();
 	RELEASE(missile_ptr, num_missile, max_missile);

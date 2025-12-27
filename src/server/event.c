@@ -441,7 +441,7 @@ int Handle_keyboard(int ind)
 		if (!BIT(pl->used, OBJ_SHIELD|OBJ_SHOT)
 		    && BIT(pl->have, OBJ_SHOT)) {
 		    SET_BIT(pl->used, OBJ_SHOT);
-		    Fire_normal_shots(ind);
+		    //    Fire_normal_shots(ind);
 		}
 		break;
 

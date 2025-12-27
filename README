@@ -167,27 +167,68 @@ SERVER CHANGES
   ---- | ----
   80ms |
       EOP
-
+NOTE: 16 2/3 will not work with a simple computation, because of the 
+unsymmetricity it introduces.. so don't use 16 2/3 fps on a 50 fps server!
 - deleted some options: roundtime, servershutdowntime
 
 
+1.2.2ix:
+- deleted some unused code (shutdowntime, delay, etc.)
+- fixed the metaupdate; got broken in 1.2.1ix
+- fixed turning to update turns at a rate specified by maxfps; checked
+  also that synchronization works properly
+- fixed the problem related to bad steering & shooting
+- fixed the deadliest scoring 
+- fixed the endroundreset when cashing and alone
+- optimized heavily the shots routine (e.g. no shots on rank)
+- new teamcup2.xp map, optimized to allow more ballruns
+
+1.3.0fxi:
+- much better packet handling
+- "fxi" stands now for "Fast eXperimental Interpolation", the so called 
+  interpolation method is now a well established method, so the 
+  "eXperimental" from that part is removed. But "fast" comes from the new
+  packet & mainloop handling, and it is "eXperimental". The new method
+  is truly concurrent, with both its pros & cons. The advantage being that
+  the server consumes still very little cpu but schedules better, and
+  the disadvantage being that a concurrent program can cause alot 
+  of problems. The concurrency correctness has not yet been verified!
+- the ghost bullets just disappeared without any fixes to it. This problem 
+  was not really easily fixable, and I was afraid that something like this 
+  might happen. It would vanish as a side-effect from something else, which 
+  again indicates that the code base is rather dirty.
+- fixed the internalfps/framedivisor tuner to also reset frame_cycle 
+  to synchronize server when changing rates; the server froze in some
+  cases without this fix
+
+1.3.1fxi:
+- encountered the first sync bug, so made the packet handling a critical
+  section with other signals blocked; this improves packet handling, but
+  will make scheduling frame updates slightly less accurate; the overall
+  effect is still better steering
+- fixed a 4.3.0 bug: the ball is now popped when hit with shields up
+- fixed a timing bug; the pause player time was too short so it would
+  pause one of the two players crashing into each other in some cases
+- connector maxratio was increased from 0.30 to 0.32, because the ship
+  moves on the average faster than before, so to support faster moves
+  the connector must not snap as easily as before; this will not make
+  records for ballruns faster though, but only average ballruns will be 
+  faster
+- fixed the ballpopping, it now shows correctly also on interpolated frames
+- fixed the viewing, works now to view all players
+- fixed a bug from 1.2.2: the shots routine can cause a server crash if the
+  shots appear outside the map area
+
+
 TODO
-------------
-- fix bullet gfx bug(when you shoot, the bullet may appear
-  randomly on screen, but is not lethal to anyone)
-- fix frame ordering better - now also players playing at basic
-  rate get interpolated frames which is wrong
+----
 
 2.x.xfinal
 - rewrite packet protocol, delete unused stuff in packets
-- time stamp server response of turning (this may or may not improve
-  steering dramatically, depending on the packet window size). I
-  would want to see this before I can say if it works or not. This
-  was also the case with interpolation (nobody, including myself 
-  believed it would work so well, so I will not speculate on the 
-  issue further. All I can say is that time stamping has a potential).
 - add all necessary features like more paused players
- 
+- try the system specified in my xpilot technical writings,
+  IssueX.txt (available in same dir as this release). 
+
 The end result should be a server, which one can use in teamcups,
 and more serious games. The old walls code will be used throughout
 all releases unless someone can come up with something better.

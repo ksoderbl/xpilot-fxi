@@ -35,11 +35,6 @@
 #include "global.h"
 #include "types.h"
 
-/*
-#include "serverconst.h"
-#include "global.h"
-#include "object.h"
-*/
 
 
 char rank_version[] = VERSION;
@@ -419,7 +414,6 @@ ranknode_t *Rank_get_by_name(const char *name)
      */
     i =  Get_player_index_by_name(name);
     pl = Players[i];
-    printf("%d\n",i);
     if ((i != -1) && pl->rank)
 	return pl->rank;
 

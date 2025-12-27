@@ -605,10 +605,8 @@ static void Move_segment(move_state_t *ms)
 
     case TREASURE:
 
-      if (frame_cycle == 0) {
-	
-	if (block_type == TREASURE) {
-	    if (mi->treasure_crashes) {
+      if (block_type == TREASURE) {
+	if (mi->treasure_crashes && mi->obj->life != 0) {
 		/*
 		 * Test if the movement is within the upper half of
 		 * the treasure, which is the upper half of a circle.
@@ -685,8 +683,17 @@ static void Move_segment(move_state_t *ms)
 		if (World.treasures[ms->treasure].team ==
 			Players[GetInd[mi->obj->owner]]->team) {
 		  player *pl = NULL, *pl2 = NULL;
-		  int n;
+		  int n, enemies = 0;
 		  pl = Players[GetInd[mi->obj->owner]];
+
+		  /* compute amount of active enemies */
+		  for (n = 0; n < NumPlayers; n++){
+		    pl2 = Players[n];
+		    if ((pl2->team != pl->team) && (!BIT(pl2->status, PAUSE))
+			&& (!(pl2->mychar == 'W'))) enemies++;
+		  }
+		  
+
 		    /*
 		     * Ball has been brought back to home treasure.
 		     * The team should be punished.
@@ -694,26 +701,27 @@ static void Move_segment(move_state_t *ms)
 		    sprintf(msg," < The ball was loose for %ld frames >",
 			    LONG_MAX - mi->obj->life);
 		    Set_message(msg);
-		    Rank_cashed_ball(pl);
-		    Rank_ballrun(pl,  LONG_MAX - mi->obj->life);
-		    for (n = 0; n < NumPlayers; n++){
-		      pl2 = Players[n];
-		      if ((pl2->team != pl->team) && (!BIT(pl2->status, PAUSE))
-			  && (!(pl2->mychar == 'W'))) Rank_lost_ball(pl2); 
-		      else if ((!BIT(pl2->status, PAUSE)) && (!(pl2->mychar == 'W')))
-			Rank_won_ball(pl2);
+		    if (enemies > 0){
+		      Rank_cashed_ball(pl);
+		      for (n = 0; n < NumPlayers; n++){
+			pl2 = Players[n];
+			if ((pl2->team != pl->team) && (!BIT(pl2->status, PAUSE))
+			    && (!(pl2->mychar == 'W'))) Rank_lost_ball(pl2); 
+			else if ((!BIT(pl2->status, PAUSE)) && (!(pl2->mychar == 'W')))
+			  Rank_won_ball(pl2);
+		      }
 		    }
-		    
+		    Rank_ballrun(pl,  LONG_MAX - mi->obj->life);
 		    if (Punish_team(GetInd[mi->obj->owner],
 				    mi->obj->treasure, ms->treasure))
-		      CLR_BIT(mi->obj->status, RECREATE);
+		      SET_BIT(mi->obj->status, RECREATE);
 		}
 		mi->obj->life = 0;
 		return;
 	    }
-	}
-	/*FALLTHROUGH*/
       }
+	/*FALLTHROUGH*/
+	/*}*/
     case FUEL:
     case FILLED:
 	if (inside) {
@@ -1386,12 +1394,11 @@ void Move_object_interpolation(int ind)
 		
 		/* cannot destroy objects which hit walls in the interpolation routine of
 		   collisions or we'll get into trouble with ballcounting times in end of round -pgm
-		   
-		   if (sqr(ms.vel.x) + sqr(ms.vel.y) > sqr(maxObjectWallBounceSpeed)) {
-		   obj->life = 0;
-		   break;
-		   }
 		*/
+		if (sqr(ms.vel.x) + sqr(ms.vel.y) > sqr(maxObjectWallBounceSpeed)) {
+		  obj->life = 0;
+		  break;
+		}
 		ms.vel.x *= objectWallBrakeFactor;
 		ms.vel.y *= objectWallBrakeFactor;
 		ms.todo.x = (int)(ms.todo.x * objectWallBrakeFactor);

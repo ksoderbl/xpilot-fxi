@@ -113,7 +113,6 @@ int Punish_team(int ind, int t_destroyed, int t_target)
     }
 
     if (treasureKillTeam) {
-	Players[ind]->kills++;
 	Rank_add_kill(Players[ind]);
     }
 

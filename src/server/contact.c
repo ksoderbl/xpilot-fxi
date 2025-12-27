@@ -517,15 +517,11 @@ void Contact(int fd, void *arg)
 	    sprintf(msg, "|*******| %s (%s) |*******| \"%s\"",
 		(delay > 0) ? "SHUTTING DOWN" : "SHUTDOWN STOPPED",
 		real_name, ShutdownReason);
-	    if (delay > 0) {
-		ShutdownServer = delay * FPS;		/* delay is in seconds */;
-		ShutdownDelay = ShutdownServer;
-	    } else {
-		ShutdownServer = -1;
-	    }
+	    /* shutdown not supported -pgm */
+	    
 	    Set_message(msg);
 	}
-
+	
 	Sockbuf_clear(&ibuf);
 	Packet_printf(&ibuf, "%u%c%c", my_magic, reply_to, status);
     }

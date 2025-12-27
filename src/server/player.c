@@ -468,7 +468,8 @@ void Reset_all_players(void)
 	CLR_BIT(pl->have, OBJ_BALL);
 	pl->kills = 0;
 	pl->deaths = 0;
-	pl->frame_last_busy = frame_loops; /*timing ok, used only to determine pausing -pgm */
+	/* do not reset frame_last_busy after round end */
+	//pl->frame_last_busy = frame_loops; /*timing ok, used only to determine pausing -pgm */
 	if (!BIT(pl->status, PAUSE)) {
 	    pl->mychar = ' ';
 	    pl->life = World.rules->lives;
@@ -1041,13 +1042,15 @@ void Compute_game_status(void)
 	     */
 	    int	i, treasures_destroyed;
 
-	    for (treasures_destroyed = i = 0; i < MAX_TEAMS; i++)
+	    for (treasures_destroyed = i = 0; i < MAX_TEAMS; i++){
 		treasures_destroyed += (World.teams[i].NumTreasures
 					- World.teams[i].TreasuresLeft);
-	    if (treasures_destroyed)
-		Team_game_over(winning_team, " by staying in the game");
+	    }
+	    if (treasures_destroyed && (num_alive_teams == 0))
+	      Team_game_over(winning_team, " by staying in the game");
+	    
 	}
-
+	
     } else {
 
     /* Do we have a winner ? (No team play) */
@@ -1251,8 +1254,7 @@ void Player_death_reset(int ind, bool rank_death)
     pl->lock.distance	= 0;
 
     Player_init_fuel(ind, World.items[ITEM_FUEL].initial * FUEL_SCALE_FACT);
-    if (rank_death)
-      Rank_add_death(pl);
+    if (rank_death) Rank_add_death(pl);
 
     /*-BA Handle the combination of limited life games and
      *-BA robotLeaveLife by making a robot leave iff it gets
@@ -1287,7 +1289,6 @@ void Player_death_reset(int ind, bool rank_death)
 	pl->life++;
     }
 
-    pl->deaths++;
 
     pl->have	= DEF_HAVE;
     pl->used	|= DEF_USED;

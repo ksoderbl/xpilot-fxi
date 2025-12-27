@@ -70,8 +70,7 @@ object			*Obj[MAX_TOTAL_SHOTS];
 int			GetInd_1;
 int			GetInd[NUM_IDS+1];
 server_t		Server;
-int			ShutdownServer = -1;
-int			ShutdownDelay = 1000;
+
 char			ShutdownReason[MAX_CHARS];
 long			main_loops = 0;		/* needed in events.c */
 long                    main_loops_slow = 0;
@@ -87,13 +86,10 @@ time_t			serverTime = 0;
 
 extern int		login_in_progress;
 extern int		NumQueuedPlayers;
-
 int frameDivisor;
 int internalFps;
 int frame_cycle = 0;
-
 static void Check_server_versions(void);
-extern void Main_loop(void);
 static void Handle_signal(int sig_no);
 void checkPlayers(void);
 
@@ -192,7 +188,7 @@ int main(int argc, char **argv)
 	     internalFps, 1.0/frameDivisor);
 #endif
     
-    install_timer_tick(Main_loop, internalFps);
+    setup_timer(internalFps);
     main_loops = 0;
     sched();
     xpprintf("sched returned!?");
@@ -203,75 +199,66 @@ int main(int argc, char **argv)
 void Main_loop(void)
 {
   struct timeval tv1, tv2;
+
   gettimeofday(&tv1, NULL);
   main_loops++;
   
+  //printf("mainloop: %e\n",timeval_to_seconds(tv1));
+  
   if (frame_cycle == frameDivisor)
     frame_cycle = 0;
+
   
   if (frame_cycle == 0)
     insert_measure();
-  
-  
-  if (frame_cycle == 0){
-    if ((main_loops & 0x3F) == 0) {
-      Meta_update(0);
-    }
+
+  if ((main_loops & 0x3F) == 0) {
+    Meta_update(0);
   }
-    /*
-     * Check for possible shutdown, the server will
-     * shutdown when ShutdownServer (a counter) reaches 0.
-     * If the counter is < 0 then no shutdown is in progress.
-     */
-    if (ShutdownServer >= 0) {
-	if (ShutdownServer == 0) {
-	  End_game();
-	}
-	else {
-	    ShutdownServer--;
-	}
-    }
+  
     
+  if (frame_cycle == 0){
     /* uses mainloops + FPS for timings */
     Input();
+  }
+  
+  if (NumPlayers > NumRobots + NumPseudoPlayers || RawMode) {
     
-    if (NumPlayers > NumRobots + NumPseudoPlayers || RawMode) {
-      
-      if (NoPlayersEnteredYet) {
+    if (NoPlayersEnteredYet) {
 	if (NumPlayers > NumRobots + NumPseudoPlayers) {
 	  NoPlayersEnteredYet = false;
 	}
-      }
-      
-      if (frame_cycle == 0){
-	Update_objects();
-	Init_interpolation_data();
-	//	printf("nointerp: %d\n", frame_cycle);
-	Frame_update();
-	main_loops_slow++;
-      }
-      
-      if (frame_cycle != 0){
-	
-	Update_objects_interpolation();
-	//printf("interp: %d\n", frame_cycle);
-	Frame_update();
-      }
-      
-      
     }
     
-    checkPlayers();
-    Queue_loop();
-#if 0
     if (frame_cycle == 0){
-      measure_time();
+      Update_objects();
+      Init_interpolation_data();
+      //printf("nointerp: %d\n", frame_cycle);
+      Frame_update();
+      main_loops_slow++;
     }
-#endif    
     
-    gettimeofday(&tv2, NULL);
-    mainLoopTime = ( timeval_to_seconds(tv2) - timeval_to_seconds(tv1)) * 1e3;
-    frame_cycle++;
+    if (frame_cycle != 0){
+      
+      Update_objects_interpolation();
+      //printf("interp: %d\n", frame_cycle);
+      Frame_update();
+    }
+    
+    
+  }
+  
+  checkPlayers();
+  Queue_loop();
+#if 0
+  if (frame_cycle == 0){
+    measure_time();
+  }
+#endif    
+  
+  gettimeofday(&tv2, NULL);
+  mainLoopTime = ( timeval_to_seconds(tv2) - timeval_to_seconds(tv1)) * 1e3;
+  frame_cycle++;
 }
 
 
@@ -310,26 +297,21 @@ void End_game(void)
     player		*pl;
     char		msg[MSG_LEN];
 
-    if (ShutdownServer == 0) {
-	errno = 0;
-	error("Shutting down...");
-	sprintf(msg, "shutting down: %s", ShutdownReason);
-    } else {
-	sprintf(msg, "server exiting");
-    }
-
+    sprintf(msg, "server exiting");
+    
+    
     while (NumPlayers > 0) {	/* Kick out all remaining players */
-	pl = Players[NumPlayers - 1];
-	if (pl->conn == NOT_CONNECTED) {
-	    Delete_player(NumPlayers - 1);
-	} else {
-	    Destroy_connection(pl->conn, msg);
-	}
+      pl = Players[NumPlayers - 1];
+      if (pl->conn == NOT_CONNECTED) {
+	Delete_player(NumPlayers - 1);
+      } else {
+	Destroy_connection(pl->conn, msg);
+      }
     }
-
+    
     /* Tell meta server that we are gone. */
     Meta_gone();
-
+    
     Contact_cleanup();
 
     Free_players();
@@ -487,13 +469,11 @@ void Server_info(char *str, unsigned max_size)
 	    "      AUTHOR.....: %s\n"
 	    "PLAYERS (%2d/%2d)..:\n",
 	    server_version,
-	    (game_lock && ShutdownServer == -1) ? "locked" :
-	    (!game_lock && ShutdownServer != -1) ? "shutting down" :
-	    (game_lock && ShutdownServer != -1) ? "locked and shutting down" : "ok",
+	    (game_lock) ? "locked" : "ok",
 	    internalFps,
 	    World.x, World.y, World.name, World.author,
 	    NumPlayers, World.NumBases);
-
+    
     if (strlen(str) >= max_size) {
 	errno = 0;
 	error("Server_info string overflow (%d)", max_size);

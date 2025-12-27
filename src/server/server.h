@@ -29,4 +29,6 @@ enum TeamPickType {
     PickForRobot	= 2
 };
 
+void Main_loop();
+
 #endif

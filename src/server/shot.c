@@ -111,11 +111,28 @@ void Make_treasure_ball(int treasure)
     NumObjs++;
 }
 
-void Fire_main_shot(int ind, int type, int dir)
+
+void Fire_normal_shots(int ind)
+
 {
-    player *pl = Players[ind];
-    DFLOAT x,
-	  y;
+    player		*pl = (ind == -1 ? NULL : Players[ind]);
+    int			life, fuse = 0, lock = 0, status = 0, pl_range = 0, pl_radius = 0;
+    DFLOAT		turnspeed = 0, max_speed = SPEED_LIMIT, angle;
+    vector		mv;
+    position		shotpos;
+    object              *shot = Obj[NumObjs];
+    DFLOAT x, y;
+    u_short team        = pl->team;
+    DFLOAT speed        = pl->shot_speed;
+    int type = OBJ_SHOT;
+    int dir = pl->dir;
+
+    if (main_loops_slow < (pl->shot_time + fireRepeatRate)) {
+	return;
+    }
+
+    pl->shot_time = main_loops_slow;
+
 
     if (pl->shots >= pl->shot_max || BIT(pl->used, OBJ_SHIELD))
 	return;
@@ -123,31 +140,7 @@ void Fire_main_shot(int ind, int type, int dir)
     x = pl->pos.x + pl->ship->m_gun[pl->dir].x;
     y = pl->pos.y + pl->ship->m_gun[pl->dir].y;
 
-    Fire_general_shot(ind, pl->team, 0, x, y, type, dir,
-		      pl->shot_speed, -1);
-}
 
-void Fire_general_shot(int ind, u_short team, bool cannon, DFLOAT x, DFLOAT y,
-		       int type, int dir, DFLOAT speed, int target)
-{
-    player		*pl = (ind == -1 ? NULL : Players[ind]);
-    int			life, fuse = 0,
-			lock = 0,
-			status = 0,
-			i,
-			pl_range,
-			pl_radius,
-			rack_no = 0,
-			racks_left = 0,
-			r,
-			on_this_rack = 0,
-			side = 0,
-			fired = 0;
-    DFLOAT		turnspeed = 0,
-			max_speed = SPEED_LIMIT, angle;
-
-    vector		mv;
-    position		shotpos;
 
     if (NumObjs >= MAX_TOTAL_SHOTS)
 	return;
@@ -158,20 +151,8 @@ void Fire_general_shot(int ind, u_short team, bool cannon, DFLOAT x, DFLOAT y,
 	life = ShotsLife;
     }
 
-    switch (type) {
-    default:
-	return;
-
-    case OBJ_SHOT:
-	pl_range = pl_radius = 0;
-	if (pl) {
-	    if (pl->fuel.sum < -ED_SHOT)
-		return;
-	    Add_fuel(&(pl->fuel), (long)(ED_SHOT));
-	    Rank_fire_shot(pl);
-	}
-	break;
-    }
+    /* add fired shots*/
+    pl->shots++;
 
 
  /*
@@ -180,77 +161,49 @@ void Fire_general_shot(int ind, u_short team, bool cannon, DFLOAT x, DFLOAT y,
   * time passes.  This is a hack to stop various odd missile and shot
   * mounting points killing the player when they're firing.
   */
-    fuse += (int)((2.0 * (DFLOAT)SHIP_SZ) / speed + 1.0);
-    
-    for (r = 0, i = 0; i < 1; i++, r++) {
-      object *shot = Obj[NumObjs++];
-      
-      shot->life      = life;
-      shot->fuselife  = shot->life - fuse;
-      shot->max_speed = max_speed;   
-      shot->turnspeed = turnspeed;
-      shot->count     = 0;
-      shot->info      = lock;
-      shot->type      = type;  
-      shot->id        = (pl ? pl->id : -1);
-      shot->team      = team;
-      shot->owner     = -1;
-      shot->color     = (pl ? pl->color : WHITE);
-      
-      shotpos.x       = x;
-      shotpos.y       = y;
-      if (pl && type != OBJ_SHOT) {
-	if (r == on_this_rack) {  
-	  /*
-	   * We've fired all the mini missiles for the current rack,
-	   * we now move onto the next one. (See Comment Point 2)
-	   */
-	  on_this_rack = (1 - i) / racks_left--;
-	  if (on_this_rack < 1) on_this_rack = 1;
-	  if (++rack_no >= pl->ship->num_m_rack)
-	    rack_no = 0;
-	  r = 0;
-            }
-	shotpos.x += pl->ship->m_rack[rack_no][pl->dir].x;
-	shotpos.y += pl->ship->m_rack[rack_no][pl->dir].y;
-	side = (int)(pl->ship->m_rack[rack_no][0].y);
-      }
-      shotpos.x = WRAP_XPIXEL(shotpos.x);
-      shotpos.y = WRAP_YPIXEL(shotpos.y);
-      if (shotpos.x < 0 || shotpos.x >= World.width
-	  || shotpos.y < 0 || shotpos.y >= World.height) {
-	NumObjs--;
-	continue;
-      }
-      
-      Object_position_init_pixels(shot, shotpos.x, shotpos.y);
   
+    fuse = (int)((2.0 * (DFLOAT)SHIP_SZ) / speed + 1.0);
+    
+ 
+    shot->life      = life;
+    shot->fuselife  = shot->life - fuse;
+    shot->max_speed = max_speed;   
+    shot->turnspeed = turnspeed;
+    shot->count     = 0;
+    shot->info      = lock;
+    shot->type      = type;  
+    shot->id        = (pl ? pl->id : -1);
+    shot->team      = team;
+    shot->owner     = -1;
+    shot->color     = (pl ? pl->color : WHITE);
+    
+    shotpos.x       = x;
+    shotpos.y       = y;
+
+    NumObjs++;
+    
+    shotpos.x = WRAP_XPIXEL(shotpos.x);
+    shotpos.y = WRAP_YPIXEL(shotpos.y);
+    if (shotpos.x < 0 || shotpos.x >= World.width
+	|| shotpos.y < 0 || shotpos.y >= World.height) {
+      NumObjs--;
+      return;            /* this is necessary or the game will crash sometimes -pgm */
+    }
+    
+    Object_position_init_pixels(shot, shotpos.x, shotpos.y);
+    
          
-      mv.x = mv.y = shot->acc.x = shot->acc.y = 0;
-      
-      shot->vel.x     = mv.x + (pl ? pl->vel.x : 0.0) + tcos(dir) * speed;
-      shot->vel.y     = mv.y + (pl ? pl->vel.y : 0.0) + tsin(dir) * speed;
-      shot->status    = status;
-      shot->dir       = dir;
-      shot->pl_range  = pl_range;
-      shot->pl_radius = pl_radius;
-      fired++;
-    }
+    mv.x = mv.y = shot->acc.x = shot->acc.y = 0;
+    
+    shot->vel.x     = mv.x + (pl ? pl->vel.x : 0.0) + tcos(dir) * speed;
+    shot->vel.y     = mv.y + (pl ? pl->vel.y : 0.0) + tsin(dir) * speed;
+    shot->status    = status;
+    shot->dir       = dir;
+    shot->pl_range  = pl_range;
+    shot->pl_radius = pl_radius;
+   
+    
 }
-
-void Fire_normal_shots(int ind)
-{
-    player		*pl = Players[ind];
-
-    if (main_loops_slow < (pl->shot_time + fireRepeatRate)) {
-	return;
-    }
-
-    pl->shot_time = main_loops_slow;
-
-    Fire_main_shot(ind, OBJ_SHOT, pl->dir);
-}
-
 
 /* Removes shot from array */
 void Delete_shot(int ind)

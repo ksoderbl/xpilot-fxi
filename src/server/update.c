@@ -46,13 +46,11 @@ char update_version[] = VERSION;
 	(o_)->vel.y += (o_)->acc.y;					\
     }
 
-int	rdelay = 0;		/* delay until start of next round */
-int	rdelaySend = 0;		/* number of frames to send rdelay to client */
 
 static char msg[MSG_LEN];
-
-
+extern int frame_cycle;
 void update_player_turn(int ind);
+void update_player_thrust(player *pl);
 static void Transport_to_home(int ind)
 {
     /*
@@ -131,15 +129,17 @@ void Update_objects_interpolation(void)
     player_fps = internalFps;
     player_fps = MIN(player_fps, pl->player_fps);
     
-    
-    //       if (player_fps < internalFps) {
-    //	 int divisor = (internalFps - 1) / player_fps + 1;
-    //	 if (frame_loops % divisor)
-    //	   continue;
-    //  }
-
+   
+    if (player_fps < internalFps) {
+      int divisor = (internalFps - 1) / player_fps + 1;
+      if (frame_loops % divisor)
+	continue;
+    }
+   
     /* update turn for player also in interpolated frame */
-    /*    update_player_turn(i); */
+    /* printf("interpolation: %d %d %d\n", main_loops, frame_loops, frame_cycle); */
+    /* fflush(stdout); */
+    update_player_turn(i); 
      
   }
   
@@ -149,6 +149,8 @@ void Update_objects_interpolation(void)
       Move_player_interpolation(i);
     }
   }
+  
+  
   
 }
 
@@ -273,9 +275,6 @@ void Update_objects(void)
 	if (BIT(pl->status, PLAYING|GAME_OVER|PAUSE) != PLAYING)
 	    continue;
 
-	if (rdelay > 0)
-	    continue;
-
 
 	if (pl->shield_time > 0) {
 	    if (--pl->shield_time == 0) {
@@ -289,6 +288,9 @@ void Update_objects(void)
 	}
 
 	/* compute turn updates */
+	/* printf("real: %d %d %d\n", main_loops, frame_loops, frame_cycle);*/
+	/* fflush(stdout); */
+	
 	update_player_turn(i);
 
 	/*
@@ -345,27 +347,7 @@ void Update_objects(void)
 	if (pl->fuel.sum > (pl->fuel.max-REFUEL_RATE))
 	    CLR_BIT(pl->used, OBJ_REFUEL);
 
-	/*
-	 * Update acceleration vector etc.
-	 */
-	if (BIT(pl->status, THRUSTING)) {
-	    DFLOAT power = pl->power;
-	    DFLOAT f = pl->power * 0.0008;	/* 1/(FUEL_SCALE*MIN_POWER) */
-	    int a = pl->item[ITEM_AFTERBURNER];
-	    DFLOAT inert = pl->mass;
-
-	    if (a) {
-		power = AFTER_BURN_POWER(power, a);
-		f = AFTER_BURN_FUEL(f, a);
-	    }
-	    pl->acc.x = power * tcos(pl->dir) / inert;
-	    pl->acc.y = power * tsin(pl->dir) / inert;
-	    Add_fuel(&(pl->fuel), (long)(-f * FUEL_SCALE_FACT)); /* Decrement fuel */
-	} else {
-	    pl->acc.x = pl->acc.y = 0.0;
-	}
-
-	pl->mass = pl->emptymass + FUEL_MASS(pl->fuel.sum);
+	update_player_thrust(pl);
 
 	if (!BIT(pl->status, PAUSE)) {
 	    update_object_speed(pl);	    /* New position */
@@ -406,9 +388,9 @@ void Update_objects(void)
 	    Kill_player(i, true);
 
 	    if (IS_HUMAN_PTR(pl)) {
-	      if (frame_loops - pl->frame_last_busy > 60 * FPS /*ok -pgm */
+	      if (frame_loops - pl->frame_last_busy > 60 * FPS * frameDivisor  /*ok -pgm */
 		    && (NumPlayers - NumPseudoPlayers) > 1) {
-		    Pause_player(i, 1);
+		Pause_player(i, 1);
 		}
 	    }
 	}
@@ -469,3 +451,29 @@ void update_player_turn(int ind){
   */
   Turn_player(ind);
 }
+
+void update_player_thrust(player *pl){
+  /*
+   * Update acceleration vector etc.
+   */
+
+  if (BIT(pl->status, THRUSTING)) {
+    DFLOAT power = pl->power;
+    DFLOAT f = pl->power * 0.0008;	/* 1/(FUEL_SCALE*MIN_POWER) */
+    int a = pl->item[ITEM_AFTERBURNER];
+    DFLOAT inert = pl->mass;
+    
+    if (a) {
+      power = AFTER_BURN_POWER(power, a);
+      f = AFTER_BURN_FUEL(f, a);
+    }
+    pl->acc.x = power * tcos(pl->dir) / inert;
+    pl->acc.y = power * tsin(pl->dir) / inert;
+    Add_fuel(&(pl->fuel), (long)(-f * FUEL_SCALE_FACT)); /* Decrement fuel */
+  } else {
+    pl->acc.x = pl->acc.y = 0.0;
+  }
+  
+  pl->mass = pl->emptymass + FUEL_MASS(pl->fuel.sum);
+}
+

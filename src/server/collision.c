@@ -460,7 +460,6 @@ static void PlayerCollision(void)
 		    sprintf(msg, "%s ran over %s.",
 			    pl->name, Players[j]->name);
 		    Set_message(msg);
-		    pl->kills++;
 			sc = (int)floor(Rate(pl->score, Players[j]->score)
 					* runoverKillScoreMult);
 			Score_players(i_tank_owner, sc, Players[j]->name,
@@ -473,7 +472,6 @@ static void PlayerCollision(void)
 		    sprintf(msg, "%s ran over %s.",
 			    Players[j]->name, pl->name);
 		    Set_message(msg);
-		    Players[j]->kills++;
 		    sc = (int)floor(Rate(Players[j]->score, pl->score)
 				    * runoverKillScoreMult);
 		    Score_players(j_tank_owner, sc, pl->name,
@@ -640,15 +638,15 @@ static void PlayerObjectCollision(int ind)
 	    /*
 	     * The ball is special, usually players bounce off of it with
 	     * shields up, or die with shields down.  The treasure may
-	     * be destroyed.
+	     * be destroyed. 
+	     * This was a bug; balls should be popped even with shields on -pgm
 	     */
 	    Obj_repel((object *)pl, obj, radius);
-	    if (BIT(pl->used, OBJ_SHIELD) != OBJ_SHIELD) {
-		Add_fuel(&(pl->fuel), (long)ED_BALL_HIT);
-		if (treasureCollisionDestroys) {
-		    obj->life = 0;
-		}
+	    Add_fuel(&(pl->fuel), (long)ED_BALL_HIT);
+	    if (treasureCollisionDestroys) {
+	      obj->life = 0;
 	    }
+	    
 	    if (pl->fuel.sum > 0) {
 		if (!treasureCollisionMayKill || BIT(pl->used, OBJ_SHIELD))
 		    continue;
@@ -672,7 +670,6 @@ static void PlayerObjectCollision(int ind)
 			  OBJ_Y_IN_BLOCKS(pl),
 			  Players[killer]->name);
 		} else {
-		    Players[killer]->kills++;
 		    sc = (int)floor(Rate(Players[killer]->score, pl->score)
 			       * ballKillScoreMult);
 		    Score_players(killer, sc, pl->name,
@@ -713,7 +710,6 @@ static void PlayerObjectCollision(int ind)
 			      OBJ_Y_IN_BLOCKS(pl),
 			      (killer == -1) ? "[Explosion]" : pl->name);
 		    } else {
-			Players[killer]->kills++;
 			sc = (int)floor(Rate(Players[killer]->score, pl->score)
 				   * explosionKillScoreMult);
 			Score_players(killer, sc, pl->name,
@@ -782,7 +778,6 @@ static void PlayerObjectCollision(int ind)
 			      OBJ_Y_IN_BLOCKS(pl),
 			      Players[killer]->name);
 		    } else {
-			Players[killer]->kills++;
 			Rank_add_kill(killer);
 			sc = (int)floor(Rate(Players[killer]->score, pl->score)
 				   * shotKillScoreMult);

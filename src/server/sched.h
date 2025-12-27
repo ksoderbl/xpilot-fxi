@@ -26,7 +26,7 @@
 
 void block_timer(void);
 void allow_timer(void);
-void install_timer_tick(void (*func)(void), int freq);
+void setup_timer(int);
 void install_timeout(void (*func)(void *), int offset, void *arg);
 void remove_timeout(void (*func)(void *), void *arg);
 void install_input(void (*func)(int, void *), int fd, void *arg);

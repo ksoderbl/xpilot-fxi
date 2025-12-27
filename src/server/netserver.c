@@ -150,6 +150,12 @@ int			login_in_progress;
 static int		num_logins, num_logouts;
 extern int frame_cycle;
 
+
+static inline double timeval_to_seconds(struct timeval tv)
+{
+    return ((double)tv.tv_sec)/1000 + tv.tv_usec * 1e-3;
+}
+
 char *showtime(void)
 {
     time_t		now;
@@ -1036,6 +1042,11 @@ static void Handle_input(int fd, void *arg)
     int			type,
 			result,
 			(**receive_tbl)(int ind);
+    struct              timeval tv1;
+
+    //gettimeofday(&tv1, NULL);
+    //printf("Handleinput:%e\n", timeval_to_seconds(tv1));
+
 
     if (connp->state & (CONN_PLAYING | CONN_READY)) {
 	receive_tbl = &playing_receive[0];
@@ -1304,7 +1315,7 @@ int Send_self(int ind,
       }
       return Send_modifiers(ind, mods);
     }
-    printf("buuu!\n");
+
     n = Packet_printf(&connp->w,
 		      "%c"
 		      "%hd%hd%hd%hd%c"
@@ -1714,9 +1725,15 @@ int Send_message(int ind, const char *msg)
     return Packet_printf(&connp->c, "%c%S", PKT_MESSAGE, msg);
 }
 
+
+
 int Send_start_of_frame(int ind)
 {
     connection_t	*connp = &Conn[ind];
+    struct timeval tv1;
+    gettimeofday(&tv1, NULL);
+    //printf("send start:%e %d\n",timeval_to_seconds(tv1), main_loops);
+
 
     if (connp->state != CONN_PLAYING) {
 	if (connp->state != CONN_READY) {
@@ -1760,8 +1777,10 @@ int Send_end_of_frame(int ind)
 	 * Frame update size exceeded buffer size.
 	 * Drop this packet.
 	 */
-	Sockbuf_clear(&connp->w);
-	return 0;
+      printf("ooops:send_end\n");
+      fflush(stdout);
+      Sockbuf_clear(&connp->w);
+      return 0;
     }
     while (connp->motd_offset >= 0
 	&& connp->c.len + connp->w.len < MAX_RELIABLE_DATA_PACKET_SIZE) {
@@ -1790,7 +1809,10 @@ static int Receive_keyboard(int ind)
     long		change;
     u_byte		ch;
     int			size = KEYBOARD_SIZE;
+    struct timeval      tv1;
 
+    //gettimeofday(&tv1, NULL);
+    //printf("receive kb:%e %d\n",timeval_to_seconds(tv1), main_loops);
     if (connp->version < 0x3800) {
 	/* older servers have a keyboard_size of 8 bytes instead of 9. */
 	size--;
@@ -2603,6 +2625,10 @@ static int Receive_pointer_move(int ind)
     short		movement;
     int			n;
     DFLOAT		turnspeed, turndir;
+    long  last_loops;
+    struct timeval      tv1;
+    //gettimeofday(&tv1, NULL);
+    //if ((n = Packet_scanf(&connp->r, "%c%hd%ld", &ch, &movement, &last_loops)) <= 0)
 
     if ((n = Packet_scanf(&connp->r, "%c%hd", &ch, &movement)) <= 0) {
 	if (n == -1) {
@@ -2612,14 +2638,8 @@ static int Receive_pointer_move(int ind)
     }
     pl = Players[GetInd[connp->id]];
 
-/*    if (BIT(pl->status, HOVERPAUSE))
-	return 1;
-*/
+    //printf("receive_pointer:%e main_loops:%d\n",timeval_to_seconds(tv1),last_loops);
 
-
-/*    if (BIT(pl->used, OBJ_AUTOPILOT))
-	Autopilot(GetInd[connp->id], 0);
-*/
     turnspeed = movement * pl->turnspeed / MAX_PLAYER_TURNSPEED;
 
     if (turnspeed < 0) {

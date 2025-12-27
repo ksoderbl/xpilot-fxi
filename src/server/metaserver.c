@@ -189,10 +189,7 @@ void Meta_update(int change)
 	}
     }
 
-    game_mode = (game_lock && ShutdownServer == -1) ? "locked"
-		: (!game_lock && ShutdownServer != -1) ? "shutting down"
-		: (game_lock && ShutdownServer != -1) ? "locked and shutting down"
-		: "ok";
+    game_mode = (game_lock) ? "locked" : "ok";
 
     /* calculate number of available homebases per team. */
     freebases[0] = '\0';

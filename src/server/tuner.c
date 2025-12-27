@@ -28,8 +28,9 @@
 #include "proto.h"
 #include "error.h"
 #include "commonproto.h"
+#include "sched.h"
 
-
+extern int frame_cycle;
 
 
 void tuner_plock(void)
@@ -143,12 +144,17 @@ void tuner_worldlives(void)
 
 void tuner_framedivisor(void){
  
-  LIMIT(frameDivisor, 1, 10);	
+  LIMIT(frameDivisor, 1, 10);
+  frame_cycle = 0;
+  setup_timer(internalFps);
+  frame_cycle = 0;
 }
 
 
 void tuner_internalFps(void){
  
   LIMIT(internalFps, 1, MAX_SERVER_FPS);	
-  install_timer_tick(Main_loop, internalFps);
+  frame_cycle = 0;
+  setup_timer(internalFps);
+  frame_cycle = 0;
 }

@@ -1,0 +1,1854 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  us/call  us/call  name    
+ 22.00      0.11     0.11    20112     5.47     5.47  Receive_pointer_move
+ 22.00      0.22     0.11        1 110000.00 290000.00  sched
+ 12.00      0.28     0.06    19799     3.03     9.09  Handle_input
+ 12.00      0.34     0.06                             Packet_scanf
+ 10.00      0.39     0.05        1 50000.00 50000.00  Alloc_shots
+  8.00      0.43     0.04                             Sockbuf_read
+  4.00      0.45     0.02        1 20000.00 20000.00  Walldist_init
+  4.00      0.47     0.02                             DgramRead
+  2.00      0.48     0.01    73383     0.14     0.14  Object_position_init_pixels
+  2.00      0.49     0.01     4779     2.09     2.09  Receive_keyboard
+  2.00      0.50     0.01        1 10000.00 10000.00  Grok_map
+  0.00      0.50     0.00  1386561     0.00     0.00  Object_position_set_clicks_interpolation
+  0.00      0.50     0.00   768280     0.00     0.00  Object_position_set_clicks
+  0.00      0.50     0.00   727529     0.00     0.00  Really_empty_space
+  0.00      0.50     0.00   694897     0.00     0.00  Move_object
+  0.00      0.50     0.00   693127     0.00     0.00  Move_object_interpolation
+  0.00      0.50     0.00   581297     0.00     0.00  Move_segment
+  0.00      0.50     0.00    73235     0.00     0.00  Delete_shot
+  0.00      0.50     0.00    44318     0.00     0.00  Robot_default_get_data
+  0.00      0.50     0.00    37404     0.00     0.00  Wrap_length
+  0.00      0.50     0.00    32630     0.00     0.00  Player_position_set_clicks_interpolation
+  0.00      0.50     0.00    22600     0.00     0.00  Detect
+  0.00      0.50     0.00    22570     0.00     0.00  Bounce_wall
+  0.00      0.50     0.00    20991     0.00     0.00  fastshot_store
+  0.00      0.50     0.00    19463     0.00     0.00  block_inview
+  0.00      0.50     0.00    17577     0.00     0.00  Move_player_interpolation
+  0.00      0.50     0.00    17162     0.00     0.00  Turn_player
+  0.00      0.50     0.00    17162     0.00     0.00  update_player_turn
+  0.00      0.50     0.00    16387     0.00     0.59  Make_debris
+  0.00      0.50     0.00    15276     0.00     0.00  Move_player
+  0.00      0.50     0.00    15258     0.00     0.00  Player_position_set_clicks
+  0.00      0.50     0.00    15114     0.00     0.00  timeval_to_seconds
+  0.00      0.50     0.00    12639     0.00     0.00  Wrap_findDir
+  0.00      0.50     0.00    12500     0.00     0.00  update_player_thrust
+  0.00      0.50     0.00    12498     0.00     0.00  Cell_objects_get
+  0.00      0.50     0.00    12498     0.00     0.00  PlayerObjectCollision
+  0.00      0.50     0.00    12437     0.00     0.00  Update_tanks
+  0.00      0.50     0.00    10865     0.00     0.00  Send_fastshot
+  0.00      0.50     0.00    10351     0.00     0.00  Add_fuel
+  0.00      0.50     0.00     9352     0.00     0.00  Robot_check_leave
+  0.00      0.50     0.00     9287     0.00     0.00  Check_robot_evade
+  0.00      0.50     0.00     9287     0.00     0.01  Robot_default_play
+  0.00      0.50     0.00     9287     0.00     0.00  Robot_default_play_check_objects
+  0.00      0.50     0.00     9287     0.00     0.01  Robot_play
+  0.00      0.50     0.00     8936     0.00     0.01  Check_robot_target
+  0.00      0.50     0.00     8908     0.00     0.00  Frame_radar_buffer_add
+  0.00      0.50     0.00     8908     0.00     0.00  Send_radar
+  0.00      0.50     0.00     8152     0.00     1.19  Thrust
+  0.00      0.50     0.00     7557     0.00     0.00  Queue_loop
+  0.00      0.50     0.00     7175     0.00     0.00  Frame_radar_buffer_free
+  0.00      0.50     0.00     7175     0.00     0.00  Frame_shuffle
+  0.00      0.50     0.00     7175     0.00     0.00  Frame_update
+  0.00      0.50     0.00     6544     0.00     0.00  Send_ship
+  0.00      0.50     0.00     5465     0.00     0.00  Ball_handler
+  0.00      0.50     0.00     3780     0.00     0.00  Input
+  0.00      0.50     0.00     3780     0.00     0.00  insert_measure
+  0.00      0.50     0.00     3588     0.00     0.00  Cell_objects_init
+  0.00      0.50     0.00     3588     0.00     0.00  Check_collision
+  0.00      0.50     0.00     3588     0.00     0.01  Compute_game_status
+  0.00      0.50     0.00     3588     0.00     0.00  Init_interpolation_data
+  0.00      0.50     0.00     3588     0.00     0.00  PlayerCollision
+  0.00      0.50     0.00     3588     0.00     0.01  Robot_update
+  0.00      0.50     0.00     3588     0.00     0.00  Send_start_of_frame
+  0.00      0.50     0.00     3588     0.00     2.79  Update_objects
+  0.00      0.50     0.00     3587     0.00     0.00  Frame_map
+  0.00      0.50     0.00     3587     0.00     0.00  Frame_parameters
+  0.00      0.50     0.00     3587     0.00     0.00  Frame_radar
+  0.00      0.50     0.00     3587     0.00     0.00  Frame_radar_buffer_reset
+  0.00      0.50     0.00     3587     0.00     0.00  Frame_radar_buffer_send
+  0.00      0.50     0.00     3587     0.00     0.00  Frame_ships
+  0.00      0.50     0.00     3587     0.00     0.00  Frame_shots
+  0.00      0.50     0.00     3587     0.00     0.00  Frame_status
+  0.00      0.50     0.00     3587     0.00     0.00  Get_display_parameters
+  0.00      0.50     0.00     3587     0.00     0.00  Get_player_id
+  0.00      0.50     0.00     3587     0.00     0.00  Send_end_of_frame
+  0.00      0.50     0.00     3587     0.00     0.00  Send_modifiers
+  0.00      0.50     0.00     3587     0.00     0.00  Send_self
+  0.00      0.50     0.00     3587     0.00     0.00  Send_self_items
+  0.00      0.50     0.00     3587     0.00     0.00  Update_objects_interpolation
+  0.00      0.50     0.00     3587     0.00     0.00  debris_end
+  0.00      0.50     0.00     3587     0.00     0.00  fastshot_end
+  0.00      0.50     0.00     3476     0.00     0.00  Object_crash
+  0.00      0.50     0.00     2776     0.00     0.00  Transport_to_home
+  0.00      0.50     0.00     2598     0.00     0.08  Fire_normal_shots
+  0.00      0.50     0.00     2417     0.00     0.00  Send_ball
+  0.00      0.50     0.00     1805     0.00     0.00  Delta_mv
+  0.00      0.50     0.00     1530     0.00     0.00  Check_robot_hunt
+  0.00      0.50     0.00     1202     0.00     0.00  Handle_keyboard
+  0.00      0.50     0.00     1148     0.00     0.00  Receive_ack_fuel
+  0.00      0.50     0.00     1148     0.00     0.00  Send_fuel
+  0.00      0.50     0.00      678     0.00     0.00  Send_refuel
+  0.00      0.50     0.00      396     0.00     0.00  Move_ball_interpolation
+  0.00      0.50     0.00      394     0.00     0.00  Move_ball
+  0.00      0.50     0.00      376     0.00     0.00  Option_hash_string
+  0.00      0.50     0.00      354     0.00     0.00  Robot_default_play_check_map
+  0.00      0.50     0.00      210     0.00     0.00  Option_allocate_node
+  0.00      0.50     0.00      210     0.00     0.00  Option_free_node
+  0.00      0.50     0.00      210     0.00     0.00  Option_free_value
+  0.00      0.50     0.00      178     0.00     0.00  Option_allocate_value
+  0.00      0.50     0.00      145     0.00     0.00  Option_add_node
+  0.00      0.50     0.00      131     0.00     0.00  Rank_add_score
+  0.00      0.50     0.00      131     0.00     0.00  SCORE
+  0.00      0.50     0.00      131     0.00     0.00  Send_score
+  0.00      0.50     0.00      123     0.00     0.00  Receive_ack
+  0.00      0.50     0.00      122     0.00     0.00  Send_reliable
+  0.00      0.50     0.00      120     0.00     0.00  Meta_update
+  0.00      0.50     0.00      119     0.00     0.00  Get_hash_node_by_name
+  0.00      0.50     0.00      114     0.00     0.00  Option_parse_node
+  0.00      0.50     0.00      113     0.00     0.00  Option_add_desc
+  0.00      0.50     0.00      112     0.00     0.00  Option_set_value
+  0.00      0.50     0.00      103     0.00     0.00  parseLine
+  0.00      0.50     0.00      101     0.00     0.00  skipspace
+  0.00      0.50     0.00       93     0.00     0.00  Detach_ball
+  0.00      0.50     0.00       88     0.00     0.00  Player_init_fuel
+  0.00      0.50     0.00       83     0.00     1.03  Explode_fighter
+  0.00      0.50     0.00       83     0.00     1.03  Kill_player
+  0.00      0.50     0.00       83     0.00     0.00  Player_death_reset
+  0.00      0.50     0.00       82     0.00     0.00  Go_home
+  0.00      0.50     0.00       82     0.00     0.00  Player_position_init_pixels
+  0.00      0.50     0.00       78     0.00     0.00  Robot_default_war_on_player
+  0.00      0.50     0.00       78     0.00     0.00  Robot_war_on_player
+  0.00      0.50     0.00       77     0.00     0.00  Send_message
+  0.00      0.50     0.00       77     0.00     0.00  Set_message
+  0.00      0.50     0.00       74     0.00     0.00  Find_closest_team
+  0.00      0.50     0.00       70     0.00     0.00  Rate
+  0.00      0.50     0.00       69     0.00     0.00  Robot_default_go_home
+  0.00      0.50     0.00       69     0.00     0.00  Robot_go_home
+  0.00      0.50     0.00       65     0.00     0.00  Send_score_object
+  0.00      0.50     0.00       64     0.00     0.00  Robot_talks
+  0.00      0.50     0.00       63     0.00     0.57  Make_wreckage
+  0.00      0.50     0.00       63     0.00     0.00  Rank_add_death
+  0.00      0.50     0.00       62     0.00     0.00  Send_connector
+  0.00      0.50     0.00       61     0.00     0.00  Robot_war
+  0.00      0.50     0.00       61     0.00     0.00  Update_score_table
+  0.00      0.50     0.00       60     0.00     0.00  Rank_add_kill
+  0.00      0.50     0.00       60     0.00     0.00  Score_players
+  0.00      0.50     0.00       48     0.00     0.00  encode
+  0.00      0.50     0.00       47     0.00     0.00  Option_change_node
+  0.00      0.50     0.00       41     0.00     0.00  Convert_string_to_bool
+  0.00      0.50     0.00       30     0.00     0.00  Player_lock_allowed
+  0.00      0.50     0.00       30     0.00     0.00  Player_lock_closest
+  0.00      0.50     0.00       26     0.00     0.00  Convert_string_to_float
+  0.00      0.50     0.00       26     0.00     0.00  Convert_string_to_int
+  0.00      0.50     0.00       25     0.00     0.00  Robot_default_set_war
+  0.00      0.50     0.00       25     0.00     0.00  Robot_set_war
+  0.00      0.50     0.00       20     0.00     0.00  Rank_add_round
+  0.00      0.50     0.00       20     0.00     0.00  Send_war
+  0.00      0.50     0.00       19     0.00     0.00  init_ID
+  0.00      0.50     0.00       16     0.00     0.00  Find_option_by_name
+  0.00      0.50     0.00       15     0.00     0.14  Make_treasure_ball
+  0.00      0.50     0.00       14     0.00     0.00  peek_ID
+  0.00      0.50     0.00       11     0.00     0.00  Parse_check_info_request
+  0.00      0.50     0.00       11     0.00     0.00  showtime
+  0.00      0.50     0.00        8     0.00     0.00  Conn_set_state
+  0.00      0.50     0.00        8     0.00     0.00  Get_player_index_by_name
+  0.00      0.50     0.00        8     0.00     0.00  Rank_get_logout_message
+  0.00      0.50     0.00        8     0.00     0.00  rank_showtime
+  0.00      0.50     0.00        6     0.00     0.00  Check_team_members
+  0.00      0.50     0.00        6     0.00     0.00  Pick_startpos
+  0.00      0.50     0.00        6     0.00     0.00  Receive_power
+  0.00      0.50     0.00        6     0.00     0.00  Send_base
+  0.00      0.50     0.00        5     0.00     0.00  Delete_player
+  0.00      0.50     0.00        5     0.00     0.00  Init_player
+  0.00      0.50     0.00        5     0.00     0.00  Meta_send
+  0.00      0.50     0.00        5     0.00     0.00  Option_get_value
+  0.00      0.50     0.00        5     0.00     0.00  Pick_team
+  0.00      0.50     0.00        5     0.00     0.00  Send_player
+  0.00      0.50     0.00        5     0.00     0.00  release_ID
+  0.00      0.50     0.00        5     0.00     0.00  request_ID
+  0.00      0.50     0.00        4     0.00     0.00  Compute_end_of_round_values
+  0.00      0.50     0.00        4     0.00     0.00  Count_rounds
+  0.00      0.50     0.00        4     0.00     0.00  Give_best_player_bonus
+  0.00      0.50     0.00        4     0.00     0.00  Give_individual_bonus
+  0.00      0.50     0.00        4     0.00     0.00  Init_item
+  0.00      0.50     0.00        4     0.00     0.00  Rank_write_rankfile
+  0.00      0.50     0.00        4     0.00     0.00  Rank_write_webpage
+  0.00      0.50     0.00        4     0.00     0.00  Receive_modifier_bank
+  0.00      0.50     0.00        4     0.00     5.41  Reset_all_players
+  0.00      0.50     0.00        4     0.00     0.00  Robot_create
+  0.00      0.50     0.00        4     0.00     0.00  Robot_default_create
+  0.00      0.50     0.00        4     0.00     0.00  Robot_default_destroy
+  0.00      0.50     0.00        4     0.00     0.00  Robot_destroy
+  0.00      0.50     0.00        4     0.00     0.00  Robot_reset_war
+  0.00      0.50     0.00        4     0.00     0.00  Server_info
+  0.00      0.50     0.00        4     0.00     0.00  SortRankings
+  0.00      0.50     0.00        4     0.00     5.41  Team_game_over
+  0.00      0.50     0.00        3     0.00     0.00  Obj_repel
+  0.00      0.50     0.00        3     0.00     0.00  Reply
+  0.00      0.50     0.00        3     0.00     0.00  Version_to_magic
+  0.00      0.50     0.00        3     0.00     0.00  fileOpen
+  0.00      0.50     0.00        2     0.00     0.00  Check_address
+  0.00      0.50     0.00        2     0.00     0.00  Contact
+  0.00      0.50     0.00        2     0.00     0.00  Convert_string_to_list
+  0.00      0.50     0.00        2     0.00     0.00  Free_cells
+  0.00      0.50     0.00        2     0.00     0.00  Log_game
+  0.00      0.50     0.00        2     0.00     0.00  Player_crash
+  0.00      0.50     0.00        2     0.00     0.00  Send_reply
+  0.00      0.50     0.00        2     0.00     0.00  install_input
+  0.00      0.50     0.00        2     0.00     0.00  openDefaultsFile
+  0.00      0.50     0.00        2     0.00     0.00  sig_ok
+  0.00      0.50     0.00        1     0.00     0.00  Alloc_map
+  0.00      0.50     0.00        1     0.00     0.00  Alloc_players
+  0.00      0.50     0.00        1     0.00     0.00  Check_connection
+  0.00      0.50     0.00        1     0.00     0.00  Check_names
+  0.00      0.50     0.00        1     0.00     0.00  Check_server_versions
+  0.00      0.50     0.00        1     0.00     0.00  Compress_map
+  0.00      0.50     0.00        1     0.00     0.00  Contact_cleanup
+  0.00      0.50     0.00        1     0.00     0.00  Contact_init
+  0.00      0.50     0.00        1     0.00     0.00  Destroy_connection
+  0.00      0.50     0.00        1     0.00     0.00  End_game
+  0.00      0.50     0.00        1     0.00     0.00  Find_base_direction
+  0.00      0.50     0.00        1     0.00     0.00  Free_map
+  0.00      0.50     0.00        1     0.00     0.00  Free_players
+  0.00      0.50     0.00        1     0.00     0.00  Free_shots
+  0.00      0.50     0.00        1     0.00     0.00  Get_option_descs
+  0.00      0.50     0.00        1     0.00     0.00  Handle_listening
+  0.00      0.50     0.00        1     0.00     0.00  Handle_login
+  0.00      0.50     0.00        1     0.00     0.00  Handle_setup
+  0.00      0.50     0.00        1     0.00     0.00  Handle_signal
+  0.00      0.50     0.00        1     0.00     0.00  Init_default_options
+  0.00      0.50     0.00        1     0.00     0.00  Init_map
+  0.00      0.50     0.00        1     0.00     0.00  Init_options
+  0.00      0.50     0.00        1     0.00     0.00  Init_receive
+  0.00      0.50     0.00        1     0.00     0.00  Init_setup
+  0.00      0.50     0.00        1     0.00     0.00  Meta_gone
+  0.00      0.50     0.00        1     0.00     0.00  Meta_init
+  0.00      0.50     0.00        1     0.00     0.00  Move_init
+  0.00      0.50     0.00        1     0.00     0.00  Options_free
+  0.00      0.50     0.00        1     0.00     0.00  Options_hash_free
+  0.00      0.50     0.00        1     0.00     0.00  Options_hash_performance
+  0.00      0.50     0.00        1     0.00     0.00  Options_parse
+  0.00      0.50     0.00        1     0.00     0.00  Options_parse_FPS
+  0.00      0.50     0.00        1     0.00     0.00  Options_parse_expand
+  0.00      0.50     0.00        1     0.00     0.00  Origin_name
+  0.00      0.50     0.00        1     0.00     0.00  Parse_robot_file
+  0.00      0.50     0.00        1     0.00     0.00  Parser
+  0.00      0.50     0.00        1     0.00     0.00  Player_set_score
+  0.00      0.50     0.00        1     0.00     0.00  Queue_ack
+  0.00      0.50     0.00        1     0.00     0.00  Queue_player
+  0.00      0.50     0.00        1     0.00     0.00  Queue_remove
+  0.00      0.50     0.00        1     0.00     0.00  Rank_get_saved_score
+  0.00      0.50     0.00        1     0.00     0.00  Rank_init_saved_scores
+  0.00      0.50     0.00        1     0.00     0.00  Rank_parse_rankfile
+  0.00      0.50     0.00        1     0.00     0.00  Rank_save_score
+  0.00      0.50     0.00        1     0.00     0.00  Receive_display
+  0.00      0.50     0.00        1     0.00     0.00  Receive_fps_request
+  0.00      0.50     0.00        1     0.00     0.00  Receive_play
+  0.00      0.50     0.00        1     0.00     0.00  Receive_quit
+  0.00      0.50     0.00        1     0.00     0.00  Receive_shape
+  0.00      0.50     0.00        1     0.00     0.00  Robot_default_setup
+  0.00      0.50     0.00        1     0.00     0.00  Robot_init
+  0.00      0.50     0.00        1     0.00     0.00  Set_initial_resources
+  0.00      0.50     0.00        1     0.00     0.00  Set_world_items
+  0.00      0.50     0.00        1     0.00     0.00  Set_world_rules
+  0.00      0.50     0.00        1     0.00     0.00  Setup_connection
+  0.00      0.50     0.00        1     0.00     0.00  Walldist_alloc
+  0.00      0.50     0.00        1     0.00     0.00  Walls_init
+  0.00      0.50     0.00        1     0.00     0.00  allow_timer
+  0.00      0.50     0.00        1     0.00     0.00  block_timer
+  0.00      0.50     0.00        1     0.00     0.00  closeCompressedFile
+  0.00      0.50     0.00        1     0.00     0.00  closeMapFile
+  0.00      0.50     0.00        1     0.00     0.00  copyFilename
+  0.00      0.50     0.00        1     0.00     0.00  fileClose
+  0.00      0.50     0.00        1     0.00     0.00  getMultilineValue
+  0.00      0.50     0.00        1     0.00     0.00  isCompressed
+  0.00      0.50     0.00        1     0.00     0.00  openCompressedFile
+  0.00      0.50     0.00        1     0.00     0.00  openMapFile
+  0.00      0.50     0.00        1     0.00     0.00  parseDefaultsFile
+  0.00      0.50     0.00        1     0.00     0.00  parseMapFile
+  0.00      0.50     0.00        1     0.00     0.00  parseOpenFile
+  0.00      0.50     0.00        1     0.00     0.00  parsePasswordFile
+  0.00      0.50     0.00        1     0.00     0.00  plock_server
+  0.00      0.50     0.00        1     0.00     0.00  remove_input
+  0.00      0.50     0.00        1     0.00     0.00  setup_timer
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+ 
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this 
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 4 byte(s) for 2.00% of 0.50 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]     74.0    0.00    0.37                 main [1]
+                0.11    0.18       1/1           sched [2]
+                0.05    0.00       1/1           Alloc_shots [6]
+                0.02    0.00       1/1           Walldist_init [8]
+                0.01    0.00       1/1           Grok_map [12]
+                0.00    0.00       2/15          Make_treasure_ball [29]
+                0.00    0.00       1/1           Check_server_versions [207]
+                0.00    0.00       1/1           Parser [238]
+                0.00    0.00       1/1           plock_server [274]
+                0.00    0.00       1/1           Find_base_direction [213]
+                0.00    0.00       1/1           Walls_init [259]
+                0.00    0.00       1/1           Alloc_players [204]
+                0.00    0.00       1/1           Move_init [229]
+                0.00    0.00       1/1           Robot_init [253]
+                0.00    0.00       1/1           Rank_init_saved_scores [244]
+                0.00    0.00       1/2           Log_game [197]
+                0.00    0.00       1/1           Contact_init [210]
+                0.00    0.00       1/1           Meta_init [228]
+                0.00    0.00       1/11          showtime [157]
+                0.00    0.00       1/1           setup_timer [276]
+                0.00    0.00       1/1           Handle_signal [221]
+-----------------------------------------------
+                0.11    0.18       1/1           main [1]
+[2]     58.0    0.11    0.18       1         sched [2]
+                0.06    0.12   19799/19799       Handle_input [3]
+                0.00    0.00       2/2           Contact [194]
+                0.00    0.00       1/1           Handle_listening [218]
+-----------------------------------------------
+                0.06    0.12   19799/19799       sched [2]
+[3]     36.0    0.06    0.12   19799         Handle_input [3]
+                0.11    0.00   20112/20112       Receive_pointer_move [4]
+                0.01    0.00    4779/4779        Receive_keyboard [11]
+                0.00    0.00    1148/1148        Receive_ack_fuel [97]
+                0.00    0.00     123/123         Receive_ack [112]
+                0.00    0.00       6/6           Receive_power [164]
+                0.00    0.00       4/4           Receive_modifier_bank [181]
+                0.00    0.00       1/1           Receive_quit [250]
+                0.00    0.00       1/1           Receive_fps_request [248]
+                0.00    0.00       1/1           Receive_display [247]
+                0.00    0.00       1/1           Receive_play [249]
+                0.00    0.00       1/1           Receive_shape [251]
+-----------------------------------------------
+                0.11    0.00   20112/20112       Handle_input [3]
+[4]     22.0    0.11    0.00   20112         Receive_pointer_move [4]
+-----------------------------------------------
+                                                 <spontaneous>
+[5]     12.0    0.06    0.00                 Packet_scanf [5]
+-----------------------------------------------
+                0.05    0.00       1/1           main [1]
+[6]     10.0    0.05    0.00       1         Alloc_shots [6]
+-----------------------------------------------
+                                                 <spontaneous>
+[7]      8.0    0.04    0.00                 Sockbuf_read [7]
+-----------------------------------------------
+                0.02    0.00       1/1           main [1]
+[8]      4.0    0.02    0.00       1         Walldist_init [8]
+-----------------------------------------------
+                                                 <spontaneous>
+[9]      4.0    0.02    0.00                 DgramRead [9]
+-----------------------------------------------
+                0.00    0.00      15/73383       Make_treasure_ball [29]
+                0.00    0.00     263/73383       Make_wreckage [24]
+                0.00    0.00    1583/73383       Fire_normal_shots [17]
+                0.01    0.00   71522/73383       Make_debris [15]
+[10]     2.0    0.01    0.00   73383         Object_position_init_pixels [10]
+                0.00    0.00   73383/768280      Object_position_set_clicks [31]
+-----------------------------------------------
+                0.01    0.00    4779/4779        Handle_input [3]
+[11]     2.0    0.01    0.00    4779         Receive_keyboard [11]
+                0.00    0.00    1202/1202        Handle_keyboard [96]
+-----------------------------------------------
+                0.01    0.00       1/1           main [1]
+[12]     2.0    0.01    0.00       1         Grok_map [12]
+                0.00    0.00      74/74          Find_closest_team [130]
+                0.00    0.00       1/1           Init_map [223]
+                0.00    0.00       1/1           Alloc_map [203]
+                0.00    0.00       1/1           Set_world_rules [256]
+                0.00    0.00       1/1           Set_initial_resources [254]
+                0.00    0.00       1/1           Set_world_items [255]
+-----------------------------------------------
+                0.00    0.01    3588/3588        Main_loop [14]
+[13]     2.0    0.00    0.01    3588         Update_objects [13]
+                0.00    0.01    8152/8152        Thrust [16]
+                0.00    0.00    1991/2598        Fire_normal_shots [17]
+                0.00    0.00      63/83          Kill_player [19]
+                0.00    0.00    3588/3588        Robot_update [23]
+                0.00    0.00    3588/3588        Compute_game_status [26]
+                0.00    0.00       5/15          Make_treasure_ball [29]
+                0.00    0.00  694897/694897      Move_object [33]
+                0.00    0.00   73227/73235       Delete_shot [36]
+                0.00    0.00   15276/15276       Move_player [47]
+                0.00    0.00   13686/37404       Wrap_length [38]
+                0.00    0.00   12500/17162       Turn_player [45]
+                0.00    0.00   12500/17162       update_player_turn [46]
+                0.00    0.00   12500/12500       update_player_thrust [51]
+                0.00    0.00   12437/12437       Update_tanks [54]
+                0.00    0.00    3588/3588        PlayerCollision [72]
+                0.00    0.00    3588/3588        Check_collision [70]
+                0.00    0.00    2776/2776        Transport_to_home [92]
+                0.00    0.00    2066/10351       Add_fuel [56]
+                0.00    0.00     394/394         Move_ball [101]
+                0.00    0.00     110/131         Send_score [111]
+                0.00    0.00      77/82          Go_home [124]
+                0.00    0.00      63/83          Player_death_reset [123]
+                0.00    0.00      57/61          Update_score_table [139]
+-----------------------------------------------
+                                                 <spontaneous>
+[14]     2.0    0.00    0.01                 Main_loop [14]
+                0.00    0.01    3588/3588        Update_objects [13]
+                0.00    0.00   15114/15114       timeval_to_seconds [49]
+                0.00    0.00    7557/7557        Queue_loop [62]
+                0.00    0.00    7175/7175        Frame_radar_buffer_free [63]
+                0.00    0.00    7175/7175        Frame_update [65]
+                0.00    0.00    3780/3780        insert_measure [68]
+                0.00    0.00    3780/3780        Input [67]
+                0.00    0.00    3588/3588        Init_interpolation_data [71]
+                0.00    0.00    3587/3587        Update_objects_interpolation [88]
+                0.00    0.00     118/120         Meta_update [114]
+-----------------------------------------------
+                0.00    0.00      83/16387       Explode_fighter [18]
+                0.00    0.01   16304/16387       Thrust [16]
+[15]     1.9    0.00    0.01   16387         Make_debris [15]
+                0.01    0.00   71522/73383       Object_position_init_pixels [10]
+-----------------------------------------------
+                0.00    0.01    8152/8152        Update_objects [13]
+[16]     1.9    0.00    0.01    8152         Thrust [16]
+                0.00    0.01   16304/16387       Make_debris [15]
+-----------------------------------------------
+                0.00    0.00     607/2598        Check_robot_target [22]
+                0.00    0.00    1991/2598        Update_objects [13]
+[17]     0.0    0.00    0.00    2598         Fire_normal_shots [17]
+                0.00    0.00    1583/73383       Object_position_init_pixels [10]
+-----------------------------------------------
+                0.00    0.00      83/83          Kill_player [19]
+[18]     0.0    0.00    0.00      83         Explode_fighter [18]
+                0.00    0.00      83/16387       Make_debris [15]
+                0.00    0.00      63/63          Make_wreckage [24]
+-----------------------------------------------
+                0.00    0.00      20/83          Reset_all_players [27]
+                0.00    0.00      63/83          Update_objects [13]
+[19]     0.0    0.00    0.00      83         Kill_player [19]
+                0.00    0.00      83/83          Explode_fighter [18]
+-----------------------------------------------
+                0.00    0.00    9287/9287        Robot_play [21]
+[20]     0.0    0.00    0.00    9287         Robot_default_play [20]
+                0.00    0.00    5001/8936        Check_robot_target [22]
+                0.00    0.00    5465/5465        Ball_handler [25]
+                0.00    0.00    9287/44318       Robot_default_get_data [37]
+                0.00    0.00    9287/9287        Robot_default_play_check_objects [59]
+                0.00    0.00    9287/9287        Check_robot_evade [58]
+                0.00    0.00    8205/12639       Wrap_findDir [50]
+                0.00    0.00    1530/1530        Check_robot_hunt [95]
+                0.00    0.00    1176/22600       Detect [40]
+                0.00    0.00     354/354         Robot_default_play_check_map [103]
+-----------------------------------------------
+                0.00    0.00    9287/9287        Robot_update [23]
+[21]     0.0    0.00    0.00    9287         Robot_play [21]
+                0.00    0.00    9287/9287        Robot_default_play [20]
+                0.00    0.00   21424/22600       Detect [40]
+-----------------------------------------------
+                0.00    0.00    3935/8936        Ball_handler [25]
+                0.00    0.00    5001/8936        Robot_default_play [20]
+[22]     0.0    0.00    0.00    8936         Check_robot_target [22]
+                0.00    0.00     607/2598        Fire_normal_shots [17]
+                0.00    0.00  220080/727529      Really_empty_space [32]
+                0.00    0.00    8936/44318       Robot_default_get_data [37]
+-----------------------------------------------
+                0.00    0.00    3588/3588        Update_objects [13]
+[23]     0.0    0.00    0.00    3588         Robot_update [23]
+                0.00    0.00    9287/9287        Robot_play [21]
+                0.00    0.00    9352/9352        Robot_check_leave [57]
+                0.00    0.00       4/6           Send_base [165]
+                0.00    0.00       4/4           Robot_create [182]
+-----------------------------------------------
+                0.00    0.00      63/63          Explode_fighter [18]
+[24]     0.0    0.00    0.00      63         Make_wreckage [24]
+                0.00    0.00     263/73383       Object_position_init_pixels [10]
+-----------------------------------------------
+                0.00    0.00    5465/5465        Robot_default_play [20]
+[25]     0.0    0.00    0.00    5465         Ball_handler [25]
+                0.00    0.00    3935/8936        Check_robot_target [22]
+                0.00    0.00    5465/44318       Robot_default_get_data [37]
+                0.00    0.00    4836/37404       Wrap_length [38]
+                0.00    0.00     175/12639       Wrap_findDir [50]
+-----------------------------------------------
+                0.00    0.00    3588/3588        Update_objects [13]
+[26]     0.0    0.00    0.00    3588         Compute_game_status [26]
+                0.00    0.00       4/4           Team_game_over [28]
+                0.00    0.00       4/4           Compute_end_of_round_values [174]
+-----------------------------------------------
+                0.00    0.00       4/4           Team_game_over [28]
+[27]     0.0    0.00    0.00       4         Reset_all_players [27]
+                0.00    0.00      20/83          Kill_player [19]
+                0.00    0.00       8/15          Make_treasure_ball [29]
+                0.00    0.00      20/83          Player_death_reset [123]
+                0.00    0.00      20/20          Rank_add_round [151]
+                0.00    0.00      20/131         Send_score [111]
+                0.00    0.00       8/73235       Delete_shot [36]
+                0.00    0.00       4/61          Update_score_table [139]
+                0.00    0.00       4/4           Rank_write_webpage [180]
+-----------------------------------------------
+                0.00    0.00       4/4           Compute_game_status [26]
+[28]     0.0    0.00    0.00       4         Team_game_over [28]
+                0.00    0.00       4/4           Reset_all_players [27]
+                0.00    0.00       4/77          Send_message [128]
+                0.00    0.00       4/77          Set_message [129]
+                0.00    0.00       4/4           Give_best_player_bonus [176]
+                0.00    0.00       4/4           Give_individual_bonus [177]
+                0.00    0.00       4/4           Rank_write_rankfile [179]
+                0.00    0.00       4/4           Count_rounds [175]
+-----------------------------------------------
+                0.00    0.00       2/15          main [1]
+                0.00    0.00       5/15          Update_objects [13]
+                0.00    0.00       8/15          Reset_all_players [27]
+[29]     0.0    0.00    0.00      15         Make_treasure_ball [29]
+                0.00    0.00      15/73383       Object_position_init_pixels [10]
+-----------------------------------------------
+                0.00    0.00  693127/1386561     Move_object_interpolation [34]
+                0.00    0.00  693434/1386561     Init_interpolation_data [71]
+[30]     0.0    0.00    0.00 1386561         Object_position_set_clicks_interpolation [30]
+-----------------------------------------------
+                0.00    0.00   73383/768280      Object_position_init_pixels [10]
+                0.00    0.00  694897/768280      Move_object [33]
+[31]     0.0    0.00    0.00  768280         Object_position_set_clicks [31]
+-----------------------------------------------
+                0.00    0.00  220080/727529      Check_robot_target [22]
+                0.00    0.00  507449/727529      Check_robot_evade [58]
+[32]     0.0    0.00    0.00  727529         Really_empty_space [32]
+-----------------------------------------------
+                0.00    0.00  694897/694897      Update_objects [13]
+[33]     0.0    0.00    0.00  694897         Move_object [33]
+                0.00    0.00  694897/768280      Object_position_set_clicks [31]
+                0.00    0.00  244129/581297      Move_segment [35]
+                0.00    0.00   15038/22570       Bounce_wall [41]
+                0.00    0.00    3476/3476        Object_crash [91]
+-----------------------------------------------
+                0.00    0.00  693127/693127      Update_objects_interpolation [88]
+[34]     0.0    0.00    0.00  693127         Move_object_interpolation [34]
+                0.00    0.00  693127/1386561     Object_position_set_clicks_interpolation [30]
+                0.00    0.00  172417/581297      Move_segment [35]
+                0.00    0.00    7336/22570       Bounce_wall [41]
+-----------------------------------------------
+                0.00    0.00   29586/581297      Move_player_interpolation [44]
+                0.00    0.00   44526/581297      Move_player [47]
+                0.00    0.00   90639/581297      Turn_player [45]
+                0.00    0.00  172417/581297      Move_object_interpolation [34]
+                0.00    0.00  244129/581297      Move_object [33]
+[35]     0.0    0.00    0.00  581297         Move_segment [35]
+-----------------------------------------------
+                0.00    0.00       8/73235       Reset_all_players [27]
+                0.00    0.00   73227/73235       Update_objects [13]
+[36]     0.0    0.00    0.00   73235         Delete_shot [36]
+                0.00    0.00       1/93          Detach_ball [121]
+-----------------------------------------------
+                0.00    0.00      25/44318       Robot_default_set_war [149]
+                0.00    0.00      69/44318       Robot_default_go_home [132]
+                0.00    0.00      78/44318       Robot_default_war_on_player [126]
+                0.00    0.00     354/44318       Robot_default_play_check_map [103]
+                0.00    0.00    1530/44318       Check_robot_hunt [95]
+                0.00    0.00    5465/44318       Ball_handler [25]
+                0.00    0.00    8936/44318       Check_robot_target [22]
+                0.00    0.00    9287/44318       Check_robot_evade [58]
+                0.00    0.00    9287/44318       Robot_default_play_check_objects [59]
+                0.00    0.00    9287/44318       Robot_default_play [20]
+[37]     0.0    0.00    0.00   44318         Robot_default_get_data [37]
+-----------------------------------------------
+                0.00    0.00      13/37404       Player_lock_closest [146]
+                0.00    0.00     592/37404       Find_closest_team [130]
+                0.00    0.00    4836/37404       Ball_handler [25]
+                0.00    0.00   13686/37404       Update_objects [13]
+                0.00    0.00   18277/37404       PlayerCollision [72]
+[38]     0.0    0.00    0.00   37404         Wrap_length [38]
+-----------------------------------------------
+                0.00    0.00   15046/32630       Move_player_interpolation [44]
+                0.00    0.00   17584/32630       Init_interpolation_data [71]
+[39]     0.0    0.00    0.00   32630         Player_position_set_clicks_interpolation [39]
+-----------------------------------------------
+                0.00    0.00    1176/22600       Robot_default_play [20]
+                0.00    0.00   21424/22600       Robot_play [21]
+[40]     0.0    0.00    0.00   22600         Detect [40]
+-----------------------------------------------
+                0.00    0.00      51/22570       Turn_player [45]
+                0.00    0.00      55/22570       Move_player_interpolation [44]
+                0.00    0.00      90/22570       Move_player [47]
+                0.00    0.00    7336/22570       Move_object_interpolation [34]
+                0.00    0.00   15038/22570       Move_object [33]
+[41]     0.0    0.00    0.00   22570         Bounce_wall [41]
+-----------------------------------------------
+                0.00    0.00   20991/20991       Frame_shots [80]
+[42]     0.0    0.00    0.00   20991         fastshot_store [42]
+-----------------------------------------------
+                0.00    0.00   19463/19463       Frame_map [74]
+[43]     0.0    0.00    0.00   19463         block_inview [43]
+-----------------------------------------------
+                0.00    0.00   17577/17577       Update_objects_interpolation [88]
+[44]     0.0    0.00    0.00   17577         Move_player_interpolation [44]
+                0.00    0.00   29586/581297      Move_segment [35]
+                0.00    0.00   15046/32630       Player_position_set_clicks_interpolation [39]
+                0.00    0.00      55/22570       Bounce_wall [41]
+-----------------------------------------------
+                0.00    0.00    4662/17162       Update_objects_interpolation [88]
+                0.00    0.00   12500/17162       Update_objects [13]
+[45]     0.0    0.00    0.00   17162         Turn_player [45]
+                0.00    0.00   90639/581297      Move_segment [35]
+                0.00    0.00      51/22570       Bounce_wall [41]
+-----------------------------------------------
+                0.00    0.00    4662/17162       Update_objects_interpolation [88]
+                0.00    0.00   12500/17162       Update_objects [13]
+[46]     0.0    0.00    0.00   17162         update_player_turn [46]
+-----------------------------------------------
+                0.00    0.00   15276/15276       Update_objects [13]
+[47]     0.0    0.00    0.00   15276         Move_player [47]
+                0.00    0.00   44526/581297      Move_segment [35]
+                0.00    0.00   15176/15258       Player_position_set_clicks [48]
+                0.00    0.00      90/22570       Bounce_wall [41]
+                0.00    0.00       2/2           Player_crash [198]
+-----------------------------------------------
+                0.00    0.00      82/15258       Player_position_init_pixels [125]
+                0.00    0.00   15176/15258       Move_player [47]
+[48]     0.0    0.00    0.00   15258         Player_position_set_clicks [48]
+-----------------------------------------------
+                0.00    0.00   15114/15114       Main_loop [14]
+[49]     0.0    0.00    0.00   15114         timeval_to_seconds [49]
+-----------------------------------------------
+                0.00    0.00     175/12639       Ball_handler [25]
+                0.00    0.00     953/12639       Frame_status [81]
+                0.00    0.00    1176/12639       Check_robot_hunt [95]
+                0.00    0.00    2130/12639       Check_robot_evade [58]
+                0.00    0.00    8205/12639       Robot_default_play [20]
+[50]     0.0    0.00    0.00   12639         Wrap_findDir [50]
+-----------------------------------------------
+                0.00    0.00   12500/12500       Update_objects [13]
+[51]     0.0    0.00    0.00   12500         update_player_thrust [51]
+                0.00    0.00    8152/10351       Add_fuel [56]
+-----------------------------------------------
+                0.00    0.00   12498/12498       PlayerObjectCollision [53]
+[52]     0.0    0.00    0.00   12498         Cell_objects_get [52]
+-----------------------------------------------
+                0.00    0.00   12498/12498       PlayerCollision [72]
+[53]     0.0    0.00    0.00   12498         PlayerObjectCollision [53]
+                0.00    0.00   12498/12498       Cell_objects_get [52]
+                0.00    0.00    1805/1805        Delta_mv [94]
+                0.00    0.00     133/10351       Add_fuel [56]
+                0.00    0.00      61/131         SCORE [110]
+                0.00    0.00      61/77          Send_message [128]
+                0.00    0.00      61/77          Set_message [129]
+                0.00    0.00      61/61          Robot_war [138]
+                0.00    0.00      60/60          Rank_add_kill [140]
+                0.00    0.00      60/70          Rate [131]
+                0.00    0.00      60/60          Score_players [141]
+                0.00    0.00       9/65          Send_score_object [134]
+                0.00    0.00       3/3           Obj_repel [189]
+-----------------------------------------------
+                0.00    0.00   12437/12437       Update_objects [13]
+[54]     0.0    0.00    0.00   12437         Update_tanks [54]
+-----------------------------------------------
+                0.00    0.00   10865/10865       fastshot_end [90]
+[55]     0.0    0.00    0.00   10865         Send_fastshot [55]
+-----------------------------------------------
+                0.00    0.00     133/10351       PlayerObjectCollision [53]
+                0.00    0.00    2066/10351       Update_objects [13]
+                0.00    0.00    8152/10351       update_player_thrust [51]
+[56]     0.0    0.00    0.00   10351         Add_fuel [56]
+-----------------------------------------------
+                0.00    0.00    9352/9352        Robot_update [23]
+[57]     0.0    0.00    0.00    9352         Robot_check_leave [57]
+-----------------------------------------------
+                0.00    0.00    9287/9287        Robot_default_play [20]
+[58]     0.0    0.00    0.00    9287         Check_robot_evade [58]
+                0.00    0.00  507449/727529      Really_empty_space [32]
+                0.00    0.00    9287/44318       Robot_default_get_data [37]
+                0.00    0.00    2130/12639       Wrap_findDir [50]
+-----------------------------------------------
+                0.00    0.00    9287/9287        Robot_default_play [20]
+[59]     0.0    0.00    0.00    9287         Robot_default_play_check_objects [59]
+                0.00    0.00    9287/44318       Robot_default_get_data [37]
+-----------------------------------------------
+                0.00    0.00    8908/8908        Frame_radar [76]
+[60]     0.0    0.00    0.00    8908         Frame_radar_buffer_add [60]
+-----------------------------------------------
+                0.00    0.00    8908/8908        Frame_radar_buffer_send [78]
+[61]     0.0    0.00    0.00    8908         Send_radar [61]
+-----------------------------------------------
+                0.00    0.00    7557/7557        Main_loop [14]
+[62]     0.0    0.00    0.00    7557         Queue_loop [62]
+                0.00    0.00       1/1           Check_connection [205]
+                0.00    0.00       1/1           Queue_remove [242]
+                0.00    0.00       1/5           Pick_team [170]
+                0.00    0.00       1/1           Setup_connection [257]
+                0.00    0.00       1/1           Queue_ack [240]
+-----------------------------------------------
+                0.00    0.00    7175/7175        Main_loop [14]
+[63]     0.0    0.00    0.00    7175         Frame_radar_buffer_free [63]
+-----------------------------------------------
+                0.00    0.00    7175/7175        Frame_update [65]
+[64]     0.0    0.00    0.00    7175         Frame_shuffle [64]
+-----------------------------------------------
+                0.00    0.00    7175/7175        Main_loop [14]
+[65]     0.0    0.00    0.00    7175         Frame_update [65]
+                0.00    0.00    7175/7175        Frame_shuffle [64]
+                0.00    0.00    3588/3588        Send_start_of_frame [73]
+                0.00    0.00    3587/3587        Frame_parameters [75]
+                0.00    0.00    3587/3587        Frame_status [81]
+                0.00    0.00    3587/3587        Frame_map [74]
+                0.00    0.00    3587/3587        Frame_ships [79]
+                0.00    0.00    3587/3587        Frame_shots [80]
+                0.00    0.00    3587/3587        Frame_radar_buffer_reset [77]
+                0.00    0.00    3587/3587        Frame_radar [76]
+                0.00    0.00    3587/3587        Frame_radar_buffer_send [78]
+                0.00    0.00    3587/3587        debris_end [89]
+                0.00    0.00    3587/3587        fastshot_end [90]
+                0.00    0.00    3587/3587        Send_end_of_frame [84]
+-----------------------------------------------
+                0.00    0.00    6544/6544        Frame_ships [79]
+[66]     0.0    0.00    0.00    6544         Send_ship [66]
+-----------------------------------------------
+                0.00    0.00    3780/3780        Main_loop [14]
+[67]     0.0    0.00    0.00    3780         Input [67]
+                0.00    0.00       3/122         Send_reliable [113]
+                0.00    0.00       2/120         Meta_update [114]
+                0.00    0.00       1/1           Handle_setup [220]
+-----------------------------------------------
+                0.00    0.00    3780/3780        Main_loop [14]
+[68]     0.0    0.00    0.00    3780         insert_measure [68]
+-----------------------------------------------
+                0.00    0.00    3588/3588        Check_collision [70]
+[69]     0.0    0.00    0.00    3588         Cell_objects_init [69]
+-----------------------------------------------
+                0.00    0.00    3588/3588        Update_objects [13]
+[70]     0.0    0.00    0.00    3588         Check_collision [70]
+                0.00    0.00    3588/3588        Cell_objects_init [69]
+-----------------------------------------------
+                0.00    0.00    3588/3588        Main_loop [14]
+[71]     0.0    0.00    0.00    3588         Init_interpolation_data [71]
+                0.00    0.00  693434/1386561     Object_position_set_clicks_interpolation [30]
+                0.00    0.00   17584/32630       Player_position_set_clicks_interpolation [39]
+-----------------------------------------------
+                0.00    0.00    3588/3588        Update_objects [13]
+[72]     0.0    0.00    0.00    3588         PlayerCollision [72]
+                0.00    0.00   18277/37404       Wrap_length [38]
+                0.00    0.00   12498/12498       PlayerObjectCollision [53]
+-----------------------------------------------
+                0.00    0.00    3588/3588        Frame_update [65]
+[73]     0.0    0.00    0.00    3588         Send_start_of_frame [73]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_update [65]
+[74]     0.0    0.00    0.00    3587         Frame_map [74]
+                0.00    0.00   19463/19463       block_inview [43]
+                0.00    0.00    1148/1148        Send_fuel [98]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_update [65]
+[75]     0.0    0.00    0.00    3587         Frame_parameters [75]
+                0.00    0.00    3587/3587        Get_display_parameters [82]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_update [65]
+[76]     0.0    0.00    0.00    3587         Frame_radar [76]
+                0.00    0.00    8908/8908        Frame_radar_buffer_add [60]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_update [65]
+[77]     0.0    0.00    0.00    3587         Frame_radar_buffer_reset [77]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_update [65]
+[78]     0.0    0.00    0.00    3587         Frame_radar_buffer_send [78]
+                0.00    0.00    8908/8908        Send_radar [61]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_update [65]
+[79]     0.0    0.00    0.00    3587         Frame_ships [79]
+                0.00    0.00    6544/6544        Send_ship [66]
+                0.00    0.00     678/678         Send_refuel [99]
+                0.00    0.00      62/62          Send_connector [137]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_update [65]
+[80]     0.0    0.00    0.00    3587         Frame_shots [80]
+                0.00    0.00   20991/20991       fastshot_store [42]
+                0.00    0.00    2417/2417        Send_ball [93]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_update [65]
+[81]     0.0    0.00    0.00    3587         Frame_status [81]
+                0.00    0.00    3587/3587        Get_player_id [83]
+                0.00    0.00    3587/3587        Send_self [86]
+                0.00    0.00     953/12639       Wrap_findDir [50]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_parameters [75]
+[82]     0.0    0.00    0.00    3587         Get_display_parameters [82]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_status [81]
+[83]     0.0    0.00    0.00    3587         Get_player_id [83]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_update [65]
+[84]     0.0    0.00    0.00    3587         Send_end_of_frame [84]
+                0.00    0.00     118/122         Send_reliable [113]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Send_self [86]
+[85]     0.0    0.00    0.00    3587         Send_modifiers [85]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_status [81]
+[86]     0.0    0.00    0.00    3587         Send_self [86]
+                0.00    0.00    3587/3587        Send_self_items [87]
+                0.00    0.00    3587/3587        Send_modifiers [85]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Send_self [86]
+[87]     0.0    0.00    0.00    3587         Send_self_items [87]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Main_loop [14]
+[88]     0.0    0.00    0.00    3587         Update_objects_interpolation [88]
+                0.00    0.00  693127/693127      Move_object_interpolation [34]
+                0.00    0.00   17577/17577       Move_player_interpolation [44]
+                0.00    0.00    4662/17162       Turn_player [45]
+                0.00    0.00    4662/17162       update_player_turn [46]
+                0.00    0.00     396/396         Move_ball_interpolation [100]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_update [65]
+[89]     0.0    0.00    0.00    3587         debris_end [89]
+-----------------------------------------------
+                0.00    0.00    3587/3587        Frame_update [65]
+[90]     0.0    0.00    0.00    3587         fastshot_end [90]
+                0.00    0.00   10865/10865       Send_fastshot [55]
+-----------------------------------------------
+                0.00    0.00    3476/3476        Move_object [33]
+[91]     0.0    0.00    0.00    3476         Object_crash [91]
+-----------------------------------------------
+                0.00    0.00    2776/2776        Update_objects [13]
+[92]     0.0    0.00    0.00    2776         Transport_to_home [92]
+-----------------------------------------------
+                0.00    0.00    2417/2417        Frame_shots [80]
+[93]     0.0    0.00    0.00    2417         Send_ball [93]
+-----------------------------------------------
+                0.00    0.00    1805/1805        PlayerObjectCollision [53]
+[94]     0.0    0.00    0.00    1805         Delta_mv [94]
+-----------------------------------------------
+                0.00    0.00    1530/1530        Robot_default_play [20]
+[95]     0.0    0.00    0.00    1530         Check_robot_hunt [95]
+                0.00    0.00    1530/44318       Robot_default_get_data [37]
+                0.00    0.00    1176/12639       Wrap_findDir [50]
+-----------------------------------------------
+                0.00    0.00    1202/1202        Receive_keyboard [11]
+[96]     0.0    0.00    0.00    1202         Handle_keyboard [96]
+                0.00    0.00       9/93          Detach_ball [121]
+-----------------------------------------------
+                0.00    0.00    1148/1148        Handle_input [3]
+[97]     0.0    0.00    0.00    1148         Receive_ack_fuel [97]
+-----------------------------------------------
+                0.00    0.00    1148/1148        Frame_map [74]
+[98]     0.0    0.00    0.00    1148         Send_fuel [98]
+-----------------------------------------------
+                0.00    0.00     678/678         Frame_ships [79]
+[99]     0.0    0.00    0.00     678         Send_refuel [99]
+-----------------------------------------------
+                0.00    0.00     396/396         Update_objects_interpolation [88]
+[100]    0.0    0.00    0.00     396         Move_ball_interpolation [100]
+-----------------------------------------------
+                0.00    0.00     394/394         Update_objects [13]
+[101]    0.0    0.00    0.00     394         Move_ball [101]
+-----------------------------------------------
+                0.00    0.00     112/376         Option_set_value [118]
+                0.00    0.00     119/376         Get_hash_node_by_name [115]
+                0.00    0.00     145/376         Option_add_node [108]
+[102]    0.0    0.00    0.00     376         Option_hash_string [102]
+-----------------------------------------------
+                0.00    0.00     354/354         Robot_default_play [20]
+[103]    0.0    0.00    0.00     354         Robot_default_play_check_map [103]
+                0.00    0.00     354/44318       Robot_default_get_data [37]
+-----------------------------------------------
+                0.00    0.00      65/210         Option_set_value [118]
+                0.00    0.00     145/210         Option_add_desc [117]
+[104]    0.0    0.00    0.00     210         Option_allocate_node [104]
+-----------------------------------------------
+                0.00    0.00     210/210         Parser [238]
+[105]    0.0    0.00    0.00     210         Option_free_node [105]
+-----------------------------------------------
+                0.00    0.00     210/210         Options_hash_free [231]
+[106]    0.0    0.00    0.00     210         Option_free_value [106]
+-----------------------------------------------
+                0.00    0.00      65/178         Option_set_value [118]
+                0.00    0.00     113/178         Option_add_desc [117]
+[107]    0.0    0.00    0.00     178         Option_allocate_value [107]
+-----------------------------------------------
+                0.00    0.00     145/145         Option_add_desc [117]
+[108]    0.0    0.00    0.00     145         Option_add_node [108]
+                0.00    0.00     145/376         Option_hash_string [102]
+-----------------------------------------------
+                0.00    0.00     131/131         SCORE [110]
+[109]    0.0    0.00    0.00     131         Rank_add_score [109]
+-----------------------------------------------
+                0.00    0.00       2/131         Player_crash [198]
+                0.00    0.00       4/131         Give_best_player_bonus [176]
+                0.00    0.00       4/131         Give_individual_bonus [177]
+                0.00    0.00      60/131         Score_players [141]
+                0.00    0.00      61/131         PlayerObjectCollision [53]
+[110]    0.0    0.00    0.00     131         SCORE [110]
+                0.00    0.00     131/131         Rank_add_score [109]
+-----------------------------------------------
+                0.00    0.00       1/131         Receive_play [249]
+                0.00    0.00      20/131         Reset_all_players [27]
+                0.00    0.00     110/131         Update_objects [13]
+[111]    0.0    0.00    0.00     131         Send_score [111]
+-----------------------------------------------
+                0.00    0.00     123/123         Handle_input [3]
+[112]    0.0    0.00    0.00     123         Receive_ack [112]
+                0.00    0.00       3/8           Conn_set_state [158]
+-----------------------------------------------
+                0.00    0.00       1/122         Handle_listening [218]
+                0.00    0.00       3/122         Input [67]
+                0.00    0.00     118/122         Send_end_of_frame [84]
+[113]    0.0    0.00    0.00     122         Send_reliable [113]
+-----------------------------------------------
+                0.00    0.00       2/120         Input [67]
+                0.00    0.00     118/120         Main_loop [14]
+[114]    0.0    0.00    0.00     120         Meta_update [114]
+                0.00    0.00       4/4           Server_info [187]
+                0.00    0.00       4/5           Meta_send [168]
+-----------------------------------------------
+                0.00    0.00       1/119         Options_parse_expand [235]
+                0.00    0.00       5/119         Option_get_value [169]
+                0.00    0.00     113/119         Options_parse [233]
+[115]    0.0    0.00    0.00     119         Get_hash_node_by_name [115]
+                0.00    0.00     119/376         Option_hash_string [102]
+-----------------------------------------------
+                0.00    0.00       1/114         Options_parse_expand [235]
+                0.00    0.00     113/114         Options_parse [233]
+[116]    0.0    0.00    0.00     114         Option_parse_node [116]
+                0.00    0.00      41/41          Convert_string_to_bool [144]
+                0.00    0.00      26/26          Convert_string_to_float [147]
+                0.00    0.00      25/26          Convert_string_to_int [148]
+                0.00    0.00       2/2           Convert_string_to_list [195]
+-----------------------------------------------
+                0.00    0.00     113/113         Init_options [224]
+[117]    0.0    0.00    0.00     113         Option_add_desc [117]
+                0.00    0.00     145/210         Option_allocate_node [104]
+                0.00    0.00     145/145         Option_add_node [108]
+                0.00    0.00     113/178         Option_allocate_value [107]
+-----------------------------------------------
+                0.00    0.00      11/112         Parser [238]
+                0.00    0.00     101/112         parseLine [119]
+[118]    0.0    0.00    0.00     112         Option_set_value [118]
+                0.00    0.00     112/376         Option_hash_string [102]
+                0.00    0.00      65/178         Option_allocate_value [107]
+                0.00    0.00      65/210         Option_allocate_node [104]
+                0.00    0.00      47/47          Option_change_node [143]
+-----------------------------------------------
+                0.00    0.00     103/103         parseOpenFile [272]
+[119]    0.0    0.00    0.00     103         parseLine [119]
+                0.00    0.00     101/101         skipspace [120]
+                0.00    0.00     101/112         Option_set_value [118]
+                0.00    0.00       1/1           getMultilineValue [266]
+-----------------------------------------------
+                0.00    0.00     101/101         parseLine [119]
+[120]    0.0    0.00    0.00     101         skipspace [120]
+-----------------------------------------------
+                0.00    0.00       1/93          Delete_shot [36]
+                0.00    0.00       9/93          Handle_keyboard [96]
+                0.00    0.00      83/93          Player_death_reset [123]
+[121]    0.0    0.00    0.00      93         Detach_ball [121]
+-----------------------------------------------
+                0.00    0.00       5/88          Init_player [167]
+                0.00    0.00      83/88          Player_death_reset [123]
+[122]    0.0    0.00    0.00      88         Player_init_fuel [122]
+-----------------------------------------------
+                0.00    0.00      20/83          Reset_all_players [27]
+                0.00    0.00      63/83          Update_objects [13]
+[123]    0.0    0.00    0.00      83         Player_death_reset [123]
+                0.00    0.00      83/93          Detach_ball [121]
+                0.00    0.00      83/88          Player_init_fuel [122]
+                0.00    0.00      63/63          Rank_add_death [136]
+                0.00    0.00      30/30          Player_lock_closest [146]
+                0.00    0.00      30/30          Player_lock_allowed [145]
+-----------------------------------------------
+                0.00    0.00       1/82          Handle_login [219]
+                0.00    0.00       4/82          Robot_create [182]
+                0.00    0.00      77/82          Update_objects [13]
+[124]    0.0    0.00    0.00      82         Go_home [124]
+                0.00    0.00      82/82          Player_position_init_pixels [125]
+                0.00    0.00      69/69          Robot_go_home [133]
+-----------------------------------------------
+                0.00    0.00      82/82          Go_home [124]
+[125]    0.0    0.00    0.00      82         Player_position_init_pixels [125]
+                0.00    0.00      82/15258       Player_position_set_clicks [48]
+-----------------------------------------------
+                0.00    0.00      78/78          Robot_war_on_player [127]
+[126]    0.0    0.00    0.00      78         Robot_default_war_on_player [126]
+                0.00    0.00      78/44318       Robot_default_get_data [37]
+-----------------------------------------------
+                0.00    0.00       8/78          Server_info [187]
+                0.00    0.00      10/78          Delete_player [166]
+                0.00    0.00      60/78          Robot_war [138]
+[127]    0.0    0.00    0.00      78         Robot_war_on_player [127]
+                0.00    0.00      78/78          Robot_default_war_on_player [126]
+-----------------------------------------------
+                0.00    0.00       2/77          Handle_login [219]
+                0.00    0.00       2/77          Player_crash [198]
+                0.00    0.00       4/77          Give_best_player_bonus [176]
+                0.00    0.00       4/77          Team_game_over [28]
+                0.00    0.00       4/77          Robot_talks [135]
+                0.00    0.00      61/77          PlayerObjectCollision [53]
+[128]    0.0    0.00    0.00      77         Send_message [128]
+-----------------------------------------------
+                0.00    0.00       2/77          Handle_login [219]
+                0.00    0.00       2/77          Player_crash [198]
+                0.00    0.00       4/77          Give_best_player_bonus [176]
+                0.00    0.00       4/77          Team_game_over [28]
+                0.00    0.00       4/77          Robot_talks [135]
+                0.00    0.00      61/77          PlayerObjectCollision [53]
+[129]    0.0    0.00    0.00      77         Set_message [129]
+-----------------------------------------------
+                0.00    0.00      74/74          Grok_map [12]
+[130]    0.0    0.00    0.00      74         Find_closest_team [130]
+                0.00    0.00     592/37404       Wrap_length [38]
+-----------------------------------------------
+                0.00    0.00       2/70          Player_crash [198]
+                0.00    0.00       4/70          Give_best_player_bonus [176]
+                0.00    0.00       4/70          Give_individual_bonus [177]
+                0.00    0.00      60/70          PlayerObjectCollision [53]
+[131]    0.0    0.00    0.00      70         Rate [131]
+-----------------------------------------------
+                0.00    0.00      69/69          Robot_go_home [133]
+[132]    0.0    0.00    0.00      69         Robot_default_go_home [132]
+                0.00    0.00      69/44318       Robot_default_get_data [37]
+-----------------------------------------------
+                0.00    0.00      69/69          Go_home [124]
+[133]    0.0    0.00    0.00      69         Robot_go_home [133]
+                0.00    0.00      69/69          Robot_default_go_home [132]
+-----------------------------------------------
+                0.00    0.00       1/65          Player_crash [198]
+                0.00    0.00       4/65          Give_best_player_bonus [176]
+                0.00    0.00       9/65          PlayerObjectCollision [53]
+                0.00    0.00      51/65          Score_players [141]
+[134]    0.0    0.00    0.00      65         Send_score_object [134]
+-----------------------------------------------
+                0.00    0.00       4/64          Robot_create [182]
+                0.00    0.00      60/64          Robot_war [138]
+[135]    0.0    0.00    0.00      64         Robot_talks [135]
+                0.00    0.00       4/77          Send_message [128]
+                0.00    0.00       4/77          Set_message [129]
+-----------------------------------------------
+                0.00    0.00      63/63          Player_death_reset [123]
+[136]    0.0    0.00    0.00      63         Rank_add_death [136]
+-----------------------------------------------
+                0.00    0.00      62/62          Frame_ships [79]
+[137]    0.0    0.00    0.00      62         Send_connector [137]
+-----------------------------------------------
+                0.00    0.00      61/61          PlayerObjectCollision [53]
+[138]    0.0    0.00    0.00      61         Robot_war [138]
+                0.00    0.00      60/64          Robot_talks [135]
+                0.00    0.00      60/78          Robot_war_on_player [127]
+                0.00    0.00      21/25          Robot_set_war [150]
+                0.00    0.00      20/20          Send_war [152]
+-----------------------------------------------
+                0.00    0.00       4/61          Reset_all_players [27]
+                0.00    0.00      57/61          Update_objects [13]
+[139]    0.0    0.00    0.00      61         Update_score_table [139]
+-----------------------------------------------
+                0.00    0.00      60/60          PlayerObjectCollision [53]
+[140]    0.0    0.00    0.00      60         Rank_add_kill [140]
+-----------------------------------------------
+                0.00    0.00      60/60          PlayerObjectCollision [53]
+[141]    0.0    0.00    0.00      60         Score_players [141]
+                0.00    0.00      60/131         SCORE [110]
+                0.00    0.00      51/65          Send_score_object [134]
+-----------------------------------------------
+                0.00    0.00      24/48          Rank_write_webpage [180]
+                0.00    0.00      24/48          Rank_write_rankfile [179]
+[142]    0.0    0.00    0.00      48         encode [142]
+-----------------------------------------------
+                0.00    0.00      47/47          Option_set_value [118]
+[143]    0.0    0.00    0.00      47         Option_change_node [143]
+                0.00    0.00       1/1           Origin_name [236]
+-----------------------------------------------
+                0.00    0.00      41/41          Option_parse_node [116]
+[144]    0.0    0.00    0.00      41         Convert_string_to_bool [144]
+-----------------------------------------------
+                0.00    0.00      30/30          Player_death_reset [123]
+[145]    0.0    0.00    0.00      30         Player_lock_allowed [145]
+-----------------------------------------------
+                0.00    0.00      30/30          Player_death_reset [123]
+[146]    0.0    0.00    0.00      30         Player_lock_closest [146]
+                0.00    0.00      13/37404       Wrap_length [38]
+-----------------------------------------------
+                0.00    0.00      26/26          Option_parse_node [116]
+[147]    0.0    0.00    0.00      26         Convert_string_to_float [147]
+-----------------------------------------------
+                0.00    0.00       1/26          Options_parse_FPS [234]
+                0.00    0.00      25/26          Option_parse_node [116]
+[148]    0.0    0.00    0.00      26         Convert_string_to_int [148]
+-----------------------------------------------
+                0.00    0.00      25/25          Robot_set_war [150]
+[149]    0.0    0.00    0.00      25         Robot_default_set_war [149]
+                0.00    0.00      25/44318       Robot_default_get_data [37]
+-----------------------------------------------
+                0.00    0.00       4/25          Robot_reset_war [186]
+                0.00    0.00      21/25          Robot_war [138]
+[150]    0.0    0.00    0.00      25         Robot_set_war [150]
+                0.00    0.00      25/25          Robot_default_set_war [149]
+-----------------------------------------------
+                0.00    0.00      20/20          Reset_all_players [27]
+[151]    0.0    0.00    0.00      20         Rank_add_round [151]
+-----------------------------------------------
+                0.00    0.00      20/20          Robot_war [138]
+[152]    0.0    0.00    0.00      20         Send_war [152]
+-----------------------------------------------
+                0.00    0.00       1/19          Destroy_connection [211]
+                0.00    0.00       4/19          Robot_create [182]
+                0.00    0.00       4/19          End_game [212]
+                0.00    0.00       5/19          request_ID [173]
+                0.00    0.00       5/19          Init_player [167]
+[153]    0.0    0.00    0.00      19         init_ID [153]
+-----------------------------------------------
+                0.00    0.00       5/16          Init_default_options [222]
+                0.00    0.00      11/16          Parser [238]
+[154]    0.0    0.00    0.00      16         Find_option_by_name [154]
+-----------------------------------------------
+                0.00    0.00       4/14          Robot_create [182]
+                0.00    0.00       5/14          request_ID [173]
+                0.00    0.00       5/14          Init_player [167]
+[155]    0.0    0.00    0.00      14         peek_ID [155]
+-----------------------------------------------
+                0.00    0.00      11/11          Parser [238]
+[156]    0.0    0.00    0.00      11         Parse_check_info_request [156]
+-----------------------------------------------
+                0.00    0.00       1/11          Meta_init [228]
+                0.00    0.00       1/11          Init_setup [226]
+                0.00    0.00       1/11          Destroy_connection [211]
+                0.00    0.00       1/11          Handle_listening [218]
+                0.00    0.00       1/11          Handle_login [219]
+                0.00    0.00       1/11          Rank_init_saved_scores [244]
+                0.00    0.00       1/11          main [1]
+                0.00    0.00       4/11          Robot_create [182]
+[157]    0.0    0.00    0.00      11         showtime [157]
+-----------------------------------------------
+                0.00    0.00       1/8           Destroy_connection [211]
+                0.00    0.00       1/8           Setup_connection [257]
+                0.00    0.00       1/8           Handle_listening [218]
+                0.00    0.00       1/8           Handle_setup [220]
+                0.00    0.00       1/8           Handle_login [219]
+                0.00    0.00       3/8           Receive_ack [112]
+[158]    0.0    0.00    0.00       8         Conn_set_state [158]
+-----------------------------------------------
+                0.00    0.00       8/8           Rank_get_logout_message [160]
+[159]    0.0    0.00    0.00       8         Get_player_index_by_name [159]
+-----------------------------------------------
+                0.00    0.00       8/8           Rank_write_webpage [180]
+[160]    0.0    0.00    0.00       8         Rank_get_logout_message [160]
+                0.00    0.00       8/8           Get_player_index_by_name [159]
+                0.00    0.00       4/8           rank_showtime [161]
+-----------------------------------------------
+                0.00    0.00       4/8           Rank_get_logout_message [160]
+                0.00    0.00       4/8           Rank_write_webpage [180]
+[161]    0.0    0.00    0.00       8         rank_showtime [161]
+-----------------------------------------------
+                0.00    0.00       1/6           Handle_login [219]
+                0.00    0.00       5/6           Delete_player [166]
+[162]    0.0    0.00    0.00       6         Check_team_members [162]
+-----------------------------------------------
+                0.00    0.00       1/6           Handle_login [219]
+                0.00    0.00       1/6           Player_crash [198]
+                0.00    0.00       4/6           Robot_create [182]
+[163]    0.0    0.00    0.00       6         Pick_startpos [163]
+-----------------------------------------------
+                0.00    0.00       6/6           Handle_input [3]
+[164]    0.0    0.00    0.00       6         Receive_power [164]
+-----------------------------------------------
+                0.00    0.00       1/6           Receive_play [249]
+                0.00    0.00       1/6           Player_crash [198]
+                0.00    0.00       4/6           Robot_update [23]
+[165]    0.0    0.00    0.00       6         Send_base [165]
+-----------------------------------------------
+                0.00    0.00       1/5           Destroy_connection [211]
+                0.00    0.00       4/5           End_game [212]
+[166]    0.0    0.00    0.00       5         Delete_player [166]
+                0.00    0.00      10/78          Robot_war_on_player [127]
+                0.00    0.00       5/6           Check_team_members [162]
+                0.00    0.00       4/4           Robot_destroy [185]
+                0.00    0.00       4/4           Robot_reset_war [186]
+                0.00    0.00       1/1           Rank_save_score [246]
+-----------------------------------------------
+                0.00    0.00       1/5           Handle_login [219]
+                0.00    0.00       4/5           Robot_create [182]
+[167]    0.0    0.00    0.00       5         Init_player [167]
+                0.00    0.00       5/88          Player_init_fuel [122]
+                0.00    0.00       5/19          init_ID [153]
+                0.00    0.00       5/14          peek_ID [155]
+-----------------------------------------------
+                0.00    0.00       1/5           Meta_gone [227]
+                0.00    0.00       4/5           Meta_update [114]
+[168]    0.0    0.00    0.00       5         Meta_send [168]
+-----------------------------------------------
+                0.00    0.00       1/5           Options_parse_FPS [234]
+                0.00    0.00       4/5           Parser [238]
+[169]    0.0    0.00    0.00       5         Option_get_value [169]
+                0.00    0.00       5/119         Get_hash_node_by_name [115]
+-----------------------------------------------
+                0.00    0.00       1/5           Queue_loop [62]
+                0.00    0.00       4/5           Robot_create [182]
+[170]    0.0    0.00    0.00       5         Pick_team [170]
+-----------------------------------------------
+                0.00    0.00       1/5           Handle_login [219]
+                0.00    0.00       4/5           Robot_create [182]
+[171]    0.0    0.00    0.00       5         Send_player [171]
+-----------------------------------------------
+                0.00    0.00       1/5           Destroy_connection [211]
+                0.00    0.00       4/5           End_game [212]
+[172]    0.0    0.00    0.00       5         release_ID [172]
+-----------------------------------------------
+                0.00    0.00       1/5           Handle_login [219]
+                0.00    0.00       4/5           Robot_create [182]
+[173]    0.0    0.00    0.00       5         request_ID [173]
+                0.00    0.00       5/19          init_ID [153]
+                0.00    0.00       5/14          peek_ID [155]
+-----------------------------------------------
+                0.00    0.00       4/4           Compute_game_status [26]
+[174]    0.0    0.00    0.00       4         Compute_end_of_round_values [174]
+-----------------------------------------------
+                0.00    0.00       4/4           Team_game_over [28]
+[175]    0.0    0.00    0.00       4         Count_rounds [175]
+-----------------------------------------------
+                0.00    0.00       4/4           Team_game_over [28]
+[176]    0.0    0.00    0.00       4         Give_best_player_bonus [176]
+                0.00    0.00       4/70          Rate [131]
+                0.00    0.00       4/65          Send_score_object [134]
+                0.00    0.00       4/131         SCORE [110]
+                0.00    0.00       4/77          Send_message [128]
+                0.00    0.00       4/77          Set_message [129]
+-----------------------------------------------
+                0.00    0.00       4/4           Team_game_over [28]
+[177]    0.0    0.00    0.00       4         Give_individual_bonus [177]
+                0.00    0.00       4/70          Rate [131]
+                0.00    0.00       4/131         SCORE [110]
+-----------------------------------------------
+                0.00    0.00       4/4           Set_world_items [255]
+[178]    0.0    0.00    0.00       4         Init_item [178]
+-----------------------------------------------
+                0.00    0.00       4/4           Team_game_over [28]
+[179]    0.0    0.00    0.00       4         Rank_write_rankfile [179]
+                0.00    0.00      24/48          encode [142]
+-----------------------------------------------
+                0.00    0.00       4/4           Reset_all_players [27]
+[180]    0.0    0.00    0.00       4         Rank_write_webpage [180]
+                0.00    0.00      24/48          encode [142]
+                0.00    0.00       8/8           Rank_get_logout_message [160]
+                0.00    0.00       4/4           SortRankings [188]
+                0.00    0.00       4/8           rank_showtime [161]
+-----------------------------------------------
+                0.00    0.00       4/4           Handle_input [3]
+[181]    0.0    0.00    0.00       4         Receive_modifier_bank [181]
+-----------------------------------------------
+                0.00    0.00       4/4           Robot_update [23]
+[182]    0.0    0.00    0.00       4         Robot_create [182]
+                0.00    0.00       4/19          init_ID [153]
+                0.00    0.00       4/14          peek_ID [155]
+                0.00    0.00       4/5           Init_player [167]
+                0.00    0.00       4/5           Pick_team [170]
+                0.00    0.00       4/6           Pick_startpos [163]
+                0.00    0.00       4/4           Robot_default_create [183]
+                0.00    0.00       4/82          Go_home [124]
+                0.00    0.00       4/5           request_ID [173]
+                0.00    0.00       4/5           Send_player [171]
+                0.00    0.00       4/64          Robot_talks [135]
+                0.00    0.00       4/11          showtime [157]
+-----------------------------------------------
+                0.00    0.00       4/4           Robot_create [182]
+[183]    0.0    0.00    0.00       4         Robot_default_create [183]
+-----------------------------------------------
+                0.00    0.00       4/4           Robot_destroy [185]
+[184]    0.0    0.00    0.00       4         Robot_default_destroy [184]
+-----------------------------------------------
+                0.00    0.00       4/4           Delete_player [166]
+[185]    0.0    0.00    0.00       4         Robot_destroy [185]
+                0.00    0.00       4/4           Robot_default_destroy [184]
+-----------------------------------------------
+                0.00    0.00       4/4           Delete_player [166]
+[186]    0.0    0.00    0.00       4         Robot_reset_war [186]
+                0.00    0.00       4/25          Robot_set_war [150]
+-----------------------------------------------
+                0.00    0.00       4/4           Meta_update [114]
+[187]    0.0    0.00    0.00       4         Server_info [187]
+                0.00    0.00       8/78          Robot_war_on_player [127]
+-----------------------------------------------
+                0.00    0.00       4/4           Rank_write_webpage [180]
+[188]    0.0    0.00    0.00       4         SortRankings [188]
+-----------------------------------------------
+                0.00    0.00       3/3           PlayerObjectCollision [53]
+[189]    0.0    0.00    0.00       3         Obj_repel [189]
+-----------------------------------------------
+                0.00    0.00       1/3           Queue_ack [240]
+                0.00    0.00       2/3           Contact [194]
+[190]    0.0    0.00    0.00       3         Reply [190]
+-----------------------------------------------
+                0.00    0.00       1/3           Queue_ack [240]
+                0.00    0.00       2/3           Contact [194]
+[191]    0.0    0.00    0.00       3         Version_to_magic [191]
+-----------------------------------------------
+                0.00    0.00       1/3           openMapFile [269]
+                0.00    0.00       1/3           parseDefaultsFile [270]
+                0.00    0.00       1/3           parsePasswordFile [273]
+[192]    0.0    0.00    0.00       3         fileOpen [192]
+                0.00    0.00       1/1           copyFilename [264]
+-----------------------------------------------
+                0.00    0.00       2/2           Contact [194]
+[193]    0.0    0.00    0.00       2         Check_address [193]
+-----------------------------------------------
+                0.00    0.00       2/2           sched [2]
+[194]    0.0    0.00    0.00       2         Contact [194]
+                0.00    0.00       2/2           Check_address [193]
+                0.00    0.00       2/3           Version_to_magic [191]
+                0.00    0.00       2/3           Reply [190]
+                0.00    0.00       1/1           Queue_player [241]
+-----------------------------------------------
+                0.00    0.00       2/2           Option_parse_node [116]
+[195]    0.0    0.00    0.00       2         Convert_string_to_list [195]
+-----------------------------------------------
+                0.00    0.00       1/2           Alloc_cells [279]
+                0.00    0.00       1/2           End_game [212]
+[196]    0.0    0.00    0.00       2         Free_cells [196]
+-----------------------------------------------
+                0.00    0.00       1/2           main [1]
+                0.00    0.00       1/2           End_game [212]
+[197]    0.0    0.00    0.00       2         Log_game [197]
+-----------------------------------------------
+                0.00    0.00       2/2           Move_player [47]
+[198]    0.0    0.00    0.00       2         Player_crash [198]
+                0.00    0.00       2/70          Rate [131]
+                0.00    0.00       2/131         SCORE [110]
+                0.00    0.00       2/77          Send_message [128]
+                0.00    0.00       2/77          Set_message [129]
+                0.00    0.00       1/65          Send_score_object [134]
+                0.00    0.00       1/6           Send_base [165]
+                0.00    0.00       1/6           Pick_startpos [163]
+-----------------------------------------------
+                0.00    0.00       1/2           Handle_listening [218]
+                0.00    0.00       1/2           Handle_login [219]
+[199]    0.0    0.00    0.00       2         Send_reply [199]
+-----------------------------------------------
+                0.00    0.00       1/2           Contact_init [210]
+                0.00    0.00       1/2           Setup_connection [257]
+[200]    0.0    0.00    0.00       2         install_input [200]
+-----------------------------------------------
+                0.00    0.00       1/2           parseDefaultsFile [270]
+                0.00    0.00       1/2           parsePasswordFile [273]
+[201]    0.0    0.00    0.00       2         openDefaultsFile [201]
+-----------------------------------------------
+                0.00    0.00       1/2           block_timer [261]
+                0.00    0.00       1/2           allow_timer [260]
+[202]    0.0    0.00    0.00       2         sig_ok [202]
+-----------------------------------------------
+                0.00    0.00       1/1           Grok_map [12]
+[203]    0.0    0.00    0.00       1         Alloc_map [203]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[204]    0.0    0.00    0.00       1         Alloc_players [204]
+-----------------------------------------------
+                0.00    0.00       1/1           Queue_loop [62]
+[205]    0.0    0.00    0.00       1         Check_connection [205]
+-----------------------------------------------
+                0.00    0.00       1/1           Queue_player [241]
+[206]    0.0    0.00    0.00       1         Check_names [206]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[207]    0.0    0.00    0.00       1         Check_server_versions [207]
+-----------------------------------------------
+                0.00    0.00       1/1           Setup_net_server [463]
+[208]    0.0    0.00    0.00       1         Compress_map [208]
+-----------------------------------------------
+                0.00    0.00       1/1           End_game [212]
+[209]    0.0    0.00    0.00       1         Contact_cleanup [209]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[210]    0.0    0.00    0.00       1         Contact_init [210]
+                0.00    0.00       1/2           install_input [200]
+-----------------------------------------------
+                0.00    0.00       1/1           Receive_quit [250]
+[211]    0.0    0.00    0.00       1         Destroy_connection [211]
+                0.00    0.00       1/1           remove_input [275]
+                0.00    0.00       1/11          showtime [157]
+                0.00    0.00       1/8           Conn_set_state [158]
+                0.00    0.00       1/19          init_ID [153]
+                0.00    0.00       1/5           release_ID [172]
+                0.00    0.00       1/5           Delete_player [166]
+-----------------------------------------------
+                0.00    0.00       1/1           Handle_signal [221]
+[212]    0.0    0.00    0.00       1         End_game [212]
+                0.00    0.00       4/19          init_ID [153]
+                0.00    0.00       4/5           release_ID [172]
+                0.00    0.00       4/5           Delete_player [166]
+                0.00    0.00       1/1           Contact_cleanup [209]
+                0.00    0.00       1/1           Free_players [215]
+                0.00    0.00       1/1           Free_shots [216]
+                0.00    0.00       1/1           Free_map [214]
+                0.00    0.00       1/2           Free_cells [196]
+                0.00    0.00       1/2           Log_game [197]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[213]    0.0    0.00    0.00       1         Find_base_direction [213]
+-----------------------------------------------
+                0.00    0.00       1/1           End_game [212]
+[214]    0.0    0.00    0.00       1         Free_map [214]
+-----------------------------------------------
+                0.00    0.00       1/1           End_game [212]
+[215]    0.0    0.00    0.00       1         Free_players [215]
+-----------------------------------------------
+                0.00    0.00       1/1           End_game [212]
+[216]    0.0    0.00    0.00       1         Free_shots [216]
+-----------------------------------------------
+                0.00    0.00       1/1           Options_parse [233]
+[217]    0.0    0.00    0.00       1         Get_option_descs [217]
+-----------------------------------------------
+                0.00    0.00       1/1           sched [2]
+[218]    0.0    0.00    0.00       1         Handle_listening [218]
+                0.00    0.00       1/11          showtime [157]
+                0.00    0.00       1/2           Send_reply [199]
+                0.00    0.00       1/122         Send_reliable [113]
+                0.00    0.00       1/8           Conn_set_state [158]
+-----------------------------------------------
+                0.00    0.00       1/1           Receive_play [249]
+[219]    0.0    0.00    0.00       1         Handle_login [219]
+                0.00    0.00       2/77          Send_message [128]
+                0.00    0.00       2/77          Set_message [129]
+                0.00    0.00       1/6           Check_team_members [162]
+                0.00    0.00       1/5           Init_player [167]
+                0.00    0.00       1/6           Pick_startpos [163]
+                0.00    0.00       1/82          Go_home [124]
+                0.00    0.00       1/1           Rank_get_saved_score [243]
+                0.00    0.00       1/5           request_ID [173]
+                0.00    0.00       1/8           Conn_set_state [158]
+                0.00    0.00       1/2           Send_reply [199]
+                0.00    0.00       1/11          showtime [157]
+                0.00    0.00       1/5           Send_player [171]
+-----------------------------------------------
+                0.00    0.00       1/1           Input [67]
+[220]    0.0    0.00    0.00       1         Handle_setup [220]
+                0.00    0.00       1/8           Conn_set_state [158]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[221]    0.0    0.00    0.00       1         Handle_signal [221]
+                0.00    0.00       1/1           Meta_gone [227]
+                0.00    0.00       1/1           End_game [212]
+-----------------------------------------------
+                0.00    0.00       1/1           Init_options [224]
+[222]    0.0    0.00    0.00       1         Init_default_options [222]
+                0.00    0.00       5/16          Find_option_by_name [154]
+-----------------------------------------------
+                0.00    0.00       1/1           Grok_map [12]
+[223]    0.0    0.00    0.00       1         Init_map [223]
+-----------------------------------------------
+                0.00    0.00       1/1           Parser [238]
+[224]    0.0    0.00    0.00       1         Init_options [224]
+                0.00    0.00     113/113         Option_add_desc [117]
+                0.00    0.00       1/1           Init_default_options [222]
+-----------------------------------------------
+                0.00    0.00       1/1           Setup_net_server [463]
+[225]    0.0    0.00    0.00       1         Init_receive [225]
+-----------------------------------------------
+                0.00    0.00       1/1           Setup_net_server [463]
+[226]    0.0    0.00    0.00       1         Init_setup [226]
+                0.00    0.00       1/11          showtime [157]
+-----------------------------------------------
+                0.00    0.00       1/1           Handle_signal [221]
+[227]    0.0    0.00    0.00       1         Meta_gone [227]
+                0.00    0.00       1/5           Meta_send [168]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[228]    0.0    0.00    0.00       1         Meta_init [228]
+                0.00    0.00       1/11          showtime [157]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[229]    0.0    0.00    0.00       1         Move_init [229]
+-----------------------------------------------
+                0.00    0.00       1/1           Parser [238]
+[230]    0.0    0.00    0.00       1         Options_free [230]
+                0.00    0.00       1/1           Options_hash_performance [232]
+-----------------------------------------------
+                0.00    0.00       1/1           Parser [238]
+[231]    0.0    0.00    0.00       1         Options_hash_free [231]
+                0.00    0.00     210/210         Option_free_value [106]
+-----------------------------------------------
+                0.00    0.00       1/1           Options_free [230]
+[232]    0.0    0.00    0.00       1         Options_hash_performance [232]
+-----------------------------------------------
+                0.00    0.00       1/1           Parser [238]
+[233]    0.0    0.00    0.00       1         Options_parse [233]
+                0.00    0.00     113/119         Get_hash_node_by_name [115]
+                0.00    0.00     113/114         Option_parse_node [116]
+                0.00    0.00       1/1           Get_option_descs [217]
+                0.00    0.00       1/1           Options_parse_expand [235]
+                0.00    0.00       1/1           Options_parse_FPS [234]
+-----------------------------------------------
+                0.00    0.00       1/1           Options_parse [233]
+[234]    0.0    0.00    0.00       1         Options_parse_FPS [234]
+                0.00    0.00       1/5           Option_get_value [169]
+                0.00    0.00       1/26          Convert_string_to_int [148]
+-----------------------------------------------
+                0.00    0.00       1/1           Options_parse [233]
+[235]    0.0    0.00    0.00       1         Options_parse_expand [235]
+                0.00    0.00       1/119         Get_hash_node_by_name [115]
+                0.00    0.00       1/114         Option_parse_node [116]
+-----------------------------------------------
+                0.00    0.00       1/1           Option_change_node [143]
+[236]    0.0    0.00    0.00       1         Origin_name [236]
+-----------------------------------------------
+                0.00    0.00       1/1           Robot_init [253]
+[237]    0.0    0.00    0.00       1         Parse_robot_file [237]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[238]    0.0    0.00    0.00       1         Parser [238]
+                0.00    0.00     210/210         Option_free_node [105]
+                0.00    0.00      11/11          Parse_check_info_request [156]
+                0.00    0.00      11/16          Find_option_by_name [154]
+                0.00    0.00      11/112         Option_set_value [118]
+                0.00    0.00       4/5           Option_get_value [169]
+                0.00    0.00       1/1           Init_options [224]
+                0.00    0.00       1/1           parseDefaultsFile [270]
+                0.00    0.00       1/1           parsePasswordFile [273]
+                0.00    0.00       1/1           parseMapFile [271]
+                0.00    0.00       1/1           Options_parse [233]
+                0.00    0.00       1/1           Options_hash_free [231]
+                0.00    0.00       1/1           Options_free [230]
+-----------------------------------------------
+                0.00    0.00       1/1           Rank_get_saved_score [243]
+[239]    0.0    0.00    0.00       1         Player_set_score [239]
+-----------------------------------------------
+                0.00    0.00       1/1           Queue_loop [62]
+[240]    0.0    0.00    0.00       1         Queue_ack [240]
+                0.00    0.00       1/3           Version_to_magic [191]
+                0.00    0.00       1/3           Reply [190]
+-----------------------------------------------
+                0.00    0.00       1/1           Contact [194]
+[241]    0.0    0.00    0.00       1         Queue_player [241]
+                0.00    0.00       1/1           Check_names [206]
+-----------------------------------------------
+                0.00    0.00       1/1           Queue_loop [62]
+[242]    0.0    0.00    0.00       1         Queue_remove [242]
+-----------------------------------------------
+                0.00    0.00       1/1           Handle_login [219]
+[243]    0.0    0.00    0.00       1         Rank_get_saved_score [243]
+                0.00    0.00       1/1           Player_set_score [239]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[244]    0.0    0.00    0.00       1         Rank_init_saved_scores [244]
+                0.00    0.00       1/1           Rank_parse_rankfile [245]
+                0.00    0.00       1/11          showtime [157]
+-----------------------------------------------
+                0.00    0.00       1/1           Rank_init_saved_scores [244]
+[245]    0.0    0.00    0.00       1         Rank_parse_rankfile [245]
+-----------------------------------------------
+                0.00    0.00       1/1           Delete_player [166]
+[246]    0.0    0.00    0.00       1         Rank_save_score [246]
+-----------------------------------------------
+                0.00    0.00       1/1           Handle_input [3]
+[247]    0.0    0.00    0.00       1         Receive_display [247]
+-----------------------------------------------
+                0.00    0.00       1/1           Handle_input [3]
+[248]    0.0    0.00    0.00       1         Receive_fps_request [248]
+-----------------------------------------------
+                0.00    0.00       1/1           Handle_input [3]
+[249]    0.0    0.00    0.00       1         Receive_play [249]
+                0.00    0.00       1/6           Send_base [165]
+                0.00    0.00       1/131         Send_score [111]
+                0.00    0.00       1/1           Handle_login [219]
+-----------------------------------------------
+                0.00    0.00       1/1           Handle_input [3]
+[250]    0.0    0.00    0.00       1         Receive_quit [250]
+                0.00    0.00       1/1           Destroy_connection [211]
+-----------------------------------------------
+                0.00    0.00       1/1           Handle_input [3]
+[251]    0.0    0.00    0.00       1         Receive_shape [251]
+-----------------------------------------------
+                0.00    0.00       1/1           Robot_init [253]
+[252]    0.0    0.00    0.00       1         Robot_default_setup [252]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[253]    0.0    0.00    0.00       1         Robot_init [253]
+                0.00    0.00       1/1           Robot_default_setup [252]
+                0.00    0.00       1/1           Parse_robot_file [237]
+-----------------------------------------------
+                0.00    0.00       1/1           Grok_map [12]
+[254]    0.0    0.00    0.00       1         Set_initial_resources [254]
+-----------------------------------------------
+                0.00    0.00       1/1           Grok_map [12]
+[255]    0.0    0.00    0.00       1         Set_world_items [255]
+                0.00    0.00       4/4           Init_item [178]
+-----------------------------------------------
+                0.00    0.00       1/1           Grok_map [12]
+[256]    0.0    0.00    0.00       1         Set_world_rules [256]
+-----------------------------------------------
+                0.00    0.00       1/1           Queue_loop [62]
+[257]    0.0    0.00    0.00       1         Setup_connection [257]
+                0.00    0.00       1/8           Conn_set_state [158]
+                0.00    0.00       1/2           install_input [200]
+-----------------------------------------------
+                0.00    0.00       1/1           Walls_init [259]
+[258]    0.0    0.00    0.00       1         Walldist_alloc [258]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[259]    0.0    0.00    0.00       1         Walls_init [259]
+                0.00    0.00       1/1           Walldist_alloc [258]
+-----------------------------------------------
+                0.00    0.00       1/1           setup_timer [276]
+[260]    0.0    0.00    0.00       1         allow_timer [260]
+                0.00    0.00       1/2           sig_ok [202]
+-----------------------------------------------
+                0.00    0.00       1/1           setup_timer [276]
+[261]    0.0    0.00    0.00       1         block_timer [261]
+                0.00    0.00       1/2           sig_ok [202]
+-----------------------------------------------
+                0.00    0.00       1/1           parseMapFile [271]
+[262]    0.0    0.00    0.00       1         closeCompressedFile [262]
+-----------------------------------------------
+                0.00    0.00       1/1           parseMapFile [271]
+[263]    0.0    0.00    0.00       1         closeMapFile [263]
+-----------------------------------------------
+                0.00    0.00       1/1           fileOpen [192]
+[264]    0.0    0.00    0.00       1         copyFilename [264]
+-----------------------------------------------
+                0.00    0.00       1/1           parseMapFile [271]
+[265]    0.0    0.00    0.00       1         fileClose [265]
+-----------------------------------------------
+                0.00    0.00       1/1           parseLine [119]
+[266]    0.0    0.00    0.00       1         getMultilineValue [266]
+-----------------------------------------------
+                0.00    0.00       1/1           openCompressedFile [268]
+[267]    0.0    0.00    0.00       1         isCompressed [267]
+-----------------------------------------------
+                0.00    0.00       1/1           openMapFile [269]
+[268]    0.0    0.00    0.00       1         openCompressedFile [268]
+                0.00    0.00       1/1           isCompressed [267]
+-----------------------------------------------
+                0.00    0.00       1/1           parseMapFile [271]
+[269]    0.0    0.00    0.00       1         openMapFile [269]
+                0.00    0.00       1/3           fileOpen [192]
+                0.00    0.00       1/1           openCompressedFile [268]
+-----------------------------------------------
+                0.00    0.00       1/1           Parser [238]
+[270]    0.0    0.00    0.00       1         parseDefaultsFile [270]
+                0.00    0.00       1/3           fileOpen [192]
+                0.00    0.00       1/2           openDefaultsFile [201]
+-----------------------------------------------
+                0.00    0.00       1/1           Parser [238]
+[271]    0.0    0.00    0.00       1         parseMapFile [271]
+                0.00    0.00       1/1           openMapFile [269]
+                0.00    0.00       1/1           parseOpenFile [272]
+                0.00    0.00       1/1           fileClose [265]
+                0.00    0.00       1/1           closeCompressedFile [262]
+                0.00    0.00       1/1           closeMapFile [263]
+-----------------------------------------------
+                0.00    0.00       1/1           parseMapFile [271]
+[272]    0.0    0.00    0.00       1         parseOpenFile [272]
+                0.00    0.00     103/103         parseLine [119]
+-----------------------------------------------
+                0.00    0.00       1/1           Parser [238]
+[273]    0.0    0.00    0.00       1         parsePasswordFile [273]
+                0.00    0.00       1/3           fileOpen [192]
+                0.00    0.00       1/2           openDefaultsFile [201]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[274]    0.0    0.00    0.00       1         plock_server [274]
+-----------------------------------------------
+                0.00    0.00       1/1           Destroy_connection [211]
+[275]    0.0    0.00    0.00       1         remove_input [275]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[276]    0.0    0.00    0.00       1         setup_timer [276]
+                0.00    0.00       1/1           block_timer [261]
+                0.00    0.00       1/1           allow_timer [260]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+
+Index by function name
+
+  [56] Add_fuel              [100] Move_ball_interpolation [21] Robot_play (robot.c)
+ [203] Alloc_map (map.c)     [229] Move_init             [186] Robot_reset_war
+ [204] Alloc_players          [33] Move_object           [150] Robot_set_war (robot.c)
+   [6] Alloc_shots            [34] Move_object_interpolation [135] Robot_talks (robot.c)
+  [25] Ball_handler (robotdef.c) [47] Move_player         [23] Robot_update
+  [41] Bounce_wall (walls.c)  [44] Move_player_interpolation [138] Robot_war
+  [52] Cell_objects_get (collision.c) [35] Move_segment (walls.c) [127] Robot_war_on_player
+  [69] Cell_objects_init (collision.c) [189] Obj_repel   [110] SCORE
+ [193] Check_address (contact.c) [91] Object_crash (walls.c) [141] Score_players (collision.c)
+  [70] Check_collision        [10] Object_position_init_pixels [93] Send_ball
+ [205] Check_connection       [31] Object_position_set_clicks [165] Send_base
+ [206] Check_names (contact.c) [30] Object_position_set_clicks_interpolation [137] Send_connector
+  [58] Check_robot_evade (robotdef.c) [117] Option_add_desc [84] Send_end_of_frame
+  [95] Check_robot_hunt (robotdef.c) [108] Option_add_node (option.c) [55] Send_fastshot
+  [22] Check_robot_target (robotdef.c) [104] Option_allocate_node (option.c) [98] Send_fuel
+ [207] Check_server_versions (server.c) [107] Option_allocate_value (option.c) [128] Send_message
+ [162] Check_team_members    [143] Option_change_node (option.c) [85] Send_modifiers (netserver.c)
+ [208] Compress_map (netserver.c) [105] Option_free_node (option.c) [171] Send_player
+ [174] Compute_end_of_round_values (player.c) [106] Option_free_value (option.c) [61] Send_radar
+  [26] Compute_game_status   [169] Option_get_value       [99] Send_refuel
+ [158] Conn_set_state (netserver.c) [102] Option_hash_string (option.c) [113] Send_reliable
+ [194] Contact               [116] Option_parse_node (option.c) [199] Send_reply
+ [209] Contact_cleanup       [118] Option_set_value      [111] Send_score
+ [210] Contact_init          [230] Options_free          [134] Send_score_object
+ [144] Convert_string_to_bool [231] Options_hash_free (option.c) [86] Send_self
+ [147] Convert_string_to_float [232] Options_hash_performance (option.c) [87] Send_self_items (netserver.c)
+ [148] Convert_string_to_int [233] Options_parse          [66] Send_ship
+ [195] Convert_string_to_list [234] Options_parse_FPS (option.c) [73] Send_start_of_frame
+ [175] Count_rounds (player.c) [235] Options_parse_expand (option.c) [152] Send_war
+ [166] Delete_player         [236] Origin_name (option.c) [187] Server_info
+  [36] Delete_shot             [5] Packet_scanf          [254] Set_initial_resources
+  [94] Delta_mv              [156] Parse_check_info_request (parser.c) [129] Set_message
+ [211] Destroy_connection    [237] Parse_robot_file      [255] Set_world_items
+ [121] Detach_ball           [238] Parser                [256] Set_world_rules
+  [40] Detect (robotdef.c)   [163] Pick_startpos         [257] Setup_connection
+   [9] DgramRead             [170] Pick_team               [7] Sockbuf_read
+ [212] End_game               [72] PlayerCollision (collision.c) [188] SortRankings (rank.c)
+  [18] Explode_fighter        [53] PlayerObjectCollision (collision.c) [28] Team_game_over
+ [213] Find_base_direction   [198] Player_crash (walls.c) [16] Thrust
+ [130] Find_closest_team     [123] Player_death_reset     [92] Transport_to_home (update.c)
+ [154] Find_option_by_name   [122] Player_init_fuel (player.c) [45] Turn_player
+  [17] Fire_normal_shots     [145] Player_lock_allowed    [13] Update_objects
+  [74] Frame_map (frame.c)   [146] Player_lock_closest    [88] Update_objects_interpolation
+  [75] Frame_parameters (frame.c) [125] Player_position_init_pixels [139] Update_score_table
+  [76] Frame_radar (frame.c)  [48] Player_position_set_clicks [54] Update_tanks
+  [60] Frame_radar_buffer_add (frame.c) [39] Player_position_set_clicks_interpolation [191] Version_to_magic (contact.c)
+  [63] Frame_radar_buffer_free (frame.c) [239] Player_set_score (rank.c) [258] Walldist_alloc (walls.c)
+  [77] Frame_radar_buffer_reset (frame.c) [240] Queue_ack (contact.c) [8] Walldist_init (walls.c)
+  [78] Frame_radar_buffer_send (frame.c) [62] Queue_loop [259] Walls_init
+  [79] Frame_ships (frame.c) [241] Queue_player (contact.c) [50] Wrap_findDir
+  [80] Frame_shots (frame.c) [242] Queue_remove (contact.c) [38] Wrap_length
+  [64] Frame_shuffle (frame.c) [136] Rank_add_death      [260] allow_timer
+  [81] Frame_status (frame.c) [140] Rank_add_kill         [43] block_inview (frame.c)
+  [65] Frame_update          [151] Rank_add_round        [261] block_timer
+ [196] Free_cells            [109] Rank_add_score        [262] closeCompressedFile (fileparser.c)
+ [214] Free_map              [160] Rank_get_logout_message (rank.c) [263] closeMapFile (fileparser.c)
+ [215] Free_players          [243] Rank_get_saved_score  [264] copyFilename (fileparser.c)
+ [216] Free_shots            [244] Rank_init_saved_scores [89] debris_end (frame.c)
+  [82] Get_display_parameters [245] Rank_parse_rankfile (rank.c) [142] encode (rank.c)
+ [115] Get_hash_node_by_name (option.c) [246] Rank_save_score [90] fastshot_end (frame.c)
+ [217] Get_option_descs      [179] Rank_write_rankfile    [42] fastshot_store (frame.c)
+  [83] Get_player_id         [180] Rank_write_webpage    [265] fileClose (fileparser.c)
+ [159] Get_player_index_by_name [131] Rate               [192] fileOpen (fileparser.c)
+ [176] Give_best_player_bonus (player.c) [32] Really_empty_space (robotdef.c) [266] getMultilineValue (fileparser.c)
+ [177] Give_individual_bonus (player.c) [112] Receive_ack (netserver.c) [153] init_ID (id.c)
+ [124] Go_home                [97] Receive_ack_fuel (netserver.c) [68] insert_measure
+  [12] Grok_map              [247] Receive_display (netserver.c) [200] install_input
+   [3] Handle_input (netserver.c) [248] Receive_fps_request (netserver.c) [267] isCompressed (fileparser.c)
+  [96] Handle_keyboard        [11] Receive_keyboard (netserver.c) [268] openCompressedFile (fileparser.c)
+ [218] Handle_listening (netserver.c) [181] Receive_modifier_bank (netserver.c) [201] openDefaultsFile (fileparser.c)
+ [219] Handle_login (netserver.c) [249] Receive_play (netserver.c) [269] openMapFile (fileparser.c)
+ [220] Handle_setup (netserver.c) [4] Receive_pointer_move (netserver.c) [270] parseDefaultsFile
+ [221] Handle_signal (server.c) [164] Receive_power (netserver.c) [119] parseLine (fileparser.c)
+ [222] Init_default_options (cmdline.c) [250] Receive_quit (netserver.c) [271] parseMapFile
+  [71] Init_interpolation_data [251] Receive_shape (netserver.c) [272] parseOpenFile (fileparser.c)
+ [178] Init_item (rules.c)   [190] Reply (contact.c)     [273] parsePasswordFile
+ [223] Init_map (map.c)       [27] Reset_all_players     [155] peek_ID
+ [224] Init_options           [57] Robot_check_leave (robot.c) [274] plock_server
+ [167] Init_player           [182] Robot_create (robot.c) [161] rank_showtime (rank.c)
+ [225] Init_receive (netserver.c) [183] Robot_default_create (robotdef.c) [172] release_ID
+ [226] Init_setup (netserver.c) [184] Robot_default_destroy (robotdef.c) [275] remove_input
+  [67] Input                  [37] Robot_default_get_data (robotdef.c) [173] request_ID
+  [19] Kill_player           [132] Robot_default_go_home (robotdef.c) [2] sched
+ [197] Log_game               [20] Robot_default_play (robotdef.c) [276] setup_timer
+  [15] Make_debris           [103] Robot_default_play_check_map (robotdef.c) [157] showtime
+  [29] Make_treasure_ball     [59] Robot_default_play_check_objects (robotdef.c) [202] sig_ok (sched.c)
+  [24] Make_wreckage         [149] Robot_default_set_war (robotdef.c) [120] skipspace (fileparser.c)
+ [227] Meta_gone             [252] Robot_default_setup    [49] timeval_to_seconds (server.c)
+ [228] Meta_init             [126] Robot_default_war_on_player (robotdef.c) [51] update_player_thrust
+ [168] Meta_send             [185] Robot_destroy          [46] update_player_turn
+ [114] Meta_update           [133] Robot_go_home
+ [101] Move_ball             [253] Robot_init

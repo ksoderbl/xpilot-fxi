@@ -943,7 +943,7 @@ static option_desc options[] = {
     {
 	"maxBallConnectorRatio",
 	"maxBallConnectorRatio",
-	"0.30",
+	"0.32",
 	&maxBallConnectorRatio,
 	valReal,
 	tuner_dummy,

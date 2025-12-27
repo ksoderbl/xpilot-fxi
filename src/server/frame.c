@@ -348,9 +348,6 @@ static int Frame_status(int conn, int ind)
     if (BIT(pl->status, SELF_DESTRUCT) && pl->count > 0) {
 	Send_destruct(conn, pl->count);
     }
-    if (ShutdownServer != -1) {
-	Send_shutdown(conn, ShutdownServer, ShutdownDelay);
-    }
 
     return 1;
 }
@@ -709,11 +706,16 @@ static void Frame_parameters(int conn, int ind)
     }
 }
 
+static inline double timeval_to_seconds(struct timeval tv)
+{
+    return ((double)tv.tv_sec)/1000 + tv.tv_usec * 1e-3;
+}
+
 void Frame_update(void)
 {
     int			i, conn, ind, player_fps;
     player		*pl;
-
+    struct timeval tv1;
     if (++frame_loops >= LONG_MAX)	/* Used for misc. timing purposes */
 	frame_loops = 0;
 
@@ -760,15 +762,17 @@ void Frame_update(void)
 	  if (frame_cycle % divisor != 0)
 	    continue;
 	}
-	
-	
+
+	//gettimeofday(&tv1, NULL);
+	//printf("start:%e %d\n",timeval_to_seconds(tv1));
+      
 	if (Send_start_of_frame(conn) == -1) {
 	    continue;
 	}
 
 	/*
 	 * If status is GAME_OVER or PAUSE'd, the user may look through the
-	 * other players 'eyes'.  If PAUSE'd this only works on team members.
+	 * other players 'eyes'. Fixed: This also works for all players -pgm
 	 * We can't use TEAM() macro as PAUSE'd players are always on
 	 * equivalent teams.
 	 *
@@ -780,8 +784,8 @@ void Frame_update(void)
 	    if ((BIT(pl->status, (GAME_OVER|PLAYING)) == (GAME_OVER|PLAYING))
 		|| (BIT(pl->status, PAUSE) &&
 		    ((BIT(World.rules->mode, TEAM_PLAY)
-		      && pl->team != TEAM_NOT_SET
-		      && pl->team == Players[GetInd[pl->lock.pl_id]]->team)
+		      && pl->team != TEAM_NOT_SET)
+		     //  && pl->team == Players[GetInd[pl->lock.pl_id]]->team)
 		    || pl->isowner
 		    || allowViewing))) {
 		ind = GetInd[pl->lock.pl_id];
@@ -806,6 +810,8 @@ void Frame_update(void)
 	debris_end(conn);
 	fastshot_end(conn);
 	Send_end_of_frame(conn);
+	//gettimeofday(&tv1, NULL);
+	//printf("end:%e %d\n\n",timeval_to_seconds(tv1));
     }
     
     Frame_radar_buffer_free();
