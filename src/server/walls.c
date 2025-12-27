@@ -44,6 +44,7 @@
 #include "objpos.h"
 
 char walls_version[] = VERSION;
+extern int frame_cycle;
 
 #define WALLDIST_MASK	\
 	(FILLED_BIT | REC_LU_BIT | REC_LD_BIT | REC_RU_BIT | REC_RD_BIT \
@@ -604,7 +605,7 @@ static void Move_segment(move_state_t *ms)
 
     case TREASURE:
 
-      if (((main_loops % frameDivisor) == 0)) {
+      if (frame_cycle == 0) {
 	
 	if (block_type == TREASURE) {
 	    if (mi->treasure_crashes) {

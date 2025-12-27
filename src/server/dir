@@ -1,0 +1,23 @@
+frame.c:	pl_posx = pl_i->pos.x;
+frame.c:	pl_posy = pl_i->pos.y;
+frame.c:	if (pl_i->ball != NULL){
+frame.c:	  ball_posx = pl_i->ball->pos.x;
+frame.c:	  ball_posy = pl_i->ball->pos.y;
+frame.c:	pl_posx = pl_i->pos_interp.x;
+frame.c:	pl_posy = pl_i->pos_interp.y;
+frame.c:	if (pl_i->ball != NULL){
+frame.c:	  ball_posx = pl_i->ball->pos_interp.x;
+frame.c:	  ball_posy = pl_i->ball->pos_interp.y;
+frame.c:      if (!BIT(pl_i->status, PLAYING|PAUSE)) {
+frame.c:      if (BIT(pl_i->status, GAME_OVER)) {
+frame.c:      if (BIT(pl_i->status, PAUSE)) {
+frame.c:		    pl_i->count);
+frame.c:		  pl_i->id,
+frame.c:		  pl_i->dir,
+frame.c:		  BIT(pl_i->used, OBJ_SHIELD) != 0,
+frame.c:      if (BIT(pl_i->used, OBJ_REFUEL)) {
+frame.c:	if (inview(World.fuel[pl_i->fs].pix_pos.x,
+frame.c:		   World.fuel[pl_i->fs].pix_pos.y)) {
+frame.c:		      (int)World.fuel[pl_i->fs].pix_pos.x,
+frame.c:		      (int)World.fuel[pl_i->fs].pix_pos.y,
+frame.c:      if (pl_i->ball != NULL

@@ -33,7 +33,6 @@ void tuner_minrobots(void);
 void tuner_playershielding(void);
 void tuner_playerstartsshielded(void);
 void tuner_worldlives(void);
-void tuner_gameduration(void);
 void tuner_framedivisor(void);
 void tuner_internalFps(void);
 #endif

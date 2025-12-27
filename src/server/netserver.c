@@ -148,7 +148,7 @@ static int		(*playing_receive[256])(int ind),
 int			compress_maps = 1;
 int			login_in_progress;
 static int		num_logins, num_logouts;
-
+extern int frame_cycle;
 
 char *showtime(void)
 {
@@ -1015,7 +1015,6 @@ static int Handle_login(int ind)
 
     /* if the next round is delayed, delay it again */
     if (NumPlayers == 1) {
-	roundtime = -1;
 	sprintf(msg, "Player entered. Delaying 0 seconds until next round.");
 	Set_message(msg);
     }
@@ -1244,7 +1243,7 @@ int Send_self(int ind,
     int posx, posy, velx, vely;
     if (connp->version >= 0x4203) {
 
-      if ((main_loops % frameDivisor) == 0){
+      if (frame_cycle == 0){
 	posx =  (int) (pl->pos.x + 0.5) ; posy = (int) (pl->pos.y + 0.5);
 	velx =  (int) pl->vel.x; vely = (int) pl->vel.y;
 	/*	
@@ -1254,7 +1253,7 @@ int Send_self(int ind,
 	*/
       }
       
-      if ((main_loops % frameDivisor) != 0){
+      if (frame_cycle != 0){
 	posx =  (int) (pl->pos_interp.x + 0.5) ; posy = (int) (pl->pos_interp.y + 0.5);
 	velx =  (int) pl->vel_interp.x; vely = (int) pl->vel_interp.y;
 	/*

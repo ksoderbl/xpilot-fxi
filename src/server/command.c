@@ -517,9 +517,6 @@ static int Cmd_reset(char *arg, player *pl, int oper, char *msg)
 	    Players[i]->score = 0;
 	}
 	Reset_all_players();
-	if (gameDuration == -1) {
-	    gameDuration = 0;
-	}
 	roundsPlayed = 0;
 
 	sprintf(msg, " < Total reset by %s! >", pl->name);
@@ -528,9 +525,6 @@ static int Cmd_reset(char *arg, player *pl, int oper, char *msg)
     }
     else {
 	Reset_all_players();
-	if (gameDuration == -1) {
-	    gameDuration = 0;
-	}
 
 	sprintf(msg, " < Round reset by %s! >", pl->name);
 	Set_message(msg);

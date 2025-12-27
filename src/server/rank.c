@@ -1,6 +1,5 @@
+
 /*
- * XPilot NG, a multiplayer space war game.
- *
  * Copyright (C) 1999-2004 by
  *
  *      Marcus Sundberg      <mackan@stacken.kth.se>
@@ -353,7 +352,7 @@ void Rank_write_webpage(void)
 		encode(rank->name));
 
 	fprintf(file,
-		"<td align=right>%u"
+		"<td align=right>%d"
 		"<td align=right>%u"
 		"<td align=right>%u"
 		"<td align=right>%u"

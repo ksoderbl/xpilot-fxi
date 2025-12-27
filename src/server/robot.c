@@ -808,7 +808,6 @@ static void Robot_create(void)
 #endif
 
     if (NumPlayers == 1) {
-	roundtime = -1;
 	sprintf(msg, "Player entered. Delaying 0 seconds until next round.");
 	Set_message(msg);
     }

@@ -30,7 +30,6 @@
 #include "commonproto.h"
 
 
-extern time_t gameOverTime;
 
 
 void tuner_plock(void)
@@ -138,20 +137,9 @@ void tuner_worldlives(void)
 
     if (BIT(World.rules->mode, LIMITED_LIVES)) {
 	Reset_all_players();
-	if (gameDuration == -1)
-	    gameDuration = 0;
     }
 }
 
-void tuner_gameduration(void)
-{
-    if (gameDuration <= 0.0) {
-	gameOverTime = time((time_t *) NULL);
-    }
-
-    else
-	gameOverTime = (time_t) (gameDuration * 60) + time((time_t *) NULL);
-}
 
 void tuner_framedivisor(void){
  

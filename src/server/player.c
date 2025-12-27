@@ -159,7 +159,6 @@ void Go_home(int ind)
 	}
     }
     CLR_BIT(pl->status, THRUSTING);
-    pl->updateVisibility = 1;
     for (i = 0; i < NumPlayers; i++) {
 	pl->visibility[i].lastChange = 0;
 	Players[i]->visibility[ind].lastChange = 0;
@@ -295,15 +294,12 @@ int Init_player(int ind, wireobj *ship)
     pl->max_speed	= SPEED_LIMIT - pl->shot_speed;
     pl->shot_max	= ShotsMax;
     pl->shot_life	= ShotsLife;
-    pl->shot_mass	= ShotsMass;
     pl->shot_time	= 0;
     pl->color		= WHITE;
     pl->score		= 0;
     pl->prev_score	= 0;
     pl->fs		= 0;
     pl->name[0]		= '\0';
-    pl->damaged 	= 0;
-    pl->stunned		= 0;
 
     pl->status		= PLAYING | DEF_BITS;
     pl->have		= DEF_HAVE;
@@ -516,7 +512,6 @@ void Reset_all_players(void)
 	}
     }
 
-    roundtime = maxRoundTime * FPS;
     Update_score_table();
     Rank_write_webpage();
     Rank_write_rankfile();
@@ -852,10 +847,6 @@ void Compute_game_status(void)
     int			i;
     char		msg[MSG_LEN];
 
-    if (roundtime > 0) {
-	roundtime--;
-    }
-    
     
     if (BIT(World.rules->mode, TEAM_PLAY)) {
 	/* Do we have a winning team ? */
@@ -947,13 +938,8 @@ void Compute_game_status(void)
 	     * Game is not over if more than one team has treasure.
 	     */
 	    
-	    if ((teams_with_treasure > 1 || !max_destroyed)
-		&& (roundtime != 0 || maxRoundTime <= 0)) {
-		return;
-	    }
-
-	    if (maxRoundTime > 0 && roundtime == 0) {
-		Set_message("Timer expired. Round ends now.");
+	    if (teams_with_treasure > 1 || !max_destroyed) {
+	      return;
 	    }
 
 	    /*
@@ -1098,10 +1084,6 @@ void Compute_game_status(void)
 	    && num_alive_players == num_alive_robots
 	    && num_active_humans > 0) {
 	    Individual_game_over(-2);
-	}
-	else if (maxRoundTime > 0 && roundtime == 0) {
-	    Set_message("Timer expired. Round ends now.");
-	    Individual_game_over(-1);
 	}
     }
 }
@@ -1265,10 +1247,7 @@ void Player_death_reset(int ind, bool rank_death)
     pl->shot_speed	= ShotsSpeed;
     pl->shot_max	= ShotsMax;
     pl->shot_life	= ShotsLife;
-    pl->shot_mass	= ShotsMass;
     pl->count		= RECOVERY_DELAY;
-    pl->damaged 	= 0;
-    pl->stunned		= 0;
     pl->lock.distance	= 0;
 
     Player_init_fuel(ind, World.items[ITEM_FUEL].initial * FUEL_SCALE_FACT);

@@ -171,7 +171,6 @@ extern DFLOAT		maxBallConnectorRatio;
 extern DFLOAT		ballConnectorLength;
 extern bool		connectorIsString;
 
-extern DFLOAT		gameDuration;
 extern bool		allowViewing;
 extern int		game_lock;
 
@@ -188,8 +187,7 @@ extern bool		pLockServer;
 extern int		roundDelaySeconds;
 extern int		round_delay;
 extern int		round_delay_send;
-extern int		maxRoundTime;
-extern int		roundtime;
+
 extern int		roundsToPlay;
 extern int		roundsPlayed;
 
@@ -213,7 +211,6 @@ extern DFLOAT		mainLoopTime;
 extern long		KILLING_SHOTS;
 extern unsigned		SPACE_BLOCKS;
 
-extern time_t           gameOverTime;
 
 /* new as of xph */ 
 

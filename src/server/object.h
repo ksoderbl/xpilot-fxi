@@ -138,7 +138,6 @@ struct _object {
     int 	owner;			/* Who's object is this ? */
 					/* (spare for id)*/
     int		treasure;		/* Which treasure does ball belong */
-    int		new_info;		/* smart re-lock id after confusion */
     DFLOAT	length;			/* Distance between ball and player */
     DFLOAT	length_interp;
     int		spread_left;		/* how much spread time left */
@@ -247,7 +246,6 @@ struct player {
     int		shot_max;		/* Maximum number of shots active */
     int		shot_life;		/* Number of ticks shot will live */
     DFLOAT	shot_speed;		/* Speed of shots fired by player */
-    DFLOAT	shot_mass;		/* Mass of shots fired by player */
     long	shot_time;		/* Time of last shot fired by player */
     int		fs;			/* Connected to fuel station fs */
 
@@ -281,9 +279,6 @@ struct player {
     int         shove_next;
 
     struct _visibility *visibility;
-
-    int		updateVisibility, damaged;
-    int		stunned;
 
     int		conn;			/* connection index, -1 if robot */
     unsigned	version;		/* XPilot version number of client */

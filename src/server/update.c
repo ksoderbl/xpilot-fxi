@@ -48,7 +48,6 @@ char update_version[] = VERSION;
 
 int	rdelay = 0;		/* delay until start of next round */
 int	rdelaySend = 0;		/* number of frames to send rdelay to client */
-int	roundtime = -1;		/* time left this round */
 
 static char msg[MSG_LEN];
 
@@ -133,15 +132,15 @@ void Update_objects_interpolation(void)
     player_fps = MIN(player_fps, pl->player_fps);
     
     
-    if (player_fps < internalFps) {
-      int divisor = (internalFps - 1) / player_fps + 1;
-      if (frame_loops % divisor)
-	continue;
-    }
+    //       if (player_fps < internalFps) {
+    //	 int divisor = (internalFps - 1) / player_fps + 1;
+    //	 if (frame_loops % divisor)
+    //	   continue;
+    //  }
 
     /* update turn for player also in interpolated frame */
-    update_player_turn(i);
-    
+    /*    update_player_turn(i); */
+     
   }
   
   for (i = 0; i < NumPlayers; i++) {
@@ -245,9 +244,6 @@ void Update_objects(void)
 	LIMIT(pl->turnresistance, MIN_PLAYER_TURNRESISTANCE,
 				  MAX_PLAYER_TURNRESISTANCE);
 
-	if (pl->damaged > 0)
-	    pl->damaged--;
-
 	if (pl->count > 0) {
 	    pl->count--;
 	    if (!BIT(pl->status, PLAYING)) {
@@ -280,11 +276,6 @@ void Update_objects(void)
 	if (rdelay > 0)
 	    continue;
 
-	if (pl->stunned > 0) {
-	    pl->stunned--;
-	    CLR_BIT(pl->used, OBJ_SHIELD|OBJ_SHOT);
-	    CLR_BIT(pl->status, THRUSTING);
-	}
 
 	if (pl->shield_time > 0) {
 	    if (--pl->shield_time == 0) {
@@ -297,6 +288,7 @@ void Update_objects(void)
 	    }
 	}
 
+	/* compute turn updates */
 	update_player_turn(i);
 
 	/*
@@ -389,9 +381,6 @@ void Update_objects(void)
 
     for (i = 0; i < NumPlayers; i++) {
 	player *pl = Players[i];
-
-	pl->updateVisibility = 0;
-
 	if (BIT(pl->lock.tagged, LOCK_PLAYER)) {
 	    pl->lock.distance =
 		Wrap_length(pl->pos.x - Players[GetInd[pl->lock.pl_id]]->pos.x,
@@ -432,13 +421,8 @@ void Update_objects(void)
 	if (--(Obj[i]->life) <= 0)
 	    Delete_shot(i);
 
-    /*
-     * Compute general game status, do we have a winner?
-     * (not called after Game_Over() )
-     */
-    if (gameDuration >= 0.0) {
-	Compute_game_status();
-    }
+    /* do we have a game over ? */
+    Compute_game_status();
 
     /*
      * Now update labels if need be.

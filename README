@@ -16,9 +16,21 @@ have a new autoconfig package, and a cleaned up distribution.
     particular, targets, cannons, items, wormholes and weapons 
     anything other than a single machine gun is not 
     supported any longer. Also windows support is completely
-    removed, as is all other suspicious and outdated platforms. 
-    This release is meant to be used with Linux 2.4, 2.6 or
-    FreeBSD, digital alpha, and nothing else.
+    removed, as is support for all other suspicious and outdated 
+    platforms. Sound support is also removed. For what reason?
+    The codebase is now managable, and free of lots and lots
+    of dirty and unused hacks. This will result in speedups
+    for server performance, and make it a canonical and clean
+    distribution for a professional Blood's music player. It
+    is also meant a research platform for making even better
+    servers with new a revolutionary techniques. Unfortunately,
+    not many even bother to notice the improvements it brings,
+    but I hope that some day there will pop up a few exceptionally
+    talented players who will realize the value of it. If not,
+    the author has at least and at last one decent server for his 
+    own use.
+    This release is meant to be used with Linux 2.4, 2.6,
+    FreeBSD, Digital Unix, and nothing else.
 ***
 
 
@@ -29,7 +41,7 @@ CLIENT CHANGES
 - TODO integrate the changes from fix6 to this release
 
 SERVER CHANGES
-1.0.0:
+1.0.0hpx:
 - xpilot-fix6 changes(see xpilot-4.3.0fix-rc6 package)
 - inlining of crucial code(collision + packetscanf)
 - configure script(ugly xmkmf is history)
@@ -40,7 +52,7 @@ SERVER CHANGES
 - no high fps support(will be done later with an interpolation method,
   which differs fundamentally from the way xpilot-ng does it)
 
-1.0.1:
+1.0.1hpx:
 - server runs internally at different fps;
   you have the following choices:
  internalfps = 100; framedivisor = 8 ; probably too high 
@@ -53,7 +65,7 @@ SERVER CHANGES
  determines only frame rate and nothing else(doesn't affect timings, with
  proper framedivisors).
 
-1.0.2:
+1.0.2hpx:
 - timerresolution option removed; whoever implemented that must have had
   a weak understanding of how it affects gameplay(you get what you ask for,
   but the side effects are so serious that you wouldn't want it), and it's 
@@ -105,29 +117,66 @@ SERVER CHANGES
   the /maxturnsps in xpilot-ng is broken!)
 - major feature: ported ranking code from ng (use /stats and option 
   -rankFilename and -rankwebpage (NOTE: ANY decent bloods server has a 
-  ranking); you MUST at least use -rankFileName. If possible, you should 
+  ranking); you MUST at least use -rankFilename. If possible, you should 
   also have a publicly available rankwebdirectory, and copy the html files 
-  there *every month*. The rank is reset by deleting the rankfilename file(s). 
+  there *every month*. The rank is reset by deleting the rankfilename(s). 
   Failure to do all of the above correctly will at least result in a 
   small interest for your server.
 - added back the audiorequest packet to maintain compatibility
-  with clients using sound requests
+  with clients using sound requests (this server does not support any sound)
 - removed Dick Balaska from credits of source files (the server doesn't
-  contain any windows code (everyone knows that the Windows server is 
+  contain any windows code and everyone knows that the Windows server is 
   a bloat and is too slow for serious playing anyway)
 - added startscripts directory for various scripts to start server.
   You should use
   startscripts/publicserver.sh 
-  if you don't have other ideas on how to set up a public blood's server, 
-  it creates a rankfile and rankwebfile (which path should be changed to a
+  if you don't have other ideas on how to set up a public blood's server; 
+  it creates a rankfile and rankwebfile (whose path should be changed to a
   public webdirectory in your system if possible).
+
+1.2.1ix:
+
+- fixed the frame ordering;
+  Here's an example of the situation; 
+  Server ifps = 50; fdiv = 4; real = real frame; int = interpolated frame;
+  EOP = End of the frame shuffle period
+
+  client = 50 rfps
+  ____   ___   ___   ___ | ____
+  real - int - int - int - real ...
+  ----   ---   ---   --- | ----
+  20ms	 20ms  20ms  20ms|  20ms
+			EOP
+  client = 25 rfps
+  ____   ___ | ___   ___   ____
+  real - int - real -int - real ...
+  ----   --- | ---   ---   ----
+  40ms   40ms| 40ms  40ms  40ms
+ 	    EOP
+
+  client = 16 2/3 rfps
+  ____   ___   ___ | ___   ____
+  real - int - int - real- int ...
+  ----   ---   --- | ---   ----
+  60ms   60ms  60ms| 60ms  60ms
+		  EOP
+
+  client  = 12 1/2 rfps
+  ---- | ----
+  real - real .. 
+  ---- | ----
+  80ms |
+      EOP
+
+- deleted some options: roundtime, servershutdowntime
+
 
 TODO
 ------------
 - fix bullet gfx bug(when you shoot, the bullet may appear
   randomly on screen, but is not lethal to anyone)
 - fix frame ordering better - now also players playing at basic
-  rate also get interpolated frames, which is wrong
+  rate get interpolated frames which is wrong
 
 2.x.xfinal
 - rewrite packet protocol, delete unused stuff in packets
@@ -141,4 +190,4 @@ TODO
  
 The end result should be a server, which one can use in teamcups,
 and more serious games. The old walls code will be used throughout
-all the releases unless someone can come up with something better.
+all releases unless someone can come up with something better.

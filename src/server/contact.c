@@ -59,11 +59,10 @@ int			NumPseudoPlayers = 0;
 static int		contactSocket;
 static sockbuf_t	ibuf;
 static char		msg[MSG_LEN];
-extern time_t		gameOverTime;
 extern time_t		serverTime;
 extern int		login_in_progress;
 extern char		ShutdownReason[];
-
+extern int              frame_cycle;
 static bool Owner(char request, char *real_name, char *host_addr,
 		  int host_port, int pass);
 static int Enter_player(char *real, char *nick, char *disp, int team,
@@ -846,6 +845,7 @@ static void Queue_ack(struct queued_player *qp, int qpos)
     else {
 	Packet_printf(&ibuf, "%u%c%c%hu",
 		      my_magic, ENTER_GAME_pack, SUCCESS, qp->login_port);
+	frame_cycle = 0;
     }
     Reply(qp->host_addr, qp->port);
     qp->last_ack_sent = main_loops;
@@ -885,6 +885,7 @@ void Queue_loop(void)
 	prev = qp;
 	qp = next;
     }
+
 
     /* here's a player in the queue without a login port. */
     if (qp) {

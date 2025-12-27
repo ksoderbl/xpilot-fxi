@@ -55,10 +55,11 @@ am_xpilots_OBJECTS = cmdline.$(OBJEXT) collision.$(OBJEXT) \
 	fileparser.$(OBJEXT) frame.$(OBJEXT) id.$(OBJEXT) \
 	map.$(OBJEXT) metaserver.$(OBJEXT) netserver.$(OBJEXT) \
 	objpos.$(OBJEXT) option.$(OBJEXT) parser.$(OBJEXT) \
-	play.$(OBJEXT) player.$(OBJEXT) rank.$(OBJEXT) robot.$(OBJEXT) \
-	robotdef.$(OBJEXT) rules.$(OBJEXT) sched.$(OBJEXT) \
-	server.$(OBJEXT) ship.$(OBJEXT) shot.$(OBJEXT) tuner.$(OBJEXT) \
-	update.$(OBJEXT) walls.$(OBJEXT)
+	performance.$(OBJEXT) play.$(OBJEXT) player.$(OBJEXT) \
+	rank.$(OBJEXT) robot.$(OBJEXT) robotdef.$(OBJEXT) \
+	rules.$(OBJEXT) sched.$(OBJEXT) server.$(OBJEXT) \
+	ship.$(OBJEXT) shot.$(OBJEXT) tuner.$(OBJEXT) update.$(OBJEXT) \
+	walls.$(OBJEXT)
 xpilots_OBJECTS = $(am_xpilots_OBJECTS)
 xpilots_DEPENDENCIES = $(top_builddir)/src/common/libxpcommon.a
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -174,7 +175,7 @@ target_os = @target_os@
 target_vendor = @target_vendor@
 AM_CPPFLAGS = -DCONF_DATADIR=\"$(pkgdatadir)/\" -I$(top_srcdir)/src/common
 xpilots_SOURCES = \
-click.h cmdline.c collision.c command.c contact.c defaults.h event.c fileparser.c frame.c global.h id.c map.c map.h metaserver.c metaserver.h netserver.c netserver.h object.h objpos.c objpos.h option.c parser.c play.c player.c proto.h rank.c rank.h robot.c robotdef.c robot.h rules.c sched.c sched.h score.h server.c serverconst.h server.h ship.c shot.c tuner.c tuner.h update.c walls.c walls.h
+click.h cmdline.c collision.c command.c contact.c defaults.h event.c fileparser.c frame.c global.h id.c map.c map.h metaserver.c metaserver.h netserver.c netserver.h object.h objpos.c objpos.h option.c parser.c performance.c play.c player.c proto.h rank.c rank.h robot.c robotdef.c robot.h rules.c sched.c sched.h score.h server.c serverconst.h server.h ship.c shot.c tuner.c tuner.h update.c walls.c walls.h
 
 xpilots_LDADD = $(top_builddir)/src/common/libxpcommon.a @X_EXTRA_LIBS@
 all: all-am
@@ -257,6 +258,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/objpos.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/option.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/performance.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/play.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/player.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rank.Po@am__quote@

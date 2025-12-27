@@ -35,7 +35,10 @@
 #include "bit.h"
 #include "netserver.h"
 
+
 char event_version[] = VERSION;
+extern int frame_cycle;
+
 
 #define SWAP(_a, _b)	    {DFLOAT _tmp = _a; _a = _b; _b = _tmp;}
 
@@ -53,12 +56,12 @@ static void Refuel(int ind)
     int xpos, ypos;
     DFLOAT l, dist = 100;
     
-    if ((main_loops % frameDivisor) == 0){
+    if (frame_cycle == 0){
       xpos = pl->pos.x;
       ypos = pl->pos.y;
     }
     
-    if ((main_loops % frameDivisor) != 0){
+    if (frame_cycle != 0){
       xpos = pl->pos_interp.x;
       ypos = pl->pos_interp.y;
     }
@@ -204,7 +207,6 @@ void Pause_player(int ind, int onoff)
 
     if (onoff != 0 && !BIT(pl->status, PAUSE)) { /* Turn pause mode on */
 	pl->count = 10*FPS;
-	pl->updateVisibility = 1;
 	CLR_BIT(pl->status, SELF_DESTRUCT|PLAYING);
 	SET_BIT(pl->status, PAUSE);
 	pl->mychar = 'P';

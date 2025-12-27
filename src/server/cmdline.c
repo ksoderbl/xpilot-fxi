@@ -134,7 +134,6 @@ bool		playersOnRadar;		/* Are players visible on radar? */
 bool		reportToMetaServer;	/* Send status to meta-server? */
 bool		searchDomainForXPilot;	/* Do a DNS lookup for XPilot.domain? */
 char		*denyHosts;		/* Computers which are denied service */
-DFLOAT		gameDuration;		/* total duration of game in minutes */
 bool		allowViewing;		/* Are players allowed to watch others? */
 
 bool		teamAssign;		/* Assign player to team if not set? */
@@ -154,7 +153,6 @@ DFLOAT		ballConnectorLength;
 bool		lockOtherTeam;		/* lock ply from other teams when dead? */
 bool		useWreckage;		/* destroyed ships leave wreckage? */
 
-int		maxRoundTime;		/* max. duration of each round */
 int		roundsToPlay;		/* # of rounds to play. */
 int		roundsPlayed;		/* # of rounds played sofar. */
 
@@ -257,16 +255,6 @@ static option_desc options[] = {
 	valReal,
 	tuner_ballmass,
 	"Mass of balls.\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-	"shotMass",
-	"shotMass",
-	"0.1",
-	&ShotsMass,
-	valReal,
-	tuner_dummy,
-	"Mass of bullets.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
@@ -1228,16 +1216,6 @@ static option_desc options[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
-	"gameDuration",
-	"time",
-	"0.0",
-	&gameDuration,
-	valReal,
-	tuner_gameduration,
-	"The duration of the game in minutes (aka. pizza mode).\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
 	"allowViewing",
 	"allowViewing",
 	"false",
@@ -1265,16 +1243,6 @@ static option_desc options[] = {
 	valBool,
 	tuner_dummy,
 	"Do destroyed ships leave wreckage?\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-	"maxRoundTime",
-	"maxRoundTime",
-	"0",
-	&maxRoundTime,
-	valInt,
-	tuner_dummy,
-	"The maximum duration of each round, in seconds.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {

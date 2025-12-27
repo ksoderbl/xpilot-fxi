@@ -1196,12 +1196,6 @@ static void Robot_default_play(int ind)
     }
     */
 
-    /* blinded by ECM. since we're not supposed to see anything,
-       put up shields and return */
-    if (pl->damaged > 0) {
-	SET_BIT(pl->used, OBJ_SHIELD);
-	return;
-    }
 
     if (pl->fuel.sum < pl->fuel.max * 0.80) for (j = 0; j < World.NumFuels; j++) {
 	int dx, dy;

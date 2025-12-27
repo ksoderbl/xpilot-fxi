@@ -143,8 +143,7 @@ void Fire_general_shot(int ind, u_short team, bool cannon, DFLOAT x, DFLOAT y,
 			on_this_rack = 0,
 			side = 0,
 			fired = 0;
-    DFLOAT		mass,
-			turnspeed = 0,
+    DFLOAT		turnspeed = 0,
 			max_speed = SPEED_LIMIT, angle;
 
     vector		mv;
@@ -154,10 +153,8 @@ void Fire_general_shot(int ind, u_short team, bool cannon, DFLOAT x, DFLOAT y,
 	return;
 
     if (pl) {
-	mass = pl->shot_mass;
 	life = pl->shot_life;
     } else {
-	mass = ShotsMass;
 	life = ShotsLife;
     }
 
@@ -190,7 +187,6 @@ void Fire_general_shot(int ind, u_short team, bool cannon, DFLOAT x, DFLOAT y,
       
       shot->life      = life;
       shot->fuselife  = shot->life - fuse;
-      shot->mass      = mass;
       shot->max_speed = max_speed;   
       shot->turnspeed = turnspeed;
       shot->count     = 0;

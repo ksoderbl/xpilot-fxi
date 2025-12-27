@@ -83,34 +83,21 @@ static bool		Log = true;
 #endif
 static bool		NoPlayersEnteredYet = true;
 int			game_lock = false;
-time_t			gameOverTime = 0;
 time_t			serverTime = 0;
 
 extern int		login_in_progress;
 extern int		NumQueuedPlayers;
 
-int firsttime = 1;
 int frameDivisor;
 int internalFps;
+int frame_cycle = 0;
+
 static void Check_server_versions(void);
 extern void Main_loop(void);
 static void Handle_signal(int sig_no);
 void checkPlayers(void);
 
-/* how many frames to measure */
-#define MEASURE_LOOPS 500
 
-static int counter = 0;
-static struct timeval t1 = { 0,0 };
-static struct timeval t2 = { 0,0 };
-static struct timeval t_now = { 0,0 };
-static double measure[MEASURE_LOOPS];
-static double measure2[MEASURE_LOOPS];
-static double compute_mean(double array[], int n);
-static double compute_std(double array[], double mean, int n);
-static double compute_max(double array[], int n);
-static double compute_min(double array[], int n);
-void measure_time(void);
 static inline double timeval_to_seconds(struct timeval tv);
 
 
@@ -216,23 +203,17 @@ int main(int argc, char **argv)
 void Main_loop(void)
 {
   struct timeval tv1, tv2;
-  int time1;
   gettimeofday(&tv1, NULL);
   main_loops++;
-
-  if ((main_loops % frameDivisor) == 0){
-    if (NumPlayers != 0){
-      gettimeofday(&t_now, NULL);
-      time1 = t_now.tv_usec - t1.tv_usec;
-      if (time1 < 0) time1 +=1000000; 
-      measure2[counter] = time1;
-      gettimeofday(&t1, NULL); 
-    }
-    
-  }
-
   
-  if ((main_loops % frameDivisor) == 0){
+  if (frame_cycle == frameDivisor)
+    frame_cycle = 0;
+  
+  if (frame_cycle == 0)
+    insert_measure();
+  
+  
+  if (frame_cycle == 0){
     if ((main_loops & 0x3F) == 0) {
       Meta_update(0);
     }
@@ -259,22 +240,21 @@ void Main_loop(void)
       if (NoPlayersEnteredYet) {
 	if (NumPlayers > NumRobots + NumPseudoPlayers) {
 	  NoPlayersEnteredYet = false;
-	  if (gameDuration > 0.0) {
-	    xpprintf("%s Server will stop in %g minutes.\n", showtime(), gameDuration);
-	    gameOverTime = (time_t)(gameDuration * 60) + time((time_t *)NULL);
-	  }
 	}
       }
       
-      if ((main_loops % frameDivisor) == 0){
+      if (frame_cycle == 0){
 	Update_objects();
 	Init_interpolation_data();
+	//	printf("nointerp: %d\n", frame_cycle);
 	Frame_update();
 	main_loops_slow++;
       }
       
-      if ((main_loops % frameDivisor) != 0){
+      if (frame_cycle != 0){
+	
 	Update_objects_interpolation();
+	//printf("interp: %d\n", frame_cycle);
 	Frame_update();
       }
       
@@ -284,51 +264,16 @@ void Main_loop(void)
     checkPlayers();
     Queue_loop();
 #if 0
-    if ((main_loops % frameDivisor) == 0){
+    if (frame_cycle == 0){
       measure_time();
     }
 #endif    
     
     gettimeofday(&tv2, NULL);
     mainLoopTime = ( timeval_to_seconds(tv2) - timeval_to_seconds(tv1)) * 1e3;
+    frame_cycle++;
 }
 
-
-void measure_time(void) {
-  if (NumPlayers !=0){
-    gettimeofday(&t2, NULL); 
-    measure[counter] = (double)(t2.tv_usec - t1.tv_usec);
-    if (measure[counter] < 0) measure[counter] +=1000000;
-    if (((counter+1) % MEASURE_LOOPS) == 0){
-      int i = 0;
-      xpprintf("scheduling times:\n");
-      for (i = 0 ; i < MEASURE_LOOPS; i++){
-	xpprintf("%.3f\n",measure2[i]);
-      }
-      xpprintf("mainloop times:\n");
-      for (i = 0 ; i < MEASURE_LOOPS; i++){
-	xpprintf("%.3f\n",measure[i]);
-      }
-      xpprintf("mainloop time:\n");
-      xpprintf("mean:%.3f us,  std_dev:%.3f us,  min:%3.f us,  max:%3.f us\n", compute_mean(measure, MEASURE_LOOPS)
-	       ,
-	       compute_std(measure, compute_mean(measure, MEASURE_LOOPS), MEASURE_LOOPS),
-	       compute_min(measure, MEASURE_LOOPS),
-	       compute_max(measure, MEASURE_LOOPS));
-      xpprintf("scheduling:\n");
-      xpprintf("mean:%.3f us,  std_dev:%.3f us,  min:%3.f us,  max:%3.f us\n", compute_mean(measure2, MEASURE_LOOPS
-											    ),
-	       compute_std(measure, compute_mean(measure2, MEASURE_LOOPS), MEASURE_LOOPS),
-	       compute_min(measure2, MEASURE_LOOPS), compute_max(measure2, MEASURE_LOOPS));
-      
-      
-      
-      xpprintf("measured for %d frames\n",  MEASURE_LOOPS);
-      End_game();
-    }
-    counter++;
-  }
-}
 
 
 void checkPlayers(void){
@@ -349,48 +294,6 @@ void checkPlayers(void){
   
 }
 
-
-double compute_mean(double array[], int n){
-  int i;
-  double average = 0;
-  for (i = 0; i < n; i++){
-    average +=array[i];
-  }
-  average /=n;
-  return average;
-}
-
-double compute_std(double array[], double mean, int n){
-  int i;
-  double variance = 0;
-  for (i = 0; i < n; i++){
-    variance +=(array[i]-mean)*(array[i]-mean);
-  }
-  variance /=n -1;
-  return sqrt(variance);
-}
-
-double compute_max(double array[], int n){
-  int i;
-  double element;
-  element = array[0];
-  for (i = 0; i < n; i++){
-    if (element < array[i])
-      element = array[i];
-  }
-  return element;
-}
-
-double compute_min(double array[], int n){
-  int i;
-  double element;
-  element = array[0];
-  for (i = 0; i < n; i++){
-    if (element > array[i])
-      element = array[i];
-  }
-  return element;
-}
 
 static inline double timeval_to_seconds(struct timeval tv)
 {
@@ -736,11 +639,6 @@ void Game_Over(void)
     char		msg[128];
 
     Set_message("Game over...");
-
-    /*
-     * Hack to prevent Compute_Game_Status from starting over again...
-     */
-    gameDuration = -1.0;
 
     if (BIT(World.rules->mode, TEAM_PLAY)) {
 	int teamscore[MAX_TEAMS];

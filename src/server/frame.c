@@ -41,6 +41,7 @@
 #include "error.h"
 
 char frame_version[] = VERSION;
+extern int frame_cycle;
 
 /*
  * Structure for calculating if a pixel is visible by a player.
@@ -363,12 +364,12 @@ static void Frame_map(int conn, int ind)
 			conn_bit = (1 << conn);
     block_visibility_t	bv;
 
-    if ((main_loops % frameDivisor) == 0){
+    if (frame_cycle == 0){
       x = pl->pos_interp.bx;
       y = pl->pos_interp.by;
     }
 
-     if ((main_loops % frameDivisor) != 0){
+     if (frame_cycle != 0){
        x = pl->pos_interp.bx;
        y = pl->pos_interp.by;
      }
@@ -441,12 +442,12 @@ static void Frame_shots(int conn, int ind)
 
     for (i = 0; i < NumObjs; i++) {
 	shot = Obj[object_shuffle[i]];
-	if ((main_loops % frameDivisor) == 0){
+	if (frame_cycle == 0){
 	  x = shot->pos.x;
 	  y = shot->pos.y;
 	}
 	
-	if ((main_loops % frameDivisor) != 0){
+	if (frame_cycle != 0){
 	  x = shot->pos_interp.x;
 	  y = shot->pos_interp.y;
 	}
@@ -547,7 +548,7 @@ static void Frame_ships(int conn, int ind)
       i = player_shuffle[k];
       pl_i = Players[i];
       
-      if ((main_loops % frameDivisor) == 0){
+      if (frame_cycle == 0){
 	pl_posx = pl_i->pos.x;
 	pl_posy = pl_i->pos.y;
 	if (pl_i->ball != NULL){
@@ -556,7 +557,7 @@ static void Frame_ships(int conn, int ind)
 	}
       }
       
-      if ((main_loops % frameDivisor) != 0){
+      if (frame_cycle != 0){
 	pl_posx = pl_i->pos_interp.x;
 	pl_posy = pl_i->pos_interp.y;
 	if (pl_i->ball != NULL){
@@ -680,12 +681,12 @@ static void Frame_parameters(int conn, int ind)
     horizontal_blocks = (view_width + (BLOCK_SZ - 1)) / BLOCK_SZ;
     vertical_blocks = (view_height + (BLOCK_SZ - 1)) / BLOCK_SZ;
 
-    if ((main_loops % frameDivisor) == 0){
+    if (frame_cycle == 0){
       pv.world.x = pl->pos.x - view_width / 2;	/* Scroll */
       pv.world.y = pl->pos.y - view_height / 2;
     }
 
-    if ((main_loops % frameDivisor) != 0){
+    if (frame_cycle != 0){
       pv.world.x = pl->pos_interp.x - view_width / 2;	/* Scroll */
       pv.world.y = pl->pos_interp.y - view_height / 2;
     }
@@ -712,27 +713,11 @@ void Frame_update(void)
 {
     int			i, conn, ind, player_fps;
     player		*pl;
-    time_t		newTimeLeft = 0;
-    static time_t	oldTimeLeft;
-    static bool		game_over_called = false;
 
     if (++frame_loops >= LONG_MAX)	/* Used for misc. timing purposes */
 	frame_loops = 0;
 
     Frame_shuffle();
-
-    if (gameDuration > 0.0
-	&& game_over_called == false
-	&& oldTimeLeft != (newTimeLeft = gameOverTime - time(NULL))) {
-	/*
-	 * Do this once a second.
-	 */
-	if (newTimeLeft <= 0) {
-	    Game_Over();
-	    ShutdownServer = 30 * FPS;	/* Shutdown in 30 seconds */
-	    game_over_called = true;
-	}
-    }
 
     for (i = 0; i < NumPlayers; i++) {
 	pl = Players[i];
@@ -740,6 +725,7 @@ void Frame_update(void)
 	if (conn == NOT_CONNECTED) {
 	    continue;
 	}
+     
 	player_fps = internalFps;
 	if (BIT(pl->status, PAUSE|GAME_OVER)
 	    && !allowViewing
@@ -766,22 +752,20 @@ void Frame_update(void)
 	 * Reduce frame rate to player's own rate.
 	 */
 	if (player_fps < internalFps /*&& !ignoreMaxFPS*/) {
-	    int divisor = (internalFps - 1) / player_fps + 1;
-	    /*	    printf("divisor %d player %d player2 %d intern:%d\n",
-		    divisor, player_fps, pl->player_fps,internalFps);
-		    fflush(stdout);
-	    */
-	    if (frame_loops % divisor)
- 		continue;
+	  int divisor = (internalFps - 1) / player_fps + 1;
+	  /*	    printf("divisor %d player %d player2 %d intern:%d\n",
+		    //	    divisor, player_fps, pl->player_fps,internalFps);
+		    //	    fflush(stdout);
+	  */
+	  if (frame_cycle % divisor != 0)
+	    continue;
 	}
-
-
+	
+	
 	if (Send_start_of_frame(conn) == -1) {
 	    continue;
 	}
-	if (newTimeLeft != oldTimeLeft) {
-	    Send_time_left(conn, newTimeLeft);
-	}
+
 	/*
 	 * If status is GAME_OVER or PAUSE'd, the user may look through the
 	 * other players 'eyes'.  If PAUSE'd this only works on team members.
@@ -807,26 +791,23 @@ void Frame_update(void)
 	} else {
 	    ind = i;
 	}
-	if (Players[ind]->damaged > 0) {
-	    Send_damaged(conn, Players[ind]->damaged);
-	} else {
-	    Frame_parameters(conn, ind);
-	    if (Frame_status(conn, ind) <= 0) {
-		continue;
-	    }
-	    Frame_map(conn, ind);
-	    Frame_ships(conn, ind);
-	    Frame_shots(conn, ind);
-	    Frame_radar_buffer_reset();
-	    Frame_radar(conn, ind);
-	    Frame_radar_buffer_send(conn);
-	    debris_end(conn);
-	    fastshot_end(conn);
+	
+	//printf("%d\n",frame_cycle);
+	Frame_parameters(conn, ind);
+	if (Frame_status(conn, ind) <= 0) {
+	  continue;
 	}
+	Frame_map(conn, ind);
+	Frame_ships(conn, ind);
+	Frame_shots(conn, ind);
+	Frame_radar_buffer_reset();
+	Frame_radar(conn, ind);
+	Frame_radar_buffer_send(conn);
+	debris_end(conn);
+	fastshot_end(conn);
 	Send_end_of_frame(conn);
     }
-    oldTimeLeft = newTimeLeft;
-
+    
     Frame_radar_buffer_free();
 }
 
