@@ -29,6 +29,7 @@
 *.dylib
 
 # Executables
+src/server/xpilots
 *.exe
 *.out
 *.app
