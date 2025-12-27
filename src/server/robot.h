@@ -1,10 +1,11 @@
-/* $Id: robot.h,v 1.2 2007/06/03 21:12:47 kps Exp $
+/* $Id: robot.h,v 1.4 2007/10/21 12:45:07 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -98,13 +99,13 @@
  */
 typedef struct {
     const char		*name;
-    void		(*create)(int ind, char *str);
-    void		(*go_home)(int ind);
-    void		(*play)(int ind);
-    void		(*set_war)(int ind, int killer);
-    int			(*war_on_player)(int ind);
-    void		(*message)(int ind, const char *str);
-    void		(*destroy)(int ind);
+    void		(*create)(player_t *pl, char *str);
+    void		(*go_home)(player_t *pl);
+    void		(*play)(player_t *pl);
+    void		(*set_war)(player_t *pl, int killer);
+    int			(*war_on_player)(player_t *pl);
+    void		(*message)(player_t *pl, const char *str);
+    void		(*destroy)(player_t *pl);
 } robot_type_t;
 
 /*

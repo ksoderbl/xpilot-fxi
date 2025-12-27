@@ -1,10 +1,12 @@
-/* $Id: netserver.c,v 1.5 2007/09/11 14:38:17 kps Exp $
+/* $Id: netserver.c,v 1.11 2007/10/21 12:45:07 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -974,7 +976,7 @@ static int Handle_login(int ind)
 	 * And tell him about the relationships others have with eachother.
 	 */
 	else if (IS_ROBOT_IND(i)) {
-	    if ((war_on_id = Robot_war_on_player(i)) != -1) {
+	    if ((war_on_id = Robot_war_on_player(Players[i])) != -1) {
 		Send_war(pl->conn, Players[i]->id, war_on_id);
 	    }
 	}
@@ -1042,7 +1044,7 @@ static void Handle_input(int fd, void *arg)
     int			type,
 			result,
 			(**receive_tbl)(int ind);
-    struct              timeval tv1;
+    //struct              timeval tv1;
 
     //gettimeofday(&tv1, NULL);
     //printf("Handleinput:%e\n", timeval_to_seconds(tv1));
@@ -1186,55 +1188,6 @@ static int Send_modifiers(int ind, char *mods)
 }
 
 /*
- * Send items.
- * The advantage of this scheme is that it only uses bytes for items
- * which the player actually owns.  This reduces the packet size.
- * Another advantage is that here it doesn't matter if an old client
- * receives counts for items it doesn't know about.
- * This is new since pack version 4203.
- */
-static int Send_self_items(int ind, player_t *pl)
-{
-    connection_t	*connp = &Conn[ind];
-    unsigned		item_mask = 0;
-    int			i, n;
-    int			item_count = 0;
-
-    /* older clients should have the items sent as part of the self packet. */
-    if (connp->version < 0x4203) {
-	return 1;
-    }
-    /* build mask with one bit for each item type which the player owns. */
-    for (i = 0; i < NUM_ITEMS; i++) {
-	if (pl->item[i] > 0) {
-	    item_mask |= (1 << i);
-	    item_count++;
-	}
-    }
-    /* don't send anything if there are no items. */
-    if (item_count == 0) {
-	return 1;
-    }
-    /* check if enough buffer space is available for the complete packet. */
-    if (connp->w.size - connp->w.len <= 5 + item_count) {
-	return 0;
-    }
-    /* build the header. */
-    n = Packet_printf(&connp->w, "%c%u", PKT_SELF_ITEMS, item_mask);
-    if (n <= 0) {
-	return n;
-    }
-    /* build rest of packet containing the per item counts. */
-    for (i = 0; i < NUM_ITEMS; i++) {
-	if (item_mask & (1 << i)) {
-	    connp->w.buf[connp->w.len++] = pl->item[i];
-	}
-    }
-    /* return the number of bytes added to the packet. */
-    return 5 + item_count;
-}
-
-/*
  * Send all frame data related to the player self and his HUD.
  */
 int Send_self(int ind,
@@ -1305,10 +1258,6 @@ int Send_self(int ind,
 			autopilotlight
 			
 			);
-      if (n <= 0) {
-	return n;
-      }
-      n = Send_self_items(ind, pl);
       if (n <= 0) {
 	return n;
       }
@@ -1643,20 +1592,8 @@ int Send_ball(int ind, int x, int y, int id)
     return Packet_printf(&Conn[ind].w, "%c%hd%hd%hd", PKT_BALL, x, y, id);
 }
 
-int Send_paused(int ind, int x, int y, int count)
+int Send_ship(int ind, int x, int y, int id, int dir, int shield)
 {
-    return Packet_printf(&Conn[ind].w, "%c%hd%hd%hd", PKT_PAUSED, x, y, count);
-}
-
-int Send_ship(int ind, int x, int y, int id, int dir,
-	      int shield, int cloak, int emergency_shield, int phased, int deflector)
-{
-    if (Conn[ind].version < 0x4300) {
-	/* cloaking bit was also true if phased and that was used
-	 * to determine how to draw the ship.
-	 */
-	cloak = (cloak || phased);
-    }
     return Packet_printf(&Conn[ind].w,
 			 "%c%hd%hd%hd" "%c" "%c",
 			 PKT_SHIP, x, y, id,
@@ -1690,6 +1627,32 @@ int Send_radar(int ind, int x, int y, int size)
 	size &= ~0x80;
     }
     return Packet_printf(&connp->w, "%c%hd%hd%c", PKT_RADAR, x, y, size);
+}
+
+int Send_fastradar(int ind, unsigned char *buf, int n)
+{
+    int			avail;
+    sockbuf_t		*w = &Conn[ind].w;
+
+    if ((n & 0xFF) != n) {
+	errno = 0;
+	error("Bad number of fastradar %d", n);
+	return 0;
+    }
+    avail = w->size - w->len - SOCKBUF_WRITE_SPARE - 3;
+    if (n * 3 >= avail) {
+	if (avail > 3) {
+	    n = (avail - 2) / 3;
+	} else {
+	    return 0;
+	}
+    }
+    w->buf[w->len++] = PKT_FASTRADAR;
+    w->buf[w->len++] = (unsigned char)(n & 0xFF);
+    memcpy(&w->buf[w->len], buf, n * 3);
+    w->len += n * 3;
+
+    return (2 + (n * 3));
 }
 
 int Send_damaged(int ind, int damaged)
@@ -1804,7 +1767,7 @@ static int Receive_keyboard(int ind)
     long		change;
     u_byte		ch;
     int			size = KEYBOARD_SIZE;
-    struct timeval      tv1;
+    //struct timeval      tv1;
 
     //gettimeofday(&tv1, NULL);
     //printf("receive kb:%e %d\n",timeval_to_seconds(tv1), main_loops);
@@ -2432,6 +2395,13 @@ int Get_player_id(int ind)
     return connp->id;
 }
 
+int Get_conn_version(int ind)
+{
+    connection_t	*connp = &Conn[ind];
+
+    return connp->version;
+}
+
 static int Receive_shape(int ind)
 {
     connection_t	*connp = &Conn[ind];
@@ -2488,8 +2458,8 @@ static int Receive_pointer_move(int ind)
     short		movement;
     int			n;
     DFLOAT		turnspeed, turndir;
-    long  last_loops;
-    struct timeval      tv1;
+    //long  last_loops;
+    //struct timeval      tv1;
     //gettimeofday(&tv1, NULL);
     
 

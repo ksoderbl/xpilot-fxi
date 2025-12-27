@@ -1,10 +1,11 @@
-/* $Id: map.h,v 1.2 2007/06/03 21:12:44 kps Exp $
+/* $Id: map.h,v 1.4 2007/10/21 23:26:16 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,6 +98,7 @@ typedef struct {
     int		NumTreasures;		/* Number of treasures owned */
     int		TreasuresDestroyed;	/* Number of destroyed treasures */
     int		TreasuresLeft;		/* Number of treasures left */
+    int		SwapperId;		/* Player swapping to this full team */
 } team_t;
 
 typedef struct {

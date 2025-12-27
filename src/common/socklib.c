@@ -14,7 +14,7 @@
  *
  * This software is provided "as is" without any express or implied warranty.
  *
- * RCS:      $Id: socklib.c,v 1.1.1.1 2007/05/20 21:59:12 kps Exp $
+ * RCS:      $Id: socklib.c,v 1.2 2007/10/14 22:14:43 kps Exp $
  *
  * Revision 1.1.1.1  1992/05/11  12:32:34  bjoerns
  * XPilot v1.0
@@ -288,8 +288,8 @@ int CreateServerSocket(int port)
  */
 int GetPortNum(int fd)
 {
-    int			len;
-    struct sockaddr_in	addr;
+    socklen_t len;
+    struct sockaddr_in addr;
 
     len = sizeof(struct sockaddr_in);
     if (getsockname(fd, (struct sockaddr *)&addr, &len) < 0)
@@ -334,8 +334,8 @@ int GetPortNum(int fd)
  */
 char *GetSockAddr(int fd)
 {
-    int			len;
-    struct sockaddr_in	addr;
+    socklen_t len;
+    struct sockaddr_in addr;
 
     len = sizeof(struct sockaddr_in);
     if (getsockname(fd, (struct sockaddr *)&addr, &len) < 0)
@@ -379,9 +379,9 @@ char *GetSockAddr(int fd)
  */
 int GetRemoteHostName(int fd, char *name, int namelen)
 {
-    int			len;
-    struct sockaddr_in	addr;
-    struct hostent	*hp;
+    socklen_t len;
+    struct sockaddr_in addr;
+    struct hostent *hp;
 
     len = sizeof(struct sockaddr_in);
     if (getpeername(fd, (struct sockaddr *)&addr, &len) < 0)
@@ -952,7 +952,8 @@ int SetSocketBroadcast(int fd, int flag)
  */
 int GetSocketError(int fd)
 {
-    int	error, size;
+    int	error;
+    socklen_t size;
 
     size = sizeof(error);
     if (getsockopt(fd, SOL_SOCKET, SO_ERROR,
@@ -1586,8 +1587,8 @@ int DgramSend(int fd, char *host, int port, char *sbuf, int size)
  */
 int DgramReceiveAny(int fd, char *rbuf, int size)
 {
-    int		retval;
-    int		addrlen = sizeof(struct sockaddr_in);
+    int retval;
+    socklen_t addrlen = sizeof(struct sockaddr_in);
 
     (void) memset((char *)&sl_dgram_lastaddr, 0, addrlen);
     cmw_priv_assert_netaccess();

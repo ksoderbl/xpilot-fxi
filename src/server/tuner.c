@@ -1,10 +1,12 @@
-/* $Id: tuner.c,v 1.2 2007/06/02 14:48:54 kps Exp $
+/* $Id: tuner.c,v 1.4 2007/10/21 12:45:07 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -78,7 +80,7 @@ void tuner_maxrobots(void)
     }
 
     while (maxRobots < NumRobots) {
-	Robot_delete(-1, true);
+	Robot_delete(NULL, true);
     }
 }
 

@@ -1,10 +1,12 @@
-/* $Id: walls.c,v 1.5 2007/09/12 15:17:27 kps Exp $
+/* $Id: walls.c,v 1.7 2007/10/12 12:48:42 pgma Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -697,7 +699,8 @@ static void Move_segment(move_state_t *ms)
 			&& (!(pl2->mychar == 'W'))) enemies++;
 		  }
 		  
-
+		  //	  printf("enemies:%d\n",enemies);
+		  //     fflush(stdout);
 		  /*
 		   * Ball has been brought back to home treasure.
 		   * The team should be punished.
@@ -709,7 +712,8 @@ static void Move_segment(move_state_t *ms)
 		    Rank_cashed_ball(pl);
 		    for (n = 0; n < NumPlayers; n++){
 		      pl2 = Players[n];
-		      if ((!BIT(pl2->status, PAUSE)) && (!(pl2->mychar == 'W')))
+		      if ((!BIT(pl2->status, PAUSE)) && (!(pl2->mychar == 'W')) &&
+			  (pl2->team == pl->team))
 			Rank_won_ball(pl2);
 		    }
 		  }

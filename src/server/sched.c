@@ -1,10 +1,12 @@
-/* $Id: sched.c,v 1.1.1.1 2007/05/20 21:59:25 kps Exp $
+/* $Id: sched.c,v 1.3 2007/10/14 22:14:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -47,14 +49,15 @@ int sched_running = false;
 
 
 volatile long	timer_ticks;	/* SIGALRMs that have occurred */
+#if 0
 static long		timers_used;	/* SIGALRMs that have been used */
 static long		timer_freq;	/* rate at which timer ticks. (in FPS) */
 static void		(*timer_handler)(void);
 static time_t		current_time;
-
+#endif
 typedef	int		FDTYPE;
-static double sched_times[1000];
-static int counter = 0;
+//static double sched_times[1000];
+//static int counter = 0;
 static struct sigaction act;
 
 
@@ -234,8 +237,8 @@ void stop_sched(void)
 
 void sched(void)
 {
-    int			i, n, io_todo = 0;
-    struct timeval	tv, *tvp = &tv, tv1;
+    int			i, n;
+    struct timeval	tv /*, *tvp = &tv, tv1*/;
     fd_set readmask;
     if (sched_running) {
 	error("sched already running");

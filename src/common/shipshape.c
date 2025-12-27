@@ -1,4 +1,4 @@
-/* $Id: shipshape.c,v 1.3 2007/09/12 15:17:26 kps Exp $
+/* $Id: shipshape.c,v 1.5 2007/10/14 22:14:43 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -196,7 +196,7 @@ shipshape_t *Circle_ship(void)
     static position_t	pts[MAX_SHIP_PTS*2][RES];
     int i;
 
-#define RADIUS 10
+#define RADIUS 9
 
     if (!sh.num_points) {
 	sh.num_points = MAX_SHIP_PTS;
@@ -272,6 +272,12 @@ static int shape2wire(char *ship_shape_str, shipshape_t *w)
 			*teststr;
     char 		keyw[20],
 			buf[MSG_LEN];
+
+    engine.x = -RADIUS;
+    engine.y = 0;
+    m_gun.x = RADIUS;
+    m_gun.y = 0;
+    
 
     w->num_points = 0;
     w->num_l_gun = 0;
@@ -803,7 +809,7 @@ static int shape2wire(char *ship_shape_str, shipshape_t *w)
 	    /*
 	     * For making sure the ship is the right width!
 	     */
-	    int pair[2];
+	    int pair[2] = {0, 0};
 	    int dist = 0, tmpDist = 0;
 	    double vec[2], width, dTmp;
 	    const int minWidth = 12;

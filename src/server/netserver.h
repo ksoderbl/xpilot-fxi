@@ -1,10 +1,11 @@
-/* $Id: netserver.h,v 1.5 2007/09/11 14:38:17 kps Exp $
+/* $Id: netserver.h,v 1.9 2007/10/17 14:32:10 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -172,12 +173,11 @@ int Send_debris(int ind, int type, unsigned char *p, int n);
 int Send_wreckage(int ind, int x, int y, u_byte wrtype, u_byte size, u_byte rot);
 int Send_fastshot(int ind, int type, unsigned char *p, int n);
 int Send_ball(int ind, int x, int y, int id);
-int Send_paused(int ind, int x, int y, int count);
-int Send_ship(int ind, int x, int y, int id, int dir, int shield, int cloak, int eshield, 
-			  int phased, int deflector);
+int Send_ship(int ind, int x, int y, int id, int dir, int shield);
 int Send_refuel(int ind, int x0, int y0, int x1, int y1);
 int Send_connector(int ind, int x0, int y0, int x1, int y1, int tractor);
 int Send_radar(int ind, int x, int y, int size);
+int Send_fastradar(int ind, unsigned char *buf, int n);
 int Send_damaged(int ind, int damaged);
 int Send_message(int ind, const char *msg);
 int Send_start_of_frame(int ind);
@@ -188,6 +188,7 @@ int Send_eyes(int ind, int id);
 void Get_display_parameters(int ind, int *width, int *height,
 			    int *debris_colors, int *spark_rand);
 int Get_player_id(int);
+int Get_conn_version(int ind);
 int Send_shape(int ind, int shape);
 const char *Player_get_addr(player_t *pl);
 

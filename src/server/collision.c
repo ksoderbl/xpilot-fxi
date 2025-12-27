@@ -1,10 +1,12 @@
-/* $Id: collision.c,v 1.3 2007/06/12 18:59:38 kps Exp $
+/* $Id: collision.c,v 1.5 2007/10/21 12:45:07 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -481,15 +483,15 @@ static void PlayerCollision(void)
 		
 		if (BIT(Players[j]->status, KILLED)) {
 		  if (IS_ROBOT_IND(j)
-		      && Robot_war_on_player(j) == pl->id) {
-		    Robot_reset_war(j);
+		      && Robot_war_on_player(Players[j]) == pl->id) {
+		    Robot_reset_war(Players[j]);
 		  }
 		}
 		
 		if (BIT(pl->status, KILLED)) {
 		  if (IS_ROBOT_PTR(pl)
-		      && Robot_war_on_player(i) == Players[j]->id) {
-		    Robot_reset_war(i);
+		      && Robot_war_on_player(Players[i]) == Players[j]->id) {
+		    Robot_reset_war(Players[i]);
 		  }
 		  /* cannot crash with more than one player at the same time? */
 		  /* hmm, if 3 players meet at the same point at the same time? */
@@ -784,7 +786,7 @@ static void PlayerObjectCollision(int ind)
 		}
 		Set_message(msg);
 		SET_BIT(pl->status, KILLED);
-		Robot_war(ind, killer);
+		Robot_war(pl, Players[killer]);
 		return;
 
 	    default:

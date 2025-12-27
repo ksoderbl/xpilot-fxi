@@ -1,10 +1,11 @@
-/* $Id: server.c,v 1.5 2007/09/11 19:20:28 kps Exp $
+/* $Id: server.c,v 1.7 2007/10/21 12:45:07 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -522,7 +523,7 @@ void Server_info(char *str, unsigned max_size)
 	pl = order[i];
 	strcpy(name, pl->name);
 	if (IS_ROBOT_PTR(pl)) {
-	    if ((k = Robot_war_on_player(GetInd[pl->id])) != -1) {
+	    if ((k = Robot_war_on_player(pl)) != -1) {
 		sprintf(name + strlen(name), " (%s)", Players[GetInd[k]]->name);
 		if (strlen(name) >= 19) {
 		    strcpy(&name[17], ")");

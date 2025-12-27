@@ -1,10 +1,12 @@
-/* $Id: event.c,v 1.3 2007/06/03 21:12:44 kps Exp $
+/* $Id: event.c,v 1.4 2007/09/17 19:54:49 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -203,7 +205,6 @@ int Player_lock_closest(int ind, int next)
 void Pause_player(int ind, int onoff)
 {
     player_t		*pl = Players[ind];
-    int			i;
 
     if (onoff != 0 && !BIT(pl->status, PAUSE)) { /* Turn pause mode on */
 	pl->count = 10*intGameSpeed;
@@ -216,24 +217,9 @@ void Pause_player(int ind, int onoff)
     }
     else if (onoff == 0 && BIT(pl->status, PAUSE)) { /* Turn pause mode off */
 	if (pl->count <= 0) {
-	    bool toolate = false;
-
 	    CLR_BIT(pl->status, PAUSE);
 	    updateScores = true;
 	    if (BIT(World.rules->mode, LIMITED_LIVES)) {
-		for (i = 0; i < NumPlayers; i++) {
-		    /* If a non-team member has lost a life,
-		     * then it's too late to join. */
-		    if (i == ind) {
-			continue;
-		    }
-		    if (Players[i]->life < World.rules->lives && !TEAM(ind, i)) {
-			toolate = true;
-			break;
-		    }
-		}
-	    }
-	    if (toolate) {
 		pl->life = 0;
 		pl->mychar = 'W';
 		SET_BIT(pl->status, GAME_OVER);
@@ -241,9 +227,6 @@ void Pause_player(int ind, int onoff)
 		pl->mychar = ' ';
 		Go_home(ind);
 		SET_BIT(pl->status, PLAYING);
-		if (BIT(World.rules->mode, LIMITED_LIVES)) {
-		    pl->life = World.rules->lives;
-		}
 	    }
 	}
     }

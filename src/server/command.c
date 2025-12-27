@@ -1,10 +1,12 @@
-/* $Id: command.c,v 1.5 2007/09/11 19:20:28 kps Exp $
+/* $Id: command.c,v 1.7 2007/10/21 23:26:16 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -146,6 +148,33 @@ static void Send_info_about_player(player_t * pl)
     }
 }
 
+
+ 
+static void Set_swapper_state(player_t *pl)
+{
+    int ind = GetInd[pl->id];
+
+    if (BIT(pl->have, OBJ_BALL)) {
+	Detach_ball(ind, -1);
+    }
+    if (BIT(World.rules->mode, LIMITED_LIVES)) {
+	int i;
+
+	for (i = 0; i < NumPlayers; i++) {
+	    if (!TEAM(ind, i) && !BIT(Players[i]->status, PAUSE)) {
+		/* put team swapping player waiting mode. */
+		if (pl->mychar == ' ') {
+		    pl->mychar = 'W';
+		}
+		pl->prev_life = pl->life = 0;
+		SET_BIT(pl->status, GAME_OVER | PLAYING);
+		CLR_BIT(pl->status, SELF_DESTRUCT);
+		pl->count = -1;
+		break;
+	    }
+	}
+    }
+}
 
 #define CMD_RESULT_SUCCESS		0
 #define CMD_RESULT_ERROR		(-1)
@@ -421,9 +450,9 @@ static int Cmd_queue(char *arg, player_t *pl, int oper, char *msg)
 static int Cmd_team(char *arg, player_t *pl, int oper, char *msg)
 {
     int			i;
-    int			ind = GetInd[pl->id];
     int			team;
     int			swap_allowed;
+    char		*arg2;
 
     /*
      * Assume nothing will be said or done.
@@ -445,7 +474,32 @@ static int Cmd_team(char *arg, player_t *pl, int oper, char *msg)
 	sprintf(msg, "Invalid team specification.");
     }
     else {
-	team = atoi(arg);
+	team = strtoul(arg, &arg2, 0);
+	if (arg2 && *arg2) {
+	    const char *errorstr;
+	    size_t size = MSG_LEN;
+
+	    if (!pl->isoperator) {
+		sprintf(msg,
+			"You need operator status to swap other players.");
+		return CMD_RESULT_NOT_OPERATOR;
+	    }
+	    while (isspace(*arg2))
+		arg2++;
+	    pl = Get_player_by_name(arg2, NULL, &errorstr);
+	    if (!pl) {
+		strlcpy(msg, errorstr, size);
+		return CMD_RESULT_ERROR;
+	    }
+	}
+
+	for (i = 0 ; i < MAX_TEAMS ; i++) {
+	    /* Can't queue to two teams at once. */
+	    if (World.teams[i].SwapperId == pl->id) {
+		World.teams[i].SwapperId = -1;
+	    }
+	}
+
 	if (team < 0 || team >= MAX_TEAMS) {
 	    sprintf(msg, "Team %d is not a valid team.", team);
 	}
@@ -459,7 +513,77 @@ static int Cmd_team(char *arg, player_t *pl, int oper, char *msg)
 	    sprintf(msg, "You cannot join the robot team on this server.");
 	}
 	else if (World.teams[team].NumBases <= World.teams[team].NumMembers) {
-	    sprintf(msg, "Team %d is full.", team);
+	    i = World.teams[pl->team].SwapperId;
+	    while (i != -1) {
+		if ((i = Players[GetInd[i]]->team) != team) {
+		    i = World.teams[i].SwapperId;
+		}
+		else {
+		    /* Found a cycle, now change the teams */
+		    int xbase= pl->home_base, xteam = pl->team, xbase2, xteam2;
+		    player_t *pl2 = pl;
+
+		    do {
+			pl2 = Players[GetInd[World.teams[xteam].SwapperId]];
+			World.teams[xteam].SwapperId = -1;
+			xbase2 = pl2->home_base;
+			xteam2 = pl2->team;
+			pl2->team = xteam;
+			pl2->home_base = xbase;
+			//TEAM_SCORE(xteam2, -(pl2->score));
+			//TEAM_SCORE(pl2->team, pl2->score);
+			Set_swapper_state(pl2);
+			Send_info_about_player(pl2);
+			/* This can send a huge amount of data if several
+			   players swap. Unfortunately all player data, even
+			   shipshape, has to be resent to change the team of
+			   a player. This should probably be changed somehow
+			   to prevent disturbing other players. */
+			xbase = xbase2;
+			xteam = xteam2;
+		    } while (xteam != team);
+		    xteam = pl->team;
+		    pl->team = team;
+		    pl->home_base = xbase;
+		    //TEAM_SCORE(xteam, -(pl->score));
+		    //TEAM_SCORE(pl->team, pl->score);
+		    Set_swapper_state(pl);
+		    Send_info_about_player(pl);
+		    sprintf(msg, "Some players swapped teams.");
+		    Set_message(msg);
+		    strcpy(msg, "");
+		    return CMD_RESULT_SUCCESS;
+		}
+	    }
+	    /* Swap a paused player away from the full team */
+	    for (i = NumPlayers - 1; i >= 0; i--) {
+		player_t *pl2 = Players[i];
+		if (pl2->conn != NOT_CONNECTED
+		    && BIT(pl2->status, PAUSE)
+		    && (pl2->team == team)) {
+		    pl2->team = pl->team;
+		    pl->team = team;
+		    team = pl2->home_base;
+		    pl2->home_base = pl->home_base;
+		    pl->home_base = team;
+		    //TEAM_SCORE(pl2->team, -(pl->score));
+		    //TEAM_SCORE(pl->team, -(pl2->score));
+		    //TEAM_SCORE(pl2->team, pl2->score);
+		    //TEAM_SCORE(pl->team, pl->score);
+		    Set_swapper_state(pl2);
+		    Set_swapper_state(pl);
+		    Send_info_about_player(pl2);
+		    Send_info_about_player(pl);
+		    sprintf(msg, "%s has swapped with paused %s.",
+			    pl->name, pl2->name);
+		    Set_message(msg);
+		    strcpy(msg, "");
+		    return CMD_RESULT_SUCCESS;
+		}
+	    }
+	    sprintf(msg,"You are queued for swap to team %d.", team);
+	    World.teams[team].SwapperId = pl->id;
+	    return CMD_RESULT_SUCCESS;
 	}
 	else {
 	    swap_allowed = true;
@@ -472,27 +596,10 @@ static int Cmd_team(char *arg, player_t *pl, int oper, char *msg)
 
     sprintf(msg, "%s has swapped to team %d.", pl->name, team);
     Set_message(msg);
-    if (BIT(pl->have, OBJ_BALL)) {
-	Detach_ball(GetInd[pl->id], -1);
-    }
     World.teams[pl->team].NumMembers--;
     pl->team = team;
     World.teams[pl->team].NumMembers++;
-    if (BIT(World.rules->mode, LIMITED_LIVES)) {
-	for (i = 0; i < NumPlayers; i++) {
-	    if (!TEAM(ind, i) && !BIT(Players[i]->status, PAUSE)) {
-		/* put team swapping player waiting mode. */
-		if (pl->mychar == ' ') {
-		    pl->mychar = 'W';
-		}
-		pl->prev_life = pl->life = 0;
-		SET_BIT(pl->status, GAME_OVER | PLAYING);
-		CLR_BIT(pl->status, SELF_DESTRUCT);
-		pl->count = -1;
-		break;
-	    }
-	}
-    }
+    Set_swapper_state(pl);
     Pick_startpos(GetInd[pl->id]);
     Send_info_about_player(pl);
     strcpy(msg, "");

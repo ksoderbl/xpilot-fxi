@@ -130,9 +130,6 @@ SERVER CHANGES
   small interest for your server.
 - added back the audiorequest packet to maintain compatibility
   with clients using sound requests (this server does not support any sound)
-- removed Dick Balaska from credits of source files (the server doesn't
-  contain any windows code and everyone knows that the Windows server is 
-  a bloat and is too slow for serious playing anyway)
 - added startscripts directory for various scripts to start server.
   You should use
   startscripts/publicserver.sh 
@@ -303,6 +300,18 @@ unsymmetricity it introduces.. so don't use 16 2/3 fps on a 50 fps server!
 - patch to get rid of turnloss near walls and ships getting stuck in walls,
   including an /oldturn command can be used by individual players to use the
   old behaviour
+
+1.4.1fxi:
+- circle ship radius reduced from 10 to 9 to reduce ship wall hits during
+  ballruns
+- support for fastradar packet (protocol version 0x4401)
+- sendselfitems removed, server does not send any items to clients
+- don't send pause icons to clients, clients know from 'mychar' whether
+  someone pauses
+- fixed rank ball cash amount for team cashed balls
+- improved swapping code from Marcus Sundberg's rank1 patch
+- a joining or unpausing player must always waiting for next round
+- refactor some code (thanks Piotr Kamisinski)
 
 ----
 

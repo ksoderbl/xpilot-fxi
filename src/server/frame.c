@@ -1,10 +1,12 @@
-/* $Id: frame.c,v 1.3 2007/06/03 21:12:44 kps Exp $
+/* $Id: frame.c,v 1.8 2007/10/21 12:45:07 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -269,13 +271,43 @@ static void Frame_radar_buffer_send(int conn)
 	radar_shuffle[dest] = tmp;
     }
 
-    for (i = 0; i < num_radar; i++) {
-	p = &radar_ptr[radar_shuffle[i]];
-	radar_x = (radar_width * p->x) / World.width;
-	radar_y = (radar_height * p->y) / World.height;
-	send_x = (World.width * radar_x) / radar_width;
-	send_y = (World.height * radar_y) / radar_height;
-	Send_radar(conn, send_x, send_y, p->size);
+    if (Get_conn_version(conn) <= 0x4400) {
+	for (i = 0; i < num_radar; i++) {
+	    p = &radar_ptr[radar_shuffle[i]];
+	    radar_x = (radar_width * p->x) / World.width;
+	    radar_y = (radar_height * p->y) / World.height;
+	    send_x = (World.width * radar_x) / radar_width;
+	    send_y = (World.height * radar_y) / radar_height;
+	    Send_radar(conn, send_x, send_y, p->size);
+	}
+    } else {
+	unsigned char buf[3*256];
+	int buf_index = 0;
+	int fast_count = 0;
+
+	if (num_radar > 256) {
+	    num_radar = 256;
+	}
+	for (i = 0; i < num_radar; i++) {
+	    p = &radar_ptr[radar_shuffle[i]];
+	    radar_x = (radar_width * p->x) / World.width;
+	    radar_y = (radar_height * p->y) / World.height;
+	    if (radar_y >= 1024) {
+		continue;
+	    }
+	    buf[buf_index++] = (unsigned char)(radar_x);
+	    buf[buf_index++] = (unsigned char)(radar_y & 0xFF);
+	    buf[buf_index] = (unsigned char)((radar_y >> 2) & 0xC0);
+	    if (p->size & 0x80) {
+		buf[buf_index] |= (unsigned char)(0x20);
+	    }
+	    buf[buf_index] |= (unsigned char)(p->size & 0x07);
+	    buf_index++;
+	    fast_count++;
+	}
+	if (fast_count > 0) {
+	    Send_fastradar(conn, buf, fast_count);
+	}
     }
 }
 
@@ -533,12 +565,11 @@ static void Frame_shots(int conn, int ind)
     }
 }
 
-static void Frame_ships(int conn, int ind)
+static void Frame_ships(int conn)
 {
-    player_t			*pl = Players[ind],
-				*pl_i;
+    player_t			*pl_i;
     int				i, k;
-    int                         pl_posx, pl_posy, ball_posx, ball_posy;
+    int                         pl_posx, pl_posy, ball_posx = 0, ball_posy = 0;
     for (k = 0; k < NumPlayers; k++) {
       i = player_shuffle[k];
       pl_i = Players[i];
@@ -573,10 +604,6 @@ static void Frame_ships(int conn, int ind)
 	continue;
       }
       if (BIT(pl_i->status, PAUSE)) {
-	Send_paused(conn,
-		    pl_posx,
-		    pl_posy,
-		    pl_i->count);
 	continue;
       }
       
@@ -588,11 +615,7 @@ static void Frame_ships(int conn, int ind)
 		pl_posy,
 		pl_i->id,
 		pl_i->dir,
-		BIT(pl_i->used, OBJ_SHIELD) != 0,
-		0 != 0,
-		0 != 0,
-		0 != 0,
-		0 != 0
+		BIT(pl_i->used, OBJ_SHIELD) != 0
 		);
       
       if (BIT(pl_i->used, OBJ_REFUEL)) {
@@ -622,9 +645,8 @@ static void Frame_ships(int conn, int ind)
     
 static void Frame_radar(int conn, int ind)
 {
-    int			i, mask, s;
+    int			i, s;
     player_t		*pl = Players[ind];
-    object_t		*shot;
     DFLOAT		x, y;
 
     if (playersOnRadar || BIT(World.rules->mode, TEAM_PLAY)) {
@@ -708,7 +730,7 @@ void Frame_update(void)
 {
     int			i, conn, ind, player_fps;
     player_t		*pl;
-    struct timeval tv1;
+    //struct timeval tv1;
     if (++frame_loops >= LONG_MAX)	/* Used for misc. timing purposes */
 	frame_loops = 0;
     
@@ -798,7 +820,7 @@ void Frame_update(void)
 	  continue;
 	}
 	Frame_map(conn, ind);
-	Frame_ships(conn, ind);
+	Frame_ships(conn);
 	Frame_shots(conn, ind);
 	Frame_radar_buffer_reset();
 	Frame_radar(conn, ind);
@@ -860,7 +882,7 @@ void Set_player_message(player_t *pl, const char *message)
 	Send_message(pl->conn, msg);
     }
     else if (IS_ROBOT_PTR(pl)) {
-	Robot_message(GetInd[pl->id], msg);
+	Robot_message(pl, msg);
     }
 }
 

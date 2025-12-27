@@ -1,10 +1,11 @@
-/* $Id: proto.h,v 1.4 2007/09/12 15:17:27 kps Exp $
+/* $Id: proto.h,v 1.6 2007/10/21 12:45:07 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -158,7 +159,6 @@ void Make_wreckage(
 	    /* min,max speed  */ DFLOAT min_speed,  DFLOAT max_speed,
 	    /* min,max life   */ int    min_life,   int    max_life
 	    );
-void Explode(int ind);
 void Explode_fighter(int ind);
 
 /*
@@ -171,9 +171,7 @@ void Handle_player_command(player_t *pl, char *cmd);
  */
 void Pick_startpos(int ind);
 void Go_home(int ind);
-void Compute_sensor_range(player_t *);
 void Player_add_tank(int ind, long tank_fuel);
-void Player_remove_tank(int ind, int which_tank);
 int Init_player(int ind, shipshape_t *ship);
 void Alloc_players(int number);
 void Free_players(void);
@@ -194,15 +192,15 @@ void Individual_game_over(int winner);
  */
 void Parse_robot_file(void);
 void Robot_init(void);
-void Robot_delete(int ind, int kicked);
-void Robot_destroy(int ind);
+void Robot_delete(player_t *pl, int kicked);
+void Robot_destroy(player_t *pl);
 void Robot_update(void);
-void Robot_war(int ind, int killer);
-void Robot_reset_war(int ind);
-int Robot_war_on_player(int ind);
-void Robot_go_home(int ind);
-void Robot_program(int ind, int victim_id);
-void Robot_message(int ind, const char *message);
+void Robot_war(player_t *pl, player_t *kp);
+void Robot_reset_war(player_t *pl);
+int Robot_war_on_player(player_t *pl);
+void Robot_go_home(player_t *pl);
+void Robot_program(player_t *pl, int victim_id);
+void Robot_message(player_t *pl, const char *message);
 
 /*
  * Prototypes for rules.c
@@ -262,7 +260,6 @@ void Set_player_message(player_t *pl, const char *message);
  */
 void Update_radar_target(int);
 void Update_objects(void);
-void Autopilot(int ind, int on);
 void Init_interpolation_data(void);
 void Update_objects_interpolation(void);
 

@@ -1,10 +1,12 @@
-/* $Id: contact.c,v 1.2 2007/06/02 14:48:54 kps Exp $
+/* $Id: contact.c,v 1.4 2007/10/21 12:45:07 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -131,13 +133,13 @@ static int Kick_robot_players(int team)
 		}
 	    }
 	    if (low_i >= 0) {
-		Robot_delete(low_i, true);
+		Robot_delete(Players[low_i], true);
 		return 1;
 	    }
 	    return 0;
 	} else {
 	    /* kick random robot */
-	    Robot_delete(-1, true);
+	    Robot_delete(NULL, true);
 	    return 1;
 	}
     } else {
@@ -155,7 +157,7 @@ static int Kick_robot_players(int team)
 		}
 	    }
 	    if (low_i >= 0) {
-		Robot_delete(low_i, true);
+		Robot_delete(Players[low_i], true);
 		return 1;
 	    }
 	    return 0;
@@ -681,7 +683,7 @@ void Contact(int fd, void *arg)
 		minRobots = maxRobots;
 	    }
 	    while (maxRobots < NumRobots) {
-		Robot_delete(-1, true);
+		Robot_delete(NULL, true);
 	    }
 	}
 

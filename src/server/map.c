@@ -1,10 +1,12 @@
-/* $Id: map.c,v 1.2 2007/06/03 21:12:44 kps Exp $
+/* $Id: map.c,v 1.4 2007/10/21 23:26:16 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -357,6 +359,7 @@ bool Grok_map(void)
 	World.teams[i].NumTreasures = 0;
 	World.teams[i].TreasuresDestroyed = 0;
 	World.teams[i].TreasuresLeft = 0;
+	World.teams[i].SwapperId = -1;
     }
 
     /*

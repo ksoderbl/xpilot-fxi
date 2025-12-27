@@ -46,7 +46,7 @@ ballswallbounce : yes
 mineswallbounce : no
 itemswallbounce : no
 missileswallbounce : no
-sparkswallbounce : yes
+sparkswallbounce : no
 debriswallbounce : no
 maxobjectwallbouncespeed : 40
 maxshieldedwallbouncespeed : 100
@@ -121,7 +121,7 @@ itememergencythrustprob : 0.2
 itemtractorbeamprob : 0.7
 itemautopilotprob : 0.0
 itememergencyshieldprob : 0.6
-initialfuel : 500
+initialfuel : 800
 initialtanks : 0
 initialecms : 0
 initialmines : 0

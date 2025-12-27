@@ -1,10 +1,12 @@
-/* $Id: player.c,v 1.5 2007/09/12 15:17:27 kps Exp $
+/* $Id: player.c,v 1.8 2007/10/21 23:26:16 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
+ *      Dick Balaska         <dick@xpilot.org>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -162,7 +164,7 @@ void Go_home(int ind)
     CLR_BIT(pl->status, THRUSTING);
 
     if (IS_ROBOT_PTR(pl)) {
-	Robot_go_home(ind);
+	Robot_go_home(pl);
     }
 }
 
@@ -246,9 +248,7 @@ static void Player_init_fuel(int ind, long total_fuel)
 int Init_player(int ind, shipshape_t *ship)
 {
     player_t		*pl = Players[ind];
-    bool		too_late = false;
     int			i;
-
 
     pl->vel.x	= pl->vel.y	= 0.0;
     pl->acc.x	= pl->acc.y	= 0.0;
@@ -316,23 +316,12 @@ int Init_player(int ind, shipshape_t *ship)
     pl->deaths		= 0;
 
     /*
-     * If limited lives and if nobody has lost a life yet, you may enter
-     * now, otherwise you will have to wait 'til everyone gets GAME OVER.
+     * If limited lives you will have to wait 'til everyone gets GAME OVER.
      */
-    if (BIT(World.rules->mode, LIMITED_LIVES)) {
-	for (i = 0; i < NumPlayers; i++) {
-	    /* If a non-team member has lost a life,
-	     * then it's too late to join. */
-	    if (Players[i]->life < World.rules->lives && !TEAM(ind, i)) {
-		too_late = true;
-		break;
-	    }
-	}
-	if (too_late) {
-	    pl->mychar	= 'W';
-	    pl->prev_life = pl->life = 0;
-	    SET_BIT(pl->status, GAME_OVER);
-	}
+    if (BIT(World.rules->mode, LIMITED_LIVES) && NumPlayers > 0) {
+	pl->mychar	= 'W';
+	pl->prev_life = pl->life = 0;
+	SET_BIT(pl->status, GAME_OVER);
     }
 
     pl->team = TEAM_NOT_SET;
@@ -1090,7 +1079,7 @@ void Delete_player(int ind)
 			id = pl->id;
 
     if (IS_ROBOT_PTR(pl)) {
-	Robot_destroy(ind);
+	Robot_destroy(pl);
     }
     
     if (pl->isoperator) {
@@ -1101,7 +1090,16 @@ void Delete_player(int ind)
         }
     }
 
-
+    /* Won't be swapping anywhere */
+    for (i = MAX_TEAMS - 1; i >= 0; i--)
+	if (World.teams[i].SwapperId == id)
+	    World.teams[i].SwapperId = -1;
+#if 0
+    if (pl->team != TEAM_NOT_SET) {
+	/* Swapping a queued player might be better */
+	World.teams[pl->team].SwapperId = -1;
+    }
+#endif
 
     /* Delete remaining shots */
     for (i = NumObjs - 1; i >= 0; i--) {
@@ -1173,8 +1171,8 @@ void Delete_player(int ind)
 	    CLR_BIT(Players[i]->lock.tagged, LOCK_PLAYER|LOCK_VISIBLE);
 	}
 	if (IS_ROBOT_IND(i)
-	    && Robot_war_on_player(i) == id) {
-	    Robot_reset_war(i);
+	    && Robot_war_on_player(Players[i]) == id) {
+	    Robot_reset_war(Players[i]);
 	}
 	for (j = 0; j < LOCKBANK_MAX; j++) {
 	    if (Players[i]->lockbank[j] == id)
@@ -1274,7 +1272,7 @@ void Player_death_reset(int ind, bool rank_death)
 	    if (IS_ROBOT_PTR(pl)) {
 	      if (!BIT(World.rules->mode, TEAM_PLAY)
 		  || (robotsLeave && pl->score < robotLeaveScore)) {
-		Robot_delete(ind, false);
+		Robot_delete(pl, false);
 		return;
 	      }
 	    }
