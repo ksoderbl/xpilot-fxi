@@ -30,23 +30,23 @@
 #include "structs.h"
 #include "walls.h"
 
-#define ED_SHOT			(-0.2*FUEL_SCALE_FACT)
-#define ED_SHIELD		(-0.20*FUEL_SCALE_FACT)
-#define ED_SHOT_HIT		(-25.0*FUEL_SCALE_FACT)
-#define ED_PL_CRASH		(-100.0*FUEL_SCALE_FACT)
-#define ED_BALL_HIT		(-50.0*FUEL_SCALE_FACT)
+#define ED_SHOT (-0.2 * FUEL_SCALE_FACT)
+#define ED_SHIELD (-0.20 * FUEL_SCALE_FACT)
+#define ED_SHOT_HIT (-25.0 * FUEL_SCALE_FACT)
+#define ED_PL_CRASH (-100.0 * FUEL_SCALE_FACT)
+#define ED_BALL_HIT (-50.0 * FUEL_SCALE_FACT)
 
-#define PTS_PR_PL_SHOT	    	-5    	/* Points if you get shot by a player */
-#define WALL_SCORE	    	2000
+#define PTS_PR_PL_SHOT -5 /* Points if you get shot by a player */
+#define WALL_SCORE 2000
 
-#define RATE_SIZE	    	20
-#define RATE_RANGE	    	1024
+#define RATE_SIZE 20
+#define RATE_RANGE 1024
 
 #define crashScoreMult 0.33
 
-inline double Get_Score(player_t *pl);
-inline void Score_set(player_t *pl, double score);
-inline void Score_add(player_t *pl, double score);
+double Get_Score(player_t *pl);
+void Score_set(player_t *pl, double score);
+void Score_add(player_t *pl, double score);
 
 void SCORE(player_t *pl, int32_t points, objposition_t *pos, const char *msg);
 int32_t Rate(int32_t winner, int32_t looser);

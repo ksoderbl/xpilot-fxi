@@ -23,20 +23,19 @@
 
 char msg[MSG_LEN];
 
-
-inline double Get_Score(player_t *pl)
+double Get_Score(player_t *pl)
 {
-    return pl->score;
+	return pl->score;
 }
 
-inline void Score_set(player_t * pl, double score)
+void Score_set(player_t *pl, double score)
 {
-    pl->score = score;
+	pl->score = score;
 }
 
-inline void Score_add(player_t * pl, double score)
+void Score_add(player_t *pl, double score)
 {
-    pl->score += score;
+	pl->score += score;
 }
 
 void SCORE(player_t *pl, int32_t points, objposition_t *pos, const char *msg)
@@ -44,7 +43,8 @@ void SCORE(player_t *pl, int32_t points, objposition_t *pos, const char *msg)
 	Score_add(pl, points);
 
 	Rank_add_score(pl, points);
-	if (Player_is_connected(pl)) {
+	if (Player_is_connected(pl))
+	{
 		Send_score_object(pl->connp, points, pos, msg);
 	}
 
@@ -55,7 +55,7 @@ int32_t Rate(int32_t winner, int32_t loser)
 {
 	int32_t t;
 
-	t = ((RATE_SIZE / 2) * RATE_RANGE) / (ABS(loser - winner)+ RATE_RANGE);
+	t = ((RATE_SIZE / 2) * RATE_RANGE) / (ABS(loser - winner) + RATE_RANGE);
 	if (loser > winner)
 		t = RATE_SIZE - t;
 	return (t);
@@ -76,14 +76,17 @@ int32_t Rate(int32_t winner, int32_t loser)
  * BD 28-4-98: Same for killing your own tank.
  */
 void Score_players(player_t *winner, int32_t winner_score,
-		char *winner_msg, player_t *loser, int32_t loser_score,
-		char *loser_msg)
+				   char *winner_msg, player_t *loser, int32_t loser_score,
+				   char *loser_msg)
 {
-	if (TEAM(winner, loser)) {
-		if (winner_score > 0) {
+	if (TEAM(winner, loser))
+	{
+		if (winner_score > 0)
+		{
 			winner_score = -winner_score;
 		}
-		if (loser_score > 0) {
+		if (loser_score > 0)
+		{
 			loser_score = -loser_score;
 		}
 	}
@@ -105,26 +108,31 @@ void Score_compute_end_of_round(int32_t *average_score, int32_t *num_best_player
 
 	/* Figure out what the average score is and who has the best kill/death */
 	/* ratio for this round */
-	for (i = 0; i < NumPlayers; i++) {
+	for (i = 0; i < NumPlayers; i++)
+	{
 		pl = Players[i];
 
-		if ((Player_is_paused(pl) && pl->pause_count <= 0.0)) {
+		if ((Player_is_paused(pl) && pl->pause_count <= 0.0))
+		{
 			continue;
 		}
 
-		if (!(Player_is_alive(pl) || Player_is_appearing(pl) || Player_is_dead(pl))) {
+		if (!(Player_is_alive(pl) || Player_is_appearing(pl) || Player_is_dead(pl)))
+		{
 			continue;
 		}
 
 		*average_score += pl->score;
-		ratio = (DFLOAT) pl->kills / (pl->deaths + 1);
+		ratio = (DFLOAT)pl->kills / (pl->deaths + 1);
 
-		if (ratio > *best_ratio) {
+		if (ratio > *best_ratio)
+		{
 			*best_ratio = ratio;
 			best_players[0] = pl;
 			*num_best_players = 1;
 		}
-		else if (ratio == *best_ratio) {
+		else if (ratio == *best_ratio)
+		{
 			best_players[(*num_best_players)++] = pl;
 		}
 	}
@@ -133,55 +141,62 @@ void Score_compute_end_of_round(int32_t *average_score, int32_t *num_best_player
 }
 
 void Score_give_bonus(int32_t average_score, int32_t num_best_players,
-		DFLOAT best_ratio, player_t **best_players)
+					  DFLOAT best_ratio, player_t **best_players)
 {
 	int32_t i;
 	int32_t points;
 
-	if (num_best_players < 1 || best_ratio <= 0.0f) {
+	if (num_best_players < 1 || best_ratio <= 0.0f)
+	{
 		Message_game_print("There is no Deadly Player.");
 	}
-	else if (num_best_players == 1) {
+	else if (num_best_players == 1)
+	{
 		player_t *bp = best_players[0];
 
 		Message_game_print("%s is the Deadliest Player with a kill ratio of %d/%d.",
-				bp->name, bp->kills, bp->deaths);
-		points = (int32_t) (best_ratio * Rate(bp->score, average_score));
+						   bp->name, bp->kills, bp->deaths);
+		points = (int32_t)(best_ratio * Rate(bp->score, average_score));
 		SCORE(bp, points, &bp->pos, "[Deadliest]");
 		Rank_add_deadliest(bp);
 	}
-	else {
+	else
+	{
 		char msg[MSG_LEN] = "\0";
 
-		for (i = 0; i < num_best_players; i++) {
+		for (i = 0; i < num_best_players; i++)
+		{
 			player_t *bp = best_players[i];
 			int32_t ratio = Rate(bp->score, average_score);
-			DFLOAT score = (DFLOAT) (ratio + num_best_players) / num_best_players;
+			DFLOAT score = (DFLOAT)(ratio + num_best_players) / num_best_players;
 
-			if (msg[0]) {
+			if (msg[0])
+			{
 				if (i == num_best_players - 1)
 					strcat(msg, " and ");
 				else
 					strcat(msg, ", ");
 			}
-			if (strlen(msg) + 8 + strlen(bp->name) >= sizeof(msg)) {
+			if (strlen(msg) + 8 + strlen(bp->name) >= sizeof(msg))
+			{
 				Message_game_print(msg);
 				msg[0] = '\0';
 			}
 			strcat(msg, bp->name);
-			points = (int32_t) (best_ratio * score);
+			points = (int32_t)(best_ratio * score);
 			SCORE(bp, points, &bp->pos, "[Deadly]");
 			Rank_add_deadliest(bp);
 		}
-		if (strlen(msg) + 64 >= sizeof(msg)) {
+		if (strlen(msg) + 64 >= sizeof(msg))
+		{
 			Message_game_print(msg);
 			msg[0] = '\0';
 		}
 
 		Message_game_print("%s are the Deadly Players with kill ratios of %d/%d.",
-				msg,
-				(best_players[0])->kills,
-				(best_players[0])->deaths);
+						   msg,
+						   (best_players[0])->kills,
+						   (best_players[0])->deaths);
 	}
 }
 
@@ -190,8 +205,8 @@ void Score_give_individual_bonus(player_t *pl, int32_t average_score)
 	DFLOAT ratio;
 	int32_t points;
 
-	ratio = (DFLOAT) pl->kills / (pl->deaths + 1);
-	points = (int32_t) (ratio * Rate(pl->score, average_score));
+	ratio = (DFLOAT)pl->kills / (pl->deaths + 1);
+	points = (int32_t)(ratio * Rate(pl->score, average_score));
 	SCORE(pl, points, &pl->pos, "[Winner]");
 }
 
@@ -200,16 +215,17 @@ void SCORE_LegacyBallCash(move_state_t *ms, double loose_time)
 	int32_t n;
 	player_t *pl, *pl2;
 	int32_t enemies = 0;
-	const move_info_t * const mi = ms->mip; /* alias */
+	const move_info_t *const mi = ms->mip; /* alias */
 
 	pl = mi->obj->owner;
 
 	/* compute amount of active enemies */
-	for (n = 0; n < NumPlayers; n++) {
+	for (n = 0; n < NumPlayers; n++)
+	{
 		pl2 = Players[n];
 
-		if ((pl2->team == mi->obj->treasure->team)
-				&& (Player_is_alive(pl2) || Player_is_appearing(pl2) || Player_is_dead(pl2))) {
+		if ((pl2->team == mi->obj->treasure->team) && (Player_is_alive(pl2) || Player_is_appearing(pl2) || Player_is_dead(pl2)))
+		{
 			Rank_lost_ball(pl2);
 			enemies++;
 		}
@@ -217,14 +233,16 @@ void SCORE_LegacyBallCash(move_state_t *ms, double loose_time)
 
 	Rank_ballrun(pl, loose_time);
 
-	if (enemies > 0) {
+	if (enemies > 0)
+	{
 		Rank_cashed_ball(pl);
 
-		for (n = 0; n < NumPlayers; n++) {
+		for (n = 0; n < NumPlayers; n++)
+		{
 			pl2 = Players[n];
 
-			if (pl2->team == pl->team
-					&& (Player_is_alive(pl2) || Player_is_appearing(pl2) || Player_is_dead(pl2))) {
+			if (pl2->team == pl->team && (Player_is_alive(pl2) || Player_is_appearing(pl2) || Player_is_dead(pl2)))
+			{
 				Rank_won_ball(pl2);
 			}
 		}
@@ -247,25 +265,29 @@ int32_t Punish_team(player_t *pl, treasure_t *loser_treasure, treasure_t *winner
 	player_t *pl2;
 
 	/* Count scores */
-	for (i = 0; i < NumPlayers; i++) {
+	for (i = 0; i < NumPlayers; i++)
+	{
 		pl2 = Players[i];
 
-		if (!(Player_is_alive(pl2) || Player_is_appearing(pl2) || Player_is_dead(pl2))) {
+		if (!(Player_is_alive(pl2) || Player_is_appearing(pl2) || Player_is_dead(pl2)))
+		{
 			continue;
 		}
 
-		if (pl2->team == loser_treasure->team) {
+		if (pl2->team == loser_treasure->team)
+		{
 			lose_score += pl2->score;
 			lose_team_members++;
 		}
-		else if (pl2->team == winner_treasure->team) {
+		else if (pl2->team == winner_treasure->team)
+		{
 			win_score += pl2->score;
 			win_team_members++;
 		}
 	}
 
 	Message_game_important_print("%s's (%d) team has destroyed team %d treasure",
-			pl->name, pl->team->Num, loser_treasure->team->Num);
+								 pl->name, pl->team->Num, loser_treasure->team->Num);
 
 	loser_treasure->destroyed++;
 	loser_treasure->team->TreasuresLeft--;
@@ -274,17 +296,21 @@ int32_t Punish_team(player_t *pl, treasure_t *loser_treasure, treasure_t *winner
 	sc = 3 * Rate(win_score, lose_score);
 	por = (sc * lose_team_members) / (2 * win_team_members + 1);
 
-	for (i = 0; i < NumPlayers; i++) {
+	for (i = 0; i < NumPlayers; i++)
+	{
 		pl2 = Players[i];
 
-		if (!(Player_is_alive(pl2) || Player_is_appearing(pl2) || Player_is_dead(pl2))) {
+		if (!(Player_is_alive(pl2) || Player_is_appearing(pl2) || Player_is_dead(pl2)))
+		{
 			continue;
 		}
 
-		if (pl2->team == loser_treasure->team) {
+		if (pl2->team == loser_treasure->team)
+		{
 			SCORE(pl2, -sc, &winner_treasure->pos, "Treasure: ");
 		}
-		else if (pl2->team == winner_treasure->team) {
+		else if (pl2->team == winner_treasure->team)
+		{
 			SCORE(pl2, (pl2 == pl ? 3 * por : 2 * por), &winner_treasure->pos, "Treasure: ");
 		}
 	}
