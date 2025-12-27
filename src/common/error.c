@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.3 2008/08/05 19:02:04 rotunda_pk Exp $
+/*
  *
  * Adapted from 'The UNIX Programming Environment' by Kernighan & Pike
  * and an example from the manualpage for vprintf by
@@ -12,17 +12,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-
-#if defined(_WINDOWS)
-#	ifdef	_XPILOTNTSERVER_
-#		include "../server/NT/winServer.h"
-extern int8_t *showtime(void);
-#	elif !defined(_XPMONNT_)
-#		include "NT/winX.h"
-#		include "../client/NT/winClient.h"
-#	endif
-static void Win_show_error(int8_t *errmsg);
-#endif
 
 #include "version.h"
 #include "config.h"
@@ -41,7 +30,7 @@ static void Win_show_error(int8_t *errmsg);
 # endif
 #endif
 
-int8_t error_version[] = VERSION;
+char error_version[] = VERSION;
 
 /*
  * This file defines two entry points:
@@ -55,12 +44,12 @@ int8_t error_version[] = VERSION;
  * File local static data.
  */
 #define	MAX_PROG_LENGTH	32
-static int8_t progname[MAX_PROG_LENGTH];
+static char progname[MAX_PROG_LENGTH];
 
-static const int8_t* prog_basename(const int8_t *prog)
+static const char* prog_basename(const char *prog)
 {
 #ifndef _WINDOWS
-	int8_t *p;
+	char *p;
 
 	p = strrchr(prog, '/');
 
@@ -73,9 +62,9 @@ static const int8_t* prog_basename(const int8_t *prog)
 /*
  * Functions.
  */
-void init_error(const int8_t *prog)
+void init_error(const char *prog)
 {
-	const int8_t *p = prog_basename(prog); /* Beautify arv[0] */
+	const char *p = prog_basename(prog); /* Beautify arv[0] */
 
 	strlcpy(progname, p, MAX_PROG_LENGTH);
 }
@@ -84,7 +73,7 @@ void init_error(const int8_t *prog)
 /*
  * Ok, let's do it the ANSI C way.
  */
-void error(const int8_t *fmt, ...)
+void error(const char *fmt, ...)
 {
 	va_list ap;
 	int32_t e = errno;
@@ -105,7 +94,7 @@ void error(const int8_t *fmt, ...)
 	va_end(ap);
 }
 
-void warn(const int8_t *fmt, ...)
+void warn(const char *fmt, ...)
 {
 	int32_t len;
 	va_list ap;
@@ -126,7 +115,7 @@ void warn(const int8_t *fmt, ...)
 	va_end(ap);
 }
 
-void fatal(const int8_t *fmt, ...)
+void fatal(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -145,7 +134,7 @@ void fatal(const int8_t *fmt, ...)
 	exit(1);
 }
 
-void dumpcore(const int8_t *fmt, ...)
+void dumpcore(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -177,15 +166,15 @@ va_dcl
 	va_list args;
 	int32_t e = errno; /* Store errno */
 	extern int32_t sys_nerr;
-	extern int8_t *sys_errlist[];
-	int8_t *fmt;
+	extern char *sys_errlist[];
+	char *fmt;
 
 	va_start(args);
 
 	if (progname[0] != '\0')
 	fprintf(stderr, "%s: ", progname);
 
-	fmt = va_arg(args, int8_t *);
+	fmt = va_arg(args, char *);
 	(void) vfprintf(stderr, fmt, args);
 
 	if (e> 0 && e < sys_nerr)
@@ -201,14 +190,14 @@ warn(va_alist)
 va_dcl
 {
 	va_list args;
-	int8_t *fmt;
+	char *fmt;
 
 	va_start(args);
 
 	if (progname[0] != '\0')
 	fprintf(stderr, "%s: ", progname);
 
-	fmt = va_arg(args, int8_t *);
+	fmt = va_arg(args, char *);
 	(void) vfprintf(stderr, fmt, args);
 
 	fprintf(stderr, "\n");
@@ -221,14 +210,14 @@ fatal(va_alist)
 va_dcl
 {
 	va_list args;
-	int8_t *fmt;
+	char *fmt;
 
 	va_start(args);
 
 	if (progname[0] != '\0')
 	fprintf(stderr, "%s: ", progname);
 
-	fmt = va_arg(args, int8_t *);
+	fmt = va_arg(args, char *);
 	(void) vfprintf(stderr, fmt, args);
 
 	fprintf(stderr, "\n");
@@ -243,14 +232,14 @@ dumpcore(va_alist)
 va_dcl
 {
 	va_list args;
-	int8_t *fmt;
+	char *fmt;
 
 	va_start(args);
 
 	if (progname[0] != '\0')
 	fprintf(stderr, "%s: ", progname);
 
-	fmt = va_arg(args, int8_t *);
+	fmt = va_arg(args, char *);
 	(void) vfprintf(stderr, fmt, args);
 
 	fprintf(stderr, "\n");
@@ -258,92 +247,6 @@ va_dcl
 	va_end(args);
 
 	abort();
-}
-
-#endif
-
-#ifdef _WINDOWS
-static void Win_show_error(int8_t *s)
-{
-	IFWINDOWS( Trace("Error: %s\n", s); )
-	/*  inerror = TRUE; */
-	{
-#       ifdef   _XPILOTNTSERVER_
-		/* putting up a message box on the server is a bad thing.
-		 It kinda halts the server, which is a bad thing to do for
-		 the simple info messages (nick in use) that call this routine
-		 */
-		xpprintf("%s %s\n", showtime(), s);
-#       else
-		if (MessageBox(NULL, s, "Error", MB_OKCANCEL | MB_TASKMODAL) == IDCANCEL)
-		{
-#           ifdef   _XPMON_
-			xpmemShutdown();
-#           endif
-			ExitProcess(1);
-		}
-#       endif
-	}
-}
-
-void error(const int8_t *fmt, ...)
-{
-	va_list ap;
-	int8_t s[512];
-
-	va_start(ap, fmt);
-
-	vsprintf(s, fmt, ap);
-
-	Win_show_error(s);
-
-	va_end(ap);
-}
-
-void warn(const int8_t *fmt, ...)
-{
-	va_list ap;
-	int8_t s[512];
-
-	va_start(ap, fmt);
-
-	vsprintf(s, fmt, ap);
-
-	Win_show_error(s);
-
-	va_end(ap);
-}
-
-void fatal(const int8_t *fmt, ...)
-{
-	va_list ap;
-	int8_t s[512];
-
-	va_start(ap, fmt);
-
-	vsprintf(s, fmt, ap);
-
-	Win_show_error(s);
-
-	va_end(ap);
-
-	exit(1);
-}
-
-void dumpcore(const int8_t *fmt, ...)
-{
-	va_list ap;
-	int8_t s[512];
-
-	va_start(ap, fmt);
-
-	vsprintf(s, fmt, ap);
-
-	Win_show_error(s);
-
-	va_end(ap);
-
-	exit(1);
 }
 
 #endif

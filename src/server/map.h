@@ -1,4 +1,4 @@
-/* $Id: map.h,v 1.11 2008/09/02 19:08:51 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -27,11 +27,12 @@
 
 #include "types.h"
 #include "structs.h"
-
+#include "global.h"
 #include "rules.h"
 #include "item.h"
-#include "object.h"
-
+#include "objpos.h"
+#include "bit.h"
+#include "team.h"
 
 #define SPACE			0
 #define BASE			1
@@ -55,14 +56,17 @@
 #define TREASURE_BIT		(1 << TREASURE)
 
 #define DIR_RIGHT		0
-#define DIR_UP			(RES/4)
-#define DIR_LEFT		(RES/2)
-#define DIR_DOWN		(3*RES/4)
+#define DIR_UP			(ANGLE_RESOLUTION/4)
+#define DIR_LEFT		(ANGLE_RESOLUTION/2)
+#define DIR_DOWN		(3*ANGLE_RESOLUTION/4)
 
 /* Properties of teams */
+#define TEAM_INVALID		-1
 #define TEAM_DEFAULT		(1 << 0)
 #define TEAM_ONLY_ROBOTS	(1 << 1)
 #define TEAM_ONLY_PAUSERS	(1 << 2)
+
+#define Team_num_is_valid(team_num)	((team_num) >= 0 && (team_num) < MAX_TEAMS)
 
 /* Let active/waiting players see with the eyes of this team's members */
 #define TEAM_ALLOW_VIEWING	(1 << 16)
@@ -73,21 +77,16 @@
 /* Show team talk messages of this team to members of pausers' team */
 #define TEAM_SHOW_TALK_PAUSED		(1 << 18)
 
+#define Block_is_base(x, y)		(World.block[x][y] == BASE)
+#define Block_is_fuel(x, y)		(World.block[x][y] == FUEL)
+#define Block_is_treasure(x, y)		(World.block[x][y] == TREASURE)
 
 struct _fuel {
 	int32_t id;
-	ipos_t blk_pos;
-	position_t pix_pos;
+	objposition_t pos;
 	int32_t fuel;
-	uint32_t conn_mask;
+	uint32_t conn_mask;	/* mask marking player connections which already received an update of this fuel station */
 	int32_t last_change;
-	team_t *team;
-};
-
-struct _base {
-	int32_t id;
-	ipos_t pos;
-	int32_t dir;
 	team_t *team;
 };
 
@@ -97,34 +96,29 @@ typedef struct {
 } item_t;
 
 struct _treasure {
-	ipos_t pos;
 	int32_t id; /* treasure id */
+	objposition_t pos;
 	bool have; /* true if this treasure has ball in it */
 	team_t *team; /* team of this treasure */
 	int32_t destroyed; /* number of times this treasure destroyed */
 };
 
-struct _team {
-	int32_t Num; /* Number of team */
-	int32_t NumMembers; /* Number of current members */
-	int32_t NumRobots; /* Number of robot players */
-	int32_t NumBases; /* Number of bases owned */
-	int32_t NumTreasures; /* Number of treasures owned */
-	int32_t TreasuresDestroyed; /* Number of destroyed treasures */
-	int32_t TreasuresLeft; /* Number of treasures left */
-	player_t *Swapper; /* Player swapping to this full team */
-	int32_t flags; /* Properties of the team */
+struct _base {
+	int32_t id;
+	objposition_t pos;
+	int32_t dir;
+	team_t *team;
 };
 
-typedef struct {
+struct World_map_ {
 	int32_t x, y; /* Size of world in blocks */
 	int32_t diagonal; /* Diagonal length in blocks */
 	int32_t width, height; /* Size of world in pixels (optimization) */
 	int32_t cwidth, cheight;/* Size of world in clicks (optimization) */
 	int32_t hypotenuse; /* Diagonal length in pixels (optimization) */
 	rules_t *rules;
-	int8_t name[MAX_CHARS];
-	int8_t author[MAX_CHARS];
+	char name[MAX_CHARS];
+	char author[MAX_CHARS];
 
 	uint8_t **block; /* type of item in each block */
 	uint16_t **itemID; /* index into cannon/fuel/targets/treasure/itemConcentrator/bases/grav/wormhole, depending on value of corresponding block, -1 for space, walls, etc */
@@ -141,6 +135,82 @@ typedef struct {
 	int32_t NumTreasures;
 	treasure_t *treasures;
 	int32_t nextEvent;
-} World_map;
+};
+
+//extern World_map World;
+
+/** \brief Wraps a positive or negative value to fit it within range [0; limit)
+ *
+ * \param val		value to be wrapped
+ * \param limit		upper bound (must be positive)
+ *
+ * \return	wrapped value
+ */
+static inline int32_t Map_wrap_base(int32_t val, int32_t limit)
+{
+	if (BIT(World.rules->mode, WRAP_PLAY)) {
+		while (val >= limit) {
+			val -= limit;
+		}
+		while (val < 0) {
+			val += limit;
+		}
+	}
+	else {
+		if (val >= limit) {
+			val = limit - 1;
+		}
+		if (val < 0) {
+			val = 0;
+		}
+	}
+
+	return val;
+}
+
+/** \brief Wrapping macro for X coordinate in pixels */
+#define WRAP_XPIXEL(x_)		Map_wrap_base(x_, World.width)
+/** \brief Wrapping macro for Y coordinate in pixels */
+#define WRAP_YPIXEL(y_)		Map_wrap_base(y_, World.height)
+
+/** \brief Wrapping macro for X coordinate in blocks */
+#define WRAP_XBLOCK(x_)		Map_wrap_base(x_, World.x)
+/** \brief Wrapping macro for Y coordinate in blocks */
+#define WRAP_YBLOCK(y_)		Map_wrap_base(y_, World.y)
+
+/** \brief Wrapping macro for X coordinate in clicks */
+#define WRAP_XCLICK(x_)		Map_wrap_base(x_, World.cwidth)
+/** \brief Wrapping macro for Y coordinate in clicks */
+#define WRAP_YCLICK(y_)		Map_wrap_base(y_, World.cheight)
+
+/*
+ * Two macros for edge wrap of differences in position.
+ * If the absolute value of a difference is bigger than
+ * half the map size then it is wrapped.
+ */
+static inline int32_t WRAP_DX(int32_t dx)
+{
+	return (BIT(World.rules->mode, WRAP_PLAY) ? ((dx) < - (World.width >> 1) ? (dx) + World.width
+			: ((dx) > (World.width >> 1) ? (dx) - World.width : (dx))) : (dx));
+}
+
+static inline int32_t WRAP_DY(int32_t dy)
+{
+	return (BIT(World.rules->mode, WRAP_PLAY) ? ((dy) < - (World.height >> 1) ? (dy) + World.height
+			: ((dy) > (World.height >> 1) ? (dy) - World.height : (dy))) : (dy));
+}
+
+DFLOAT Map_get_discrete_angle(objposition_t *p1, objposition_t *p2);
+DFLOAT Map_get_distance(objposition_t *p1, objposition_t *p2);
+
+void Map_compute_base_direction(void);
+base_t *Map_get_base_by_pos(objposition_t *pos);
+treasure_t *Map_get_treasure_by_pos(objposition_t *pos);
+team_t *Map_get_closest_team(objposition_t *pos);
+
+void Fuelstation_add_fuel(fuel_t *fs, int32_t fuel);
+
+void Map_free(void);
+bool Map_parse(void);
 
 #endif

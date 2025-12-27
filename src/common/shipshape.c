@@ -1,4 +1,4 @@
-/* $Id: shipshape.c,v 1.9 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -22,7 +22,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,37 +31,38 @@
 
 #include "version.h"
 #include "xpconfig.h"
+#include "debug.h"
 #include "const.h"
+#include "commonproto.h"
 #include "draw.h"
 #include "error.h"
 
-int8_t shipshape_version[] = VERSION;
+char shipshape_version[] = VERSION;
 
 static int32_t debugShapeParsing = 0;
 static int32_t verboseShapeParsing;
 static int32_t shapeLimits;
 
-static int32_t Get_shape_keyword(int8_t *keyw);
-void Make_table(void);
-void Copy_point(position_t pt[RES]);
-void Rotate_point(position_t pt[RES]);
+static int32_t Get_shape_keyword(char *keyw);
+void Copy_point(position_t pt[ANGLE_RESOLUTION]);
+void Rotate_point(position_t pt[ANGLE_RESOLUTION]);
 
 
-void Rotate_point(position_t pt[RES])
+void Rotate_point(position_t pt[ANGLE_RESOLUTION])
 {
 	int32_t i;
 
-	for (i = 1; i < RES; i++) {
+	for (i = 1; i < ANGLE_RESOLUTION; i++) {
 		pt[i].x = tcos(i)* pt[0].x - tsin(i) * pt[0].y;
 		pt[i].y = tsin(i) * pt[0].x + tcos(i) * pt[0].y;
 	}
 }
 
-void Copy_point(position_t pt[RES])
+void Copy_point(position_t pt[ANGLE_RESOLUTION])
 {
 	int32_t i;
 
-	for (i = 1; i < RES; i++) {
+	for (i = 1; i < ANGLE_RESOLUTION; i++) {
 		pt[i].x = pt[0].x;
 		pt[i].y = pt[0].y;
 	}
@@ -140,7 +140,7 @@ static void Rotate_ship(shipshape_t *w)
 shipshape_t *Triangle_ship(void)
 {
 	static shipshape_t sh;
-	static position_t pts[6][RES];
+	static position_t pts[6][ANGLE_RESOLUTION];
 
 	if (!sh.num_points) {
 		sh.num_points = 3;
@@ -178,7 +178,7 @@ shipshape_t *Triangle_ship(void)
 		sh.num_l_gun = sh.num_r_gun = sh.num_l_rgun = sh.num_r_rgun = 0;
 		sh.default_ship = 1;
 
-		Make_table();
+		make_trig_table();
 
 		Rotate_ship(&sh);
 	}
@@ -194,7 +194,7 @@ shipshape_t *Triangle_ship(void)
 shipshape_t *Circle_ship(void)
 {
 	static shipshape_t sh;
-	static position_t pts[MAX_SHIP_PTS * 2][RES];
+	static position_t pts[MAX_SHIP_PTS * 2][ANGLE_RESOLUTION];
 	int32_t i;
 
 #define RADIUS 9
@@ -220,7 +220,7 @@ shipshape_t *Circle_ship(void)
 		sh.num_l_gun = sh.num_r_gun = sh.num_l_rgun = sh.num_r_rgun = 0;
 		sh.default_ship = 1;
 
-		Make_table();
+		make_trig_table();
 
 		Rotate_circle_ship(&sh);
 	}
@@ -228,7 +228,7 @@ shipshape_t *Circle_ship(void)
 	return &sh;
 }
 
-static int32_t shape2wire(int8_t *ship_shape_str, shipshape_t *w)
+static int32_t shape2wire(char *ship_shape_str, shipshape_t *w)
 {
 	/*
 	 * Macros to simplify limit-checking for ship points.
@@ -262,8 +262,8 @@ static int32_t shape2wire(int8_t *ship_shape_str, shipshape_t *w)
 			r_gun[MAX_GUN_PTS], l_rgun[MAX_GUN_PTS],
 			r_rgun[MAX_GUN_PTS], m_rack[MAX_RACK_PTS];
 	bool mainGunSet = false, engineSet = false;
-	int8_t *str, *teststr;
-	int8_t keyw[20], buf[MSG_LEN];
+	char *str, *teststr;
+	char keyw[20], buf[MSG_LEN];
 
 	engine.x = -RADIUS;
 	engine.y = 0;
@@ -1143,7 +1143,7 @@ static int32_t shape2wire(int8_t *ship_shape_str, shipshape_t *w)
 		}
 	}
 
-	i = sizeof(position_t) * RES;
+	i = sizeof(position_t) * ANGLE_RESOLUTION;
 	if (!(w->pts[0] = (position_t*) malloc(w->num_points * i))
 			|| (w->num_l_gun
 					&& !(w->l_gun[0]
@@ -1202,28 +1202,28 @@ static int32_t shape2wire(int8_t *ship_shape_str, shipshape_t *w)
 	}
 
 	for (i = 1; i < w->num_points; i++) {
-		w->pts[i] = &w->pts[i - 1][RES];
+		w->pts[i] = &w->pts[i - 1][ANGLE_RESOLUTION];
 	}
 	for (i = 1; i < w->num_l_gun; i++) {
-		w->l_gun[i] = &w->l_gun[i - 1][RES];
+		w->l_gun[i] = &w->l_gun[i - 1][ANGLE_RESOLUTION];
 	}
 	for (i = 1; i < w->num_r_gun; i++) {
-		w->r_gun[i] = &w->r_gun[i - 1][RES];
+		w->r_gun[i] = &w->r_gun[i - 1][ANGLE_RESOLUTION];
 	}
 	for (i = 1; i < w->num_l_rgun; i++) {
-		w->l_rgun[i] = &w->l_rgun[i - 1][RES];
+		w->l_rgun[i] = &w->l_rgun[i - 1][ANGLE_RESOLUTION];
 	}
 	for (i = 1; i < w->num_r_rgun; i++) {
-		w->r_rgun[i] = &w->r_rgun[i - 1][RES];
+		w->r_rgun[i] = &w->r_rgun[i - 1][ANGLE_RESOLUTION];
 	}
 	for (i = 1; i < w->num_l_light; i++) {
-		w->l_light[i] = &w->l_light[i - 1][RES];
+		w->l_light[i] = &w->l_light[i - 1][ANGLE_RESOLUTION];
 	}
 	for (i = 1; i < w->num_r_light; i++) {
-		w->r_light[i] = &w->r_light[i - 1][RES];
+		w->r_light[i] = &w->r_light[i - 1][ANGLE_RESOLUTION];
 	}
 	for (i = 1; i < w->num_m_rack; i++) {
-		w->m_rack[i] = &w->m_rack[i - 1][RES];
+		w->m_rack[i] = &w->m_rack[i - 1][ANGLE_RESOLUTION];
 	}
 
 	for (i = 0; i < w->num_points; i++) {
@@ -1272,7 +1272,7 @@ static int32_t shape2wire(int8_t *ship_shape_str, shipshape_t *w)
 	return 0;
 }
 
-static shipshape_t *do_parse_shape(int8_t *str)
+static shipshape_t *do_parse_shape(char *str)
 {
 	shipshape_t *w;
 
@@ -1327,21 +1327,21 @@ void Free_ship_shape(shipshape_t *w)
 	}
 }
 
-shipshape_t *Parse_shape_str(int8_t *str)
+shipshape_t *Parse_shape_str(char *str)
 {
 	verboseShapeParsing = debugShapeParsing;
 	shapeLimits = 1;
 	return do_parse_shape(str);
 }
 
-shipshape_t *Convert_shape_str(int8_t *str)
+shipshape_t *Convert_shape_str(char *str)
 {
 	verboseShapeParsing = debugShapeParsing;
 	shapeLimits = debugShapeParsing;
 	return do_parse_shape(str);
 }
 
-int32_t Validate_shape_str(int8_t *str)
+int32_t Validate_shape_str(char *str)
 {
 	shipshape_t *w;
 
@@ -1352,10 +1352,10 @@ int32_t Validate_shape_str(int8_t *str)
 	return (w && !w->default_ship);
 }
 
-void Convert_ship_2_string(shipshape_t *w, int8_t *buf, int8_t *ext,
+void Convert_ship_2_string(shipshape_t *w, char *buf, char *ext,
 		uint32_t shape_version)
 {
-	int8_t tmp[MSG_LEN];
+	char tmp[MSG_LEN];
 	int32_t i, buflen, extlen, tmplen, ll, rl;
 
 	ext[extlen = 0] = '\0';
@@ -1568,16 +1568,16 @@ void Convert_ship_2_string(shipshape_t *w, int8_t *buf, int8_t *ext,
 	}
 }
 
-static int32_t Get_shape_keyword(int8_t *keyw)
+static int32_t Get_shape_keyword(char *keyw)
 {
 #define NUM_SHAPE_KEYS	12
 
-	static int8_t shape_keys[NUM_SHAPE_KEYS][16] =
+	static char shape_keys[NUM_SHAPE_KEYS][16] =
 		{ "shape:", "mainGun:", "leftGun:", "rightGun:", "leftLight:",
 				"rightLight:", "engine:", "missileRack:",
 				"name:", "author:", "leftRearGun:",
 				"rightRearGun:", };
-	static int8_t abbrev_keys[NUM_SHAPE_KEYS][4] =
+	static char abbrev_keys[NUM_SHAPE_KEYS][4] =
 		{ "SH:", "MG:", "LG:", "RG:", "LL:", "RL:", "EN:", "MR:",
 				"NM:", "AU:", "LR:", "RR:", };
 	int32_t i;

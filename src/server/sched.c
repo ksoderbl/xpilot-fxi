@@ -1,4 +1,4 @@
-/* $Id: sched.c,v 1.6 2008/08/15 15:09:53 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -32,9 +32,9 @@
 #include <time.h>
 #include <errno.h>
 
-#define	SERVER
 #include "version.h"
 #include "xpconfig.h"
+#include "debug.h"
 #include "const.h"
 #include "error.h"
 #include "types.h"
@@ -43,7 +43,7 @@
 #include "server.h"
 #include "portability.h"
 
-int8_t sched_version[] = VERSION;
+char sched_version[] = VERSION;
 
 int32_t sched_running = false;
 
@@ -59,10 +59,6 @@ typedef int32_t FDTYPE;
 //static int32_t counter = 0;
 static struct sigaction act;
 
-static inline double timeval_to_seconds(struct timeval tv)
-{
-	return ((double) tv.tv_sec) / 1000 + tv.tv_usec * 1e-3;
-}
 
 /*
  * Block or unblock a single signal.
@@ -227,7 +223,7 @@ void stop_sched(void)
 void sched(void)
 {
 	int32_t i, n;
-	struct timeval tv /*, *tvp = &tv, tv1*/;
+//	struct timeval tv /*, *tvp = &tv, tv1*/;
 	fd_set readmask;
 	if (sched_running) {
 		error("sched already running");
@@ -237,8 +233,8 @@ void sched(void)
 	sched_running = 1;
 
 	while (sched_running) {
-		tv.tv_sec = 0;
-		tv.tv_usec = 0;
+//		tv.tv_sec = 0;
+//		tv.tv_usec = 0;
 
 		/*
 		 gettimeofday(&tv1, NULL);

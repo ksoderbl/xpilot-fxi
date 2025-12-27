@@ -1,4 +1,4 @@
-/* $Id: structs.h,v 1.3 2008/08/26 20:51:06 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -25,12 +25,18 @@
 #ifndef STRUCTS_H_
 #define STRUCTS_H_
 
+
 /* Forward definitions of common structures */
+typedef struct _object object_t;
 typedef struct _player player_t;
+typedef enum player_type_ player_type_t;
+typedef enum player_state_ player_state_t;
 typedef struct _team team_t;
 typedef struct _base base_t;
 typedef struct _fuel fuel_t;
 typedef struct _treasure treasure_t;
 typedef struct _connection connection_t;
+typedef struct _objposition objposition_t;
+typedef struct World_map_ World_map;
 
 #endif /* STRUCTS_H_ */

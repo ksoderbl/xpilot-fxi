@@ -1,8 +1,7 @@
-/* $Id: list.c,v 1.4 2008/08/15 15:09:52 rotunda_pk Exp $
- *
+/*
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      Bjoern Stabell       <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -22,181 +21,299 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/*
- * A double linked list similar to the STL list, but implemented in C.
- */
+#include <string.h>
 
-#include <stdlib.h>
 #include "list.h"
+#include "types.h"
+#include "debug.h"
 
-/* store a list node. */
-struct ListNode {
-	struct ListNode *next;
-	struct ListNode *prev;
-	void *data;
-};
-typedef struct ListNode list_node_t;
-
-/* store the list header. */
-struct List {
-	list_node_t tail;
-	int32_t size;
-};
-/* typedef struct List *list_t; */
-/* typedef struct ListNode *list_iter_t; */
-
-static int32_t lists_allocated;
-static int32_t nodes_allocated;
+static int32_t LIST_NumLists;
+static int32_t LIST_NumNodes;
 
 /* create a new list. */
-list_t List_new(void)
+TList LIST_New(void)
 {
-	list_t list = (list_t) malloc(sizeof(*list));
+	TList l = (TList) malloc(sizeof(*l));
 
-	if (list) {
-		lists_allocated++;
+	if (l) {
+		LIST_NumLists++;
 
-		list->tail.next = &list->tail;
-		list->tail.prev = &list->tail;
-		list->tail.data = NULL;
-		list->size = 0;
+		l->Tail.Next = &l->Tail;
+		l->Tail.Prev = &l->Tail;
+		l->Tail.Data = NULL;
+		l->Size = 0;
 	}
 
-	return list;
+	return l;
 }
 
-/* delete a list. */
-void List_delete(list_t list)
+/* delete a list and frees memory used by the data stored on that list. */
+void LIST_Delete(TList l)
 {
-	if (list) {
-		List_clear(list);
-		list->tail.next = list->tail.prev = NULL;
-		free(list);
+	ASSERT(l)
 
-		lists_allocated--;
+	if (l) {
+		LIST_Clear(l);
+		l->Tail.Next = l->Tail.Prev = NULL;
+		free(l);
+
+		LIST_NumLists--;
+	}
+}
+
+/* Delete the list, but do not deallocate the data itself
+ *
+ * This function is useful if the list stores pointers to elements, that
+ * are on some other list too and must not be removed just yet.
+ */
+void LIST_DeleteNodesOnly(TList l)
+{
+	ASSERT(l)
+
+	if (l) {
+		l->Tail.Next = l->Tail.Prev = NULL;
+		free(l);
+
+		LIST_NumLists--;
 	}
 }
 
 /* return a list iterator pointing to the first element of the list. */
-list_iter_t List_begin(list_t list)
+TListIter LIST_GetFirstItem(TList list)
 {
-	return list->tail.next;
+	ASSERT(list)
+
+	return list->Tail.Next;
 }
 
 /* return a list iterator pointing to the one past the last element of the list. */
-list_iter_t List_end(list_t list)
+TListIter LIST_GetLastItem(TList list)
 {
-	return &list->tail;
+	ASSERT(list)
+
+	return &list->Tail;
 }
 
 /* return a pointer to the last list element. */
-void* List_back(list_t list)
+void* LIST_GetLastData(TList list)
 {
-	return list->tail.prev->data;
+	ASSERT(list)
+
+	return list->Tail.Prev->Data;
 }
 
 /* return a pointer to the first list element. */
-void* List_front(list_t list)
+void* LIST_GetFirstData(TList list)
 {
-	return list->tail.next->data;
+	ASSERT(list)
+
+	return list->Tail.Next->Data;
 }
 
 /* erase all elements from the list. */
-void List_clear(list_t list)
+void LIST_Clear(TList list)
 {
-	while (!List_empty(list)) {
-		List_pop_front(list);
+	void *d;
+
+	ASSERT(list)
+
+	while (!LIST_IsEmpty(list)) {
+		d = LIST_RemoveFirstItem(list);
+		free(d);
 	}
 }
 
 /* return true if list is empty. */
-int32_t List_empty(list_t list)
+int32_t LIST_IsEmpty(TList list)
 {
-	return (list->size == 0);
+	ASSERT(list)
+
+	return (list->Size == 0);
 }
 
 /* erase element at list position. */
-list_iter_t List_erase(list_t list, list_iter_t pos)
+TListIter LIST_RemoveItem(TList list, TListIter pos)
 {
-	list_iter_t next, prev;
+	TListIter next, prev;
+	
+        ASSERT(list && pos)
 
-	if (pos == &list->tail) {
-		return List_end(list);
+	if (pos == &list->Tail) {
+		return LIST_GetLastItem(list);
 	}
 
-	next = pos->next;
-	prev = pos->prev;
-	prev->next = next;
-	next->prev = prev;
-	list->size--;
+	next = pos->Next;
+	prev = pos->Prev;
+	prev->Next = next;
+	next->Prev = prev;
+	list->Size--;
 
-	pos->prev = NULL;
-	pos->next = NULL;
-	pos->data = NULL;
+	pos->Prev = NULL;
+	pos->Next = NULL;
+	pos->Data = NULL;
 	free(pos);
 
-	nodes_allocated--;
+	LIST_NumNodes--;
 
 	return next;
 }
 
 /* erase a range of list elements excluding last. */
-list_iter_t List_erase_range(list_t list, list_iter_t first, list_iter_t last)
+TListIter LIST_RemoveItemRange(TList list, TListIter first, TListIter last)
 {
+	ASSERT(list && first && last)
+
 	while (first != last) {
-		first = List_erase(list, first);
+		first = LIST_RemoveItem(list, first);
+		free(first->Data);
 	}
 	return first;
 }
 
 /* insert a new element into the list at position
- * and return new position or NULL on failure. */
-list_iter_t List_insert(list_t list, list_iter_t pos, void *data)
+ * and return new position or NULL on failure.
+ *
+ * NOTE: it is a good practise to allocate the data pointed to by \sa data
+ * dynamically, so that it is valid only until removed manually. */
+TListIter LIST_AddItem(TList list, TListIter pos, void *data)
 {
-	list_iter_t node = (list_iter_t) malloc(sizeof(*node));
+	TListIter node = (TListIter) malloc(sizeof(*node));
+
+	ASSERT(list && pos && data)
 
 	if (node) {
-		node->next = pos;
-		node->prev = pos->prev;
-		node->data = data;
-		node->prev->next = node;
-		node->next->prev = node;
-		list->size++;
+		node->Next = pos;
+		node->Prev = pos->Prev;
+		node->Data = data;
+		node->Prev->Next = node;
+		node->Next->Prev = node;
+		list->Size++;
 
-		nodes_allocated++;
+		LIST_NumNodes++;
 	}
 
 	return node;
 }
 
-/* remove the first element from the list and return a pointer to it. */
-void* List_pop_front(list_t list)
-{
-	void *data = list->tail.next->data;
-	List_erase(list, list->tail.next);
-	return data;
-}
-
-/* remove the last element from the list and return a pointer to it. */
-void* List_pop_back(list_t list)
-{
-	void *data = list->tail.prev->data;
-	List_erase(list, list->tail.prev);
-	return data;
-}
-
 /* add a new element to the beginning of the list.
  * and return the new position or NULL on failure. */
-list_iter_t List_push_front(list_t list, void *data)
+TListIter LIST_AddItemTop(TList list, void *data)
 {
-	return List_insert(list, list->tail.next, data);
+	ASSERT(list && data)
+
+	return LIST_AddItem(list, list->Tail.Next, data);
 }
 
 /* append a new element at the end of the list.
  * and return the new position or NULL on failure. */
-list_iter_t List_push_back(list_t list, void *data)
+TListIter LIST_AddItemBottom(TList list, void *data)
 {
-	return List_insert(list, &list->tail, data);
+	ASSERT(list && data)
+
+	return LIST_AddItem(list, &list->Tail, data);
+}
+
+/* remove the first element from the list and return a pointer to it. */
+void* LIST_RemoveFirstItem(TList list)
+{
+	void *data;
+
+	ASSERT(list)
+
+	data = list->Tail.Next->Data;
+	LIST_RemoveItem(list, list->Tail.Next);
+	return data;
+}
+
+/* remove the last element from the list and return a pointer to it. */
+void* LIST_RemoveLastItem(TList list)
+{
+	void *data;
+
+	ASSERT(list)
+
+	data = list->Tail.Prev->Data;
+	LIST_RemoveItem(list, list->Tail.Prev);
+	return data;
+}
+
+//! Moves an item to the top of the list
+/*!
+ * \param list	list
+ * \param iter	iterator pointing to the item, that should be moved
+ */
+void LIST_MoveItemTop(TList list, TListIter iter)
+{
+	TListIter old_top = list->Tail.Next;
+
+	ASSERT(list && iter)
+
+	// Move the item if not already on top
+	if (iter->Prev != &list->Tail) {
+		iter->Prev->Next = iter->Next;
+		iter->Next->Prev = iter->Prev;
+
+		iter->Next = old_top;
+		old_top->Prev = iter;
+
+		iter->Prev = &list->Tail;
+		list->Tail.Next = iter;
+	}
+}
+
+//! Moves an item to the bottom of the list
+/*!
+ * \param list	list
+ * \param iter	iterator pointing to the item, that should be moved
+ */
+void LIST_MoveItemBottom(TList list, TListIter iter)
+{
+	ASSERT(list && iter)
+
+	// Move the item if not already at the bottom
+	if (iter->Next != &list->Tail) {
+		iter->Prev->Next = iter->Next;
+		iter->Next->Prev = iter->Prev;
+
+		iter->Next = &list->Tail;
+		iter->Prev = list->Tail.Prev;
+		list->Tail.Prev = iter;
+		iter->Prev->Next = iter;
+	}
+}
+
+//! Moves the element pointed to by iterator to the front of the list
+/*!
+ * \param list	list
+ * \param iter	iterator
+ */
+void LIST_SetIterFirst(TList list, TListIter iter)
+{
+	TListIter old_top;
+	TListIter tmp;
+
+	ASSERT(list && iter)
+
+	old_top = list->Tail.Next;
+	tmp = old_top->Next;
+
+	old_top->Next = iter->Next;
+	old_top->Prev = iter->Prev;
+
+	list->Tail.Next = iter;
+	iter->Prev = &list->Tail;
+
+	iter->Next = tmp;
+}
+
+//! Moves the element pointed to by iterator to the end of the list
+/*! TODO: not finished yet
+ * \param list	list
+ * \param iter	iterator
+ */
+void LIST_SetIterLast(TList list, TListIter iter)
+{
+	ASSERT(list && iter)
 }
 
 /*
@@ -204,71 +321,139 @@ list_iter_t List_push_back(list_t list, void *data)
  * Note that this is very slow because it traverses the entire list
  * searching for an element.
  */
-list_iter_t List_find(list_t list, void *data)
+TListIter LIST_FindItem(TList list, void *data, int32_t offset, int32_t size)
 {
-	return List_find_range(List_begin(list), List_end(list), data);
+	ASSERT(list && data)
+
+	return LIST_FindItemRange(LIST_GetFirstItem(list), LIST_GetLastItem(list), data, offset, size);
 }
 
 /*
  * Find an element in a range of elements (excluding last) and return
  * an iterator pointing to it.  Note that this is a very slow operation.
+ *
+ * Return NULL if the element hasn't been found
  */
-list_iter_t List_find_range(list_iter_t first, list_iter_t last, void *data)
+TListIter LIST_FindItemRange(TListIter first, TListIter last, void *data, int32_t offset, int32_t size)
 {
-	list_iter_t pos = first;
+	TListIter pos = first;
+	bool not_found = true;
 
-	while (pos != last && pos->data != data) {
-		pos = pos->next;
+	ASSERT(first && last && data)
+
+	while (pos != last && not_found) {
+		ASSERT(pos->Data)
+
+		not_found = bcmp(pos->Data + offset, data, size);
+		pos = pos->Next;
 	}
 
-	return pos;
+	if (not_found) {
+		return NULL;
+	}
+	else {
+		return pos->Prev;
+	}
 }
 
 /*
- * Remove all element from the list which are equal to data.
+ * Remove all element from the list which are equal to Data.
  * Note that this is very slow because it traverses the entire list.
- * The return value is the number of successful removals.
+ * The return Value is the number of successful removals.
  */
-int32_t List_remove(list_t list, void *data)
-{
-	list_iter_t pos = List_begin(list);
-	list_iter_t end = List_end(list);
-	int32_t count = 0;
-
-	while (pos != end) {
-		pos = List_find_range(pos, end, data);
-		if (pos != end) {
-			pos = List_erase(list, pos);
-			count++;
-		}
-	}
-
-	return count;
-}
+//int32_t		List_remove(TList list, void *data)
+//{
+//    TListIter		pos = List_begin(list);
+//    TListIter		end = List_end(list);
+//    int32_t			count = 0;
+//
+//    while (pos != end) {
+//	pos = List_find_range(pos, end, data);
+//	if (pos != end) {
+//	    pos = List_erase(list, pos);
+//	    count++;
+//	}
+//    }
+//
+//    return count;
+//}
 
 /* return the number of elements in the list. */
-int32_t List_size(list_t list)
+int32_t LIST_GetItemCount(TList list)
 {
-	return list->size;
+	ASSERT(list)
+
+	return list->Size;
 }
 
 /* advance list iterator one position and return new position. */
-list_iter_t List_iter_forward(list_iter_t *pos)
+TListIter LIST_ForwardIter(TListIter *pos)
 {
-	(*pos) = (*pos)->next;
+	ASSERT(pos)
+
+	(*pos) = (*pos)->Next;
 	return (*pos);
 }
 
 /* move list iterator one position backwards and return new position. */
-list_iter_t List_iter_backward(list_iter_t *pos)
+TListIter LIST_BackIter(TListIter *pos)
 {
-	(*pos) = (*pos)->prev;
+	ASSERT(pos && *pos)
+
+	(*pos) = (*pos)->Prev;
 	return (*pos);
 }
 
-/* return data at list position. */
-void* List_iter_data(list_iter_t pos)
+/* return Data at list position. */
+void* LIST_GetItemData(TListIter pos)
 {
-	return pos->data;
+	ASSERT(pos)
+
+	return pos->Data;
 }
 
+int32_t LIST_GetListCount(void)
+{
+	return LIST_NumLists;
+}
+
+int32_t LIST_GetNodeCount(void)
+{
+	return LIST_NumNodes;
+}
+
+void LIST_GetItemsToBuffer(TList list, char *buf, int32_t item_size)
+{
+	TListIter l;
+	TListIter l_bottom;
+	char *ptr = buf;
+
+	ASSERT(list && buf)
+
+	l = list->Tail.Next;
+	l_bottom = &list->Tail;
+
+	while (l != l_bottom) {
+		memcpy(ptr, l->Data, item_size);
+		ptr += item_size;
+		l = LIST_ForwardIter(&l);
+	}
+}
+
+void LIST_AddItemsFromBuffer(TList list, char *buf, int32_t item_size, int32_t num_items)
+{
+	char *ptr;
+	char *ptr2;
+	int32_t i;
+
+	ASSERT(list && buf)
+
+	ptr2 = buf;
+
+	for (i = 0; i < num_items; i++) {
+		ptr = malloc(item_size);
+		memcpy(ptr, ptr2, item_size);
+		LIST_AddItemBottom(list, ptr);
+		ptr2 += item_size;
+	}
+}

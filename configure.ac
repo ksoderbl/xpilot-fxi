@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([XPilot], 1.4.3fxi, kps at users.sourceforge.net, xpilot)
+AC_INIT([XPilot], 1.4.6fxi, kps at users.sourceforge.net, xpilot)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(src/server/walls.c)
 
@@ -14,10 +14,10 @@ AM_MAINTAINER_MODE
 AM_CONFIG_HEADER(config.h)
 
 dnl  Copyright & stuff.
-XP_AUTHORS="Bjoern Stabell, Ken Ronny Schouten, Bert Gijsbers, Dick Balaska and Kristian Soderblom"
+XP_AUTHORS="Bjoern Stabell, Ken Ronny Schouten, Bert Gijsbers, Dick Balaska, Kristian Soderblom, et al"
 AC_SUBST([XP_AUTHORS])
 
-XP_COPYRIGHTDATE="1991-2009"
+XP_COPYRIGHTDATE="1991-2010"
 AC_SUBST([XP_COPYRIGHTDATE])
 
 XP_COPYRIGHT="Copyright (C) $XP_COPYRIGHTDATE by $XP_AUTHORS"
@@ -71,8 +71,8 @@ case "$target" in
     *-*-freebsd*)
         MATHLIB="-lm"
         SYS_GL_LIBS="-L/usr/X11R6/lib -lGL -lGLU"
-	CPPFLAGS="$CPPFLAGS -I/usr/X11R6/include -I/usr/local/include"
-	LDFLAGS="$LDFLAGS -L/usr/local/lib"
+		CPPFLAGS="$CPPFLAGS -I/usr/X11R6/include -I/usr/local/include"
+		LDFLAGS="$LDFLAGS -L/usr/local/lib"
         ;;
     *)
         MATHLIB="-lm"
@@ -99,7 +99,9 @@ dnl CFLAGS="-g -O0 -Wall -Wcast-align -Wimplicit -Wpointer-arith -Wno-pointer-si
 CFLAGS="-O2"
 AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug], [enable debug messages]),
 [if test x$enable_debug = xyes; then
-	CFLAGS="-g -O0 -Wall -Wcast-align -Wimplicit -Wswitch -Wredundant-decls -Wreturn-type -Wunused  -Wstrict-prototypes  -Wmissing-declarations"
+	CFLAGS="-pg -g -O0 -Wall -Wcast-align -Wimplicit -Wswitch -Wredundant-decls -Wreturn-type -Wunused  -Wstrict-prototypes  -Wmissing-declarations"
+	LDFLAGS="${LDFLAGS} -rdynamic"
+	AC_DEFINE([DEBUG], 1, [debug level])
 fi])
 
 dnl AC_DEFINE_UNQUOTED(CFLAGS, "$CFLAGS", [C compiler flags])
@@ -116,6 +118,7 @@ AC_CHECK_HEADERS([ \
 	bstring.h \
 	ctype.h \
 	errno.h \
+        execinfo.h \
 	fcntl.h \
 	float.h \
 	limits.h \
@@ -187,6 +190,38 @@ AC_TRY_COMPILE([
 		AC_DEFINE(socklen_t, int, [socklen_t size])
 	])
 ])
+
+#
+# Code by Brooks Davis, taken from: http://www.open-mpi.org/community/lists/devel/2005/10/0445.php
+#
+# FreeBSD has backtrace in -lexecinfo. Can't use a simple AC_CHECK_LIB,
+# though, because Linux has backtrace in glic (so linking in libexecinfo
+# will "find" backtrace, even though it would have been found anyway
+# -- so -lexecinfo would be useless [and potentially harmful?] in this
+# case).
+#
+
+AC_MSG_CHECKING([if we need -lexecinfo for backtrace])
+AC_LINK_IFELSE(AC_LANG_PROGRAM([[extern char *backtrace;]],
+[[char *bar = backtrace;]]),
+[MSG=no],[MSG=not_found])
+if test "$MSG" = "not_found"; then
+ LIBS_save="$LIBS"
+ LIBS="$LIBS -lexecinfo"
+ AC_LINK_IFELSE(AC_LANG_PROGRAM([[extern char *backtrace;]],
+[[char *bar = backtrace;]]),
+[MSG=yes],[MSG=not_found])
+ if test "$MSG" = "not_found"; then
+ LIBS="$LIBS_save"
+ fi
+fi
+AC_MSG_RESULT([$MSG])
+
+# see if we actually have backtrace. Use AC_CHECK_FUNCS so that it
+# does the glibs "not implemented" check. Will use the current LIBS,
+# so will check in -lexecinfo if we decided we needed it above
+AC_CHECK_FUNCS([backtrace])
+
 
 dnl  Checks for library functions.
 

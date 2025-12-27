@@ -1,4 +1,4 @@
-/* $Id: option.c,v 1.7 2008/08/15 15:09:53 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -31,7 +31,6 @@
 
 #include <unistd.h>
 
-#define SERVER
 #include "version.h"
 #include "config.h"
 #include "serverconst.h"
@@ -42,7 +41,7 @@
 #include "types.h"
 #include "commonproto.h"
 
-int8_t option_version[] = VERSION;
+char option_version[] = VERSION;
 
 /*
  * This module implements an in memory server option database.
@@ -71,7 +70,7 @@ int8_t option_version[] = VERSION;
  */
 typedef struct _hash_value hash_value;
 struct _hash_value {
-	int8_t *value;
+	char *value;
 	int32_t override;
 	optOrigin origin;
 	option_desc *desc;
@@ -87,7 +86,7 @@ struct _hash_value {
 typedef struct _hash_node hash_node;
 struct _hash_node {
 	hash_node *next;
-	int8_t *name;
+	char *name;
 	hash_value *value;
 };
 
@@ -103,7 +102,7 @@ static hash_node* Option_hash_array[HASH_SIZE];
 /*
  * Compute a reasonable case-insensitive hash value across a character string.
  */
-static int32_t Option_hash_string(const int8_t *name)
+static int32_t Option_hash_string(const char *name)
 {
 	uint32_t hashVal = 0;
 	const uint8_t *string = (const uint8_t *) name;
@@ -153,7 +152,7 @@ static void Option_free_value(hash_value* val)
  * from the value parameter, or else from the option description
  * default value pointer.
  */
-static hash_value *Option_allocate_value(const int8_t *value, option_desc *desc,
+static hash_value *Option_allocate_value(const char *value, option_desc *desc,
 		optOrigin origin)
 {
 	hash_value *tmp = (hash_value *) xp_safe_malloc(sizeof(hash_value));
@@ -203,7 +202,7 @@ static void Option_free_node(hash_node* node)
 /*
  * Allocate a new node for the hash table and fill in its values.
  */
-static hash_node *Option_allocate_node(const int8_t *name, hash_value *value)
+static hash_node *Option_allocate_node(const char *name, hash_value *value)
 {
 	hash_node *tmp = (hash_node *) xp_safe_malloc(sizeof(hash_node));
 
@@ -244,7 +243,7 @@ static void Option_add_node(hash_node *node)
  * Return the hash table node of a named option,
  * or NULL if there is no node for that option name.
  */
-static hash_node *Get_hash_node_by_name(const int8_t *name)
+static hash_node *Get_hash_node_by_name(const char *name)
 {
 	hash_node *np;
 	int32_t ix = Option_hash_string(name);
@@ -267,13 +266,13 @@ bool Option_add_desc(option_desc *desc)
 	hash_node *node1, *node2;
 
 	if (!val) {
-		return FALSE;
+		return false;
 	}
 
 	node1 = Option_allocate_node(desc->name, val);
 	if (!node1) {
 		Option_free_value(val);
-		return FALSE;
+		return false;
 	}
 
 	node2 = NULL;
@@ -281,7 +280,7 @@ bool Option_add_desc(option_desc *desc)
 		node2 = Option_allocate_node(desc->commandLineOption, val);
 		if (!node2) {
 			Option_free_node(node1);
-			return FALSE;
+			return false;
 		}
 	}
 
@@ -290,16 +289,16 @@ bool Option_add_desc(option_desc *desc)
 		Option_add_node(node2);
 	}
 
-	return TRUE;
+	return true;
 }
 
 /*
  * Convert an option origin enumerated constant
  * to a character representation.
  */
-static const int8_t* Origin_name(optOrigin opt_origin)
+static const char* Origin_name(optOrigin opt_origin)
 {
-	const int8_t *source;
+	const char *source;
 
 	switch (opt_origin) {
 	case OPT_COMMAND:
@@ -325,14 +324,14 @@ static const int8_t* Origin_name(optOrigin opt_origin)
 /*
  * Modify the value for a hash node if permissions allow us to do so.
  */
-static void Option_change_node(hash_node *node, const int8_t *value,
+static void Option_change_node(hash_node *node, const char *value,
 		int32_t override, optOrigin opt_origin)
 {
-	bool set_ok = FALSE;
+	bool set_ok = false;
 
 	if (node->value == NULL) {
 		/* permit if option has no default value. */
-		set_ok = TRUE;
+		set_ok = true;
 	}
 	else {
 
@@ -351,7 +350,7 @@ static void Option_change_node(hash_node *node, const int8_t *value,
 		switch (opt_origin) {
 		case OPT_COMMAND:
 			/* command line always overrides */
-			set_ok = TRUE;
+			set_ok = true;
 			break;
 
 		case OPT_DEFAULTS:
@@ -363,14 +362,14 @@ static void Option_change_node(hash_node *node, const int8_t *value,
 			case OPT_DEFAULTS:
 				/* can't change if previous value has override. */
 				if (!node->value->override) {
-					set_ok = TRUE;
+					set_ok = true;
 				}
 				break;
 
 			case OPT_MAP:
 				/* defaults file override wins over map. */
 				if (override) {
-					set_ok = TRUE;
+					set_ok = true;
 				}
 				break;
 
@@ -379,7 +378,7 @@ static void Option_change_node(hash_node *node, const int8_t *value,
 				break;
 
 			case OPT_INIT:
-				set_ok = TRUE;
+				set_ok = true;
 				break;
 
 			default:
@@ -396,14 +395,14 @@ static void Option_change_node(hash_node *node, const int8_t *value,
 			case OPT_DEFAULTS:
 				/* can't change if defaults value has override. */
 				if (!node->value->override) {
-					set_ok = TRUE;
+					set_ok = true;
 				}
 				break;
 
 			case OPT_MAP:
 				/* can't change if previous value has override. */
 				if (!node->value->override) {
-					set_ok = TRUE;
+					set_ok = true;
 				}
 				break;
 
@@ -412,7 +411,7 @@ static void Option_change_node(hash_node *node, const int8_t *value,
 				break;
 
 			case OPT_INIT:
-				set_ok = TRUE;
+				set_ok = true;
 				break;
 
 			default:
@@ -428,23 +427,23 @@ static void Option_change_node(hash_node *node, const int8_t *value,
 
 			case OPT_DEFAULTS:
 				/* password file always wins over defaults. */
-				set_ok = TRUE;
+				set_ok = true;
 				break;
 
 			case OPT_MAP:
 				/* password file always wins over map. */
-				set_ok = TRUE;
+				set_ok = true;
 				break;
 
 			case OPT_PASSWORD:
 				/* can't change if previous value has override. */
 				if (!node->value->override) {
-					set_ok = TRUE;
+					set_ok = true;
 				}
 				break;
 
 			case OPT_INIT:
-				set_ok = TRUE;
+				set_ok = true;
 				break;
 
 			default:
@@ -457,7 +456,7 @@ static void Option_change_node(hash_node *node, const int8_t *value,
 		}
 	}
 
-	if (set_ok == TRUE) {
+	if (set_ok == true) {
 		if (node->value == NULL) {
 			node->value = Option_allocate_value(value, NULL,
 					opt_origin);
@@ -488,8 +487,8 @@ static void Option_change_node(hash_node *node, const int8_t *value,
 	}
 #if DEVELOPMENT
 	else {
-		const int8_t *old_value_origin_name = Origin_name(node->value->origin);
-		const int8_t *new_value_origin_name = Origin_name(opt_origin);
+		const char *old_value_origin_name = Origin_name(node->value->origin);
+		const char *new_value_origin_name = Origin_name(opt_origin);
 		warn("Not modifying %s option '%s' from %s\n",
 				old_value_origin_name,
 				node->name,
@@ -503,7 +502,7 @@ static void Option_change_node(hash_node *node, const int8_t *value,
  * an option with the specified name; if found call Option_change_node
  * to set option to the new value if permissions allow us to do so.
  */
-void Option_set_value(const int8_t *name, const int8_t *value, int32_t override,
+void Option_set_value(const char *name, const char *value, int32_t override,
 		optOrigin opt_origin)
 {
 	hash_node *np;
@@ -540,7 +539,7 @@ void Option_set_value(const int8_t *name, const int8_t *value, int32_t override,
  * Return the value of the specified option,
  * or NULL if there is no value for that option.
  */
-int8_t *Option_get_value(const int8_t *name, optOrigin *origin_ptr)
+char *Option_get_value(const char *name, optOrigin *origin_ptr)
 {
 	hash_node *np = Get_hash_node_by_name(name);
 
@@ -551,7 +550,7 @@ int8_t *Option_get_value(const int8_t *name, optOrigin *origin_ptr)
 		return np->value->value;
 	}
 
-	return (int8_t *) NULL;
+	return (char *) NULL;
 }
 
 /*
@@ -596,7 +595,7 @@ static void Options_hash_performance(void)
 	int32_t i;
 	hash_node *np;
 	uint8_t histo[HASH_SIZE];
-	int8_t msg[MSG_LEN];
+	char msg[MSG_LEN];
 
 	if (getenv("XPILOTSHASHPERF") == NULL) {
 		return;
@@ -622,9 +621,9 @@ static void Options_hash_performance(void)
 #endif
 }
 
-bool Convert_string_to_int(const int8_t *value_str, int32_t *int_ptr)
+bool Convert_string_to_int(const char *value_str, int32_t *int_ptr)
 {
-	int8_t *end_ptr = NULL;
+	char *end_ptr = NULL;
 	int32_t value;
 	bool result;
 
@@ -636,18 +635,18 @@ bool Convert_string_to_int(const int8_t *value_str, int32_t *int_ptr)
 
 	/* if at least one digit was found we're satisfied. */
 	if (end_ptr > value_str) {
-		result = TRUE;
+		result = true;
 	}
 	else {
-		result = FALSE;
+		result = false;
 	}
 
 	return result;
 }
 
-bool Convert_string_to_float(const int8_t *value_str, DFLOAT *float_ptr)
+bool Convert_string_to_float(const char *value_str, DFLOAT *float_ptr)
 {
-	int8_t *end_ptr = NULL;
+	char *end_ptr = NULL;
 	double value;
 	bool result;
 
@@ -658,69 +657,69 @@ bool Convert_string_to_float(const int8_t *value_str, DFLOAT *float_ptr)
 
 	/* if at least one digit was found we're satisfied. */
 	if (end_ptr > value_str) {
-		result = TRUE;
+		result = true;
 	}
 	else {
-		result = FALSE;
+		result = false;
 	}
 
 	return result;
 }
 
-bool Convert_string_to_bool(const int8_t *value_str, bool *bool_ptr)
+bool Convert_string_to_bool(const char *value_str, bool *bool_ptr)
 {
 	bool result;
 
 	if (!strcasecmp(value_str, "yes") || !strcasecmp(value_str, "on")
 			|| !strcasecmp(value_str, "true")) {
-		*bool_ptr = TRUE;
-		result = TRUE;
+		*bool_ptr = true;
+		result = true;
 	}
 	else if (!strcasecmp(value_str, "no") || !strcasecmp(value_str, "off")
 			|| !strcasecmp(value_str, "false")) {
-		*bool_ptr = FALSE;
-		result = TRUE;
+		*bool_ptr = false;
+		result = true;
 	}
 	else {
-		result = FALSE;
+		result = false;
 	}
 
 	return result;
 }
 
-void Convert_list_to_string(list_t list, int8_t **string)
+void Convert_list_to_string(TList list, char **string)
 {
-	list_iter_t iter;
+	TListIter iter;
 	size_t size = 0;
 
-	for (iter = List_begin(list); iter != List_end(list); LI_FORWARD(iter)) {
-		size += 1 + strlen((const int8_t *) LI_DATA(iter));
+	for (iter = LIST_GetFirstItem(list); iter != LIST_GetLastItem(list); LI_FORWARD(iter)) {
+		size += 1 + strlen((const char *) LI_DATA(iter));
 	}
-	*string = (int8_t *) xp_safe_malloc(size);
+	*string = (char *) xp_safe_malloc(size);
 	**string = '\0';
-	for (iter = List_begin(list); iter != List_end(list); LI_FORWARD(iter)) {
-		if (iter != List_begin(list)) {
+	for (iter = LIST_GetFirstItem(list); iter != LIST_GetLastItem(list); LI_FORWARD(iter)) {
+		if (iter != LIST_GetFirstItem(list)) {
 			strlcat(*string, ",", size);
 		}
-		strlcat(*string, (const int8_t *) LI_DATA(iter), size);
+		strlcat(*string, (const char *) LI_DATA(iter), size);
 	}
 }
 
-void Convert_string_to_list(const int8_t *value, list_t *list_ptr)
+void Convert_string_to_list(const char *value, TList *list_ptr)
 {
-	const int8_t *start, *end;
-	int8_t *str;
+	const char *start, *end;
+	char *str;
 
 	/* possibly allocate a new list. */
 	if (NULL == *list_ptr) {
-		*list_ptr = List_new();
+		*list_ptr = LIST_New();
 		if (NULL == *list_ptr) {
 			fatal("Not enough memory for list");
 		}
 	}
 
 	/* make sure list is empty. */
-	List_clear(*list_ptr);
+	LIST_Clear(*list_ptr);
 
 	/* copy comma separated list elements from value to list. */
 	for (start = value; *start; start = end) {
@@ -735,10 +734,10 @@ void Convert_string_to_list(const int8_t *value, list_t *list_ptr)
 		}
 		/* copy non-zero results to list. */
 		if (start < end) {
-			str = (int8_t *) xp_safe_malloc((end - start) + 1);
+			str = (char *) xp_safe_malloc((end - start) + 1);
 			memcpy(str, start, (end - start));
 			str[(end - start)] = '\0';
-			if (NULL == List_push_back(*list_ptr, str)) {
+			if (NULL == LIST_AddItemBottom(*list_ptr, str)) {
 				fatal("Not enough memory for list element");
 			}
 		}
@@ -751,7 +750,7 @@ void Convert_string_to_list(const int8_t *value, list_t *list_ptr)
 static void Option_parse_node(hash_node *np)
 {
 	option_desc *desc;
-	const int8_t *value;
+	const char *value;
 
 	/* Does it have a description?   If so, get a pointer to it */
 	if ((desc = np->value->desc) == NULL) {
@@ -786,7 +785,7 @@ static void Option_parse_node(hash_node *np)
 	case valInt: {
 		int32_t *ptr = (int32_t *) desc->variable;
 
-		if (Convert_string_to_int(value, ptr) != TRUE) {
+		if (Convert_string_to_int(value, ptr) != true) {
 			warn("%s value '%s' not an integral number.", np->name,
 					value);
 			Convert_string_to_int(desc->defaultValue, ptr);
@@ -797,7 +796,7 @@ static void Option_parse_node(hash_node *np)
 	case valReal: {
 		DFLOAT *ptr = (DFLOAT *) desc->variable;
 
-		if (Convert_string_to_float(value, ptr) != TRUE) {
+		if (Convert_string_to_float(value, ptr) != true) {
 			warn("%s value '%s' not a number.", np->name, value);
 			Convert_string_to_float(desc->defaultValue, ptr);
 		}
@@ -807,7 +806,7 @@ static void Option_parse_node(hash_node *np)
 	case valBool: {
 		bool *ptr = (bool *) desc->variable;
 
-		if (Convert_string_to_bool(value, ptr) != TRUE) {
+		if (Convert_string_to_bool(value, ptr) != true) {
 			warn("%s value '%s' not a boolean.", np->name, value);
 			Convert_string_to_bool(desc->defaultValue, ptr);
 		}
@@ -815,14 +814,14 @@ static void Option_parse_node(hash_node *np)
 	}
 
 	case valString: {
-		int8_t **ptr = (int8_t **) desc->variable;
+		char **ptr = (char **) desc->variable;
 
 		*ptr = xp_safe_strdup(value);
 		break;
 	}
 
 	case valList: {
-		list_t *list_ptr = (list_t *) desc->variable;
+		TList *list_ptr = (TList *) desc->variable;
 
 		Convert_string_to_list(value, list_ptr);
 		break;
@@ -847,11 +846,11 @@ static void Options_parse_expand(void)
 	}
 
 	if (expandList != NULL) {
-		int8_t *name;
-		while ((name = (int8_t *) List_pop_front(expandList)) != NULL) {
+		char *name;
+		while ((name = (char *) LIST_RemoveFirstItem(expandList)) != NULL) {
 			expandKeyword(name);
 		}
-		List_delete(expandList);
+		LIST_Delete(expandList);
 		expandList = NULL;
 	}
 }

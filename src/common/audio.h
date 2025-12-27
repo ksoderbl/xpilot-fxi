@@ -1,4 +1,4 @@
-/* $Id: audio.h,v 1.4 2008/08/15 15:09:52 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -116,7 +116,7 @@ enum {
 
 #ifdef _CAUDIO_C_
 
-static int8_t *soundNames[] =
+static char *soundNames[] =
 {
 	"start",
 	"fire_shot",
@@ -203,7 +203,7 @@ static int8_t *soundNames[] =
 
 #endif						/* _CAUDIO_C_ */
 
-extern void audioInit(int8_t* display);
+extern void audioInit(char* display);
 extern void audioCleanup();
 extern int32_t Handle_audio(int32_t type, int32_t volume);
 

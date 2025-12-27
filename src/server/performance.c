@@ -3,11 +3,12 @@
 #include <time.h>
 #include <sys/time.h>
 
-#define SERVER
 #include "xpconfig.h"
+#include "debug.h"
 #include "proto.h"
 #include "global.h"
 
+#include "server.h"
 
 #define MEASURE_LOOPS 500
 

@@ -1,4 +1,4 @@
-/* $Id: frame.c,v 1.19 2008/08/26 20:51:06 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -31,19 +31,26 @@
 #include <math.h>
 #include <time.h>
 
-#define SERVER
 #include "version.h"
 #include "commonproto.h"
 #include "xpconfig.h"
+#include "debug.h"
 #include "const.h"
 #include "global.h"
 #include "proto.h"
 #include "bit.h"
+
+#include "frame.h"
 #include "netserver.h"
 #include "error.h"
 
-int8_t frame_version[] = VERSION;
-extern int32_t frame_cycle;
+#include "player.h"
+#include "map.h"
+#include "player_inline.h"
+
+#include "robot.h"
+
+char frame_version[] = VERSION;
 
 /*
  * Structure for calculating if a pixel is visible by a player.
@@ -77,7 +84,7 @@ typedef struct {
 
 int32_t frame_loops = 1;
 static int32_t last_frame_shuffle;
-uint16_t object_shuffle[MAX_TOTAL_SHOTS];
+uint16_t object_shuffle[MAX_TOTAL_OBJECTS];
 static uint16_t player_shuffle[64 + MAX_PSEUDO_PLAYERS];
 static radar_t *radar_ptr;
 static int32_t num_radar, max_radar;
@@ -90,6 +97,12 @@ static debris_t *debris_ptr[DEBRIS_TYPES];
 static uint32_t debris_num[DEBRIS_TYPES], debris_max[DEBRIS_TYPES];
 static debris_t *fastshot_ptr[DEBRIS_TYPES * 2];
 static uint32_t fastshot_num[DEBRIS_TYPES * 2], fastshot_max[DEBRIS_TYPES * 2];
+
+static char message[MSG_LEN];	// message sent to a player
+
+static const char server_greeting_str[] = " [*Server greeting*]";
+static const char server_notice_str[] = " [*Server notice*]";
+static const char server_reply_str[] = " [*Server reply*]";
 
 void Frame_shots(connection_t *connp, player_t *pl);
 void Frame_shuffle(void);
@@ -122,19 +135,19 @@ void Frame_shuffle(void);
 	}								\
     }
 
-#define inview(x_, y_) 								\
-    (   (   ((x_) > pv.world.x && (x_) < pv.world.x + view_width)		\
-	 || ((x_) > pv.realWorld.x && (x_) < pv.realWorld.x + view_width))	\
-     && (   ((y_) > pv.world.y && (y_) < pv.world.y + view_height)		\
-	 || ((y_) > pv.realWorld.y && (y_) < pv.realWorld.y + view_height)))
+#define inview(pos) 								\
+    (   (   (((pos)->x) > pv.world.x && ((pos)->x) < pv.world.x + view_width)		\
+	 || (((pos)->x) > pv.realWorld.x && ((pos)->x) < pv.realWorld.x + view_width))	\
+     && (   (((pos)->y) > pv.world.y && ((pos)->y) < pv.world.y + view_height)		\
+	 || (((pos)->y) > pv.realWorld.y && ((pos)->y) < pv.realWorld.y + view_height)))
 
-static int32_t block_inview(block_visibility_t *bv, int32_t x, int32_t y)
+static int32_t block_inview(block_visibility_t *bv, objposition_t *pos)
 {
-	return ((x > bv->world.x && x < bv->world.x + horizontal_blocks) || (x
-			> bv->realWorld.x && x < bv->realWorld.x
-			+ horizontal_blocks)) && ((y > bv->world.y && y
-			< bv->world.y + vertical_blocks) || (y
-			> bv->realWorld.y && y < bv->realWorld.y
+	return ((pos->bx > bv->world.x && pos->bx < bv->world.x + horizontal_blocks) || (pos->bx
+			> bv->realWorld.x && pos->bx < bv->realWorld.x
+			+ horizontal_blocks)) && ((pos->by > bv->world.y && pos->by
+			< bv->world.y + vertical_blocks) || (pos->by
+			> bv->realWorld.y && pos->by < bv->realWorld.y
 			+ vertical_blocks));
 }
 
@@ -254,7 +267,7 @@ static void Frame_radar_buffer_send(connection_t *connp)
 	int32_t radar_y;
 	int32_t send_x;
 	int32_t send_y;
-	uint16_t radar_shuffle[MAX_TOTAL_SHOTS];
+	uint16_t radar_shuffle[MAX_TOTAL_OBJECTS];
 
 	for (i = 0; i < num_radar; i++) {
 		radar_shuffle[i] = i;
@@ -321,7 +334,7 @@ static void Frame_radar_buffer_free(void)
 static int32_t Frame_status(connection_t *connp, player_t *pl)
 {
 	player_t *lock_pl = NULL;
-	static int8_t mods[MAX_CHARS];
+	static char mods[MAX_CHARS];
 	int32_t n;
 	int32_t lock_dist = 0, lock_dir = 0;
 	int32_t showautopilot;
@@ -337,20 +350,12 @@ static int32_t Frame_status(connection_t *connp, player_t *pl)
 	 */
 
 	CLR_BIT(pl->lock.flags, LOCK_VISIBLE);
-	if (BIT(pl->lock.flags, LOCK_PLAYER) && BIT(pl->used, OBJ_COMPASS)) {
+	if (BIT(pl->lock.flags, LOCK_PLAYER) && Player_uses_property(pl, USES_COMPASS)) {
 		lock_pl = pl->lock.object;
 
-		if (BIT(lock_pl->status, PLAYING | GAME_OVER)
-				== PLAYING
-				&& (playersOnRadar
-						|| inview(lock_pl->pos.x, lock_pl->pos.y))
-				&& pl->lock.distance != 0) {
+		if (Player_is_alive(lock_pl) && (playersOnRadar || inview(&lock_pl->pos)) && pl->lock.distance != 0) {
 			SET_BIT(pl->lock.flags, LOCK_VISIBLE);
-			lock_dir = (int32_t) Wrap_findDir(
-					(int32_t) (lock_pl->pos.x
-							- pl->pos.x),
-					(int32_t) (lock_pl->pos.y
-							- pl->pos.y));
+			lock_dir = (int32_t) Map_get_discrete_angle(&pl->pos, &lock_pl->pos);
 			lock_dist = (int32_t) pl->lock.distance;
 		}
 	}
@@ -362,12 +367,14 @@ static int32_t Frame_status(connection_t *connp, player_t *pl)
 	 */
 	mods[0] = '\0';
 	n = Send_self(connp, pl, lock_pl, lock_dist, lock_dir, showautopilot,
-			connp->pl->status, mods);
+			connp->pl->pl_old_status, mods);
 	if (n <= 0) {
 		return 0;
 	}
-	if (BIT(pl->status, SELF_DESTRUCT) && pl->count > 0) {
-		Send_destruct(connp, pl->count);
+
+//	if (BIT(pl->pl_old_status, SELF_DESTRUCT) && pl->self_destruct_count > 0) {
+	if (Player_is_self_destructing(pl)) {
+		Send_destruct(connp, pl->self_destruct_count);
 	}
 
 	return 1;
@@ -378,12 +385,11 @@ static void Frame_map(connection_t *connp, player_t *pl)
 	int32_t i, x, y, conn_bit = (1 << connp->cid);
 	block_visibility_t bv;
 
-	if (frame_cycle == 0) {
-		x = pl->pos_interp.bx;
-		y = pl->pos_interp.by;
+	if (Frame_is_real()) {
+		x = pl->pos.bx;
+		y = pl->pos.by;
 	}
-
-	if (frame_cycle != 0) {
+	else {
 		x = pl->pos_interp.bx;
 		y = pl->pos_interp.by;
 	}
@@ -402,21 +408,15 @@ static void Frame_map(connection_t *connp, player_t *pl)
 		if (bv.world.y < 0 && bv.world.y + vertical_blocks < World.y) {
 			bv.world.y += World.y;
 		}
-		else if (bv.world.y > 0 && bv.world.y + vertical_blocks
-				> World.y) {
+		else if (bv.world.y > 0 && bv.world.y + vertical_blocks > World.y) {
 			bv.realWorld.y -= World.y;
 		}
 	}
 
 	for (i = 0; i < World.NumFuels; i++) {
-		if (BIT(World.fuel[i].conn_mask, conn_bit) == 0) {
-			if (World.block[World.fuel[i].blk_pos.x][World.fuel[i].blk_pos.y]
-					== FUEL) {
-				if (block_inview(&bv, World.fuel[i].blk_pos.x,
-						World.fuel[i].blk_pos.y)) {
-					Send_fuel(connp,
-							&World.fuel[i]);
-				}
+		if (!BIT(World.fuel[i].conn_mask, conn_bit)) {
+			if (block_inview(&bv, &World.fuel[i].pos)) {
+				Send_fuel(connp, &World.fuel[i]);
 			}
 		}
 	}
@@ -450,31 +450,29 @@ void Frame_shuffle(void)
 
 void Frame_shots(connection_t *connp, player_t *pl)
 {
-	int32_t i, color, x, y, fuzz = 0, teamshot;
-	object_t *shot;
+	int32_t i, color, fuzz = 0, teamshot;
+	object_t *obj;
+	objposition_t *pos;
 
 	for (i = 0; i < NumObjs; i++) {
-		shot = Obj[object_shuffle[i]];
+		obj = Obj[object_shuffle[i]];
 
-		if (frame_cycle == 0) {
-			x = shot->pos.x;
-			y = shot->pos.y;
+		if (Frame_is_real()) {
+			pos = &obj->pos;
+		}
+		else {
+			pos = &obj->pos_interp;
 		}
 
-		if (frame_cycle != 0) {
-			x = shot->pos_interp.x;
-			y = shot->pos_interp.y;
-		}
-
-		if (!inview(x, y)) {
+		if (!inview(pos)) {
 			continue;
 		}
-		if ((color = shot->color) == BLACK) {
-			xpprintf("black %d,%d\n", shot->type, shot->owner->id);
+		if ((color = obj->color) == BLACK) {
+			xpprintf("black %d\n", obj->type);
 			color = WHITE;
 		}
 
-		switch (shot->type) {
+		switch (obj->type) {
 		case OBJ_SPARK:
 		case OBJ_DEBRIS:
 			if ((fuzz >>= 7) < 0x40) {
@@ -497,18 +495,18 @@ void Frame_shots(connection_t *connp, player_t *pl)
 			if (debris_colors >= 3) {
 				if (debris_colors > 4) {
 					if (color == BLUE) {
-						color = (shot->life >> 1);
+						color = (obj->obj_life >> 1);
 					}
 					else {
-						color = (shot->life >> 2);
+						color = (obj->obj_life >> 2);
 					}
 				}
 				else {
 					if (color == BLUE) {
-						color = (shot->life >> 2);
+						color = (obj->obj_life >> 2);
 					}
 					else {
-						color = (shot->life >> 3);
+						color = (obj->obj_life >> 3);
 					}
 				}
 				if (color >= debris_colors) {
@@ -516,21 +514,18 @@ void Frame_shots(connection_t *connp, player_t *pl)
 				}
 			}
 
-			debris_store((int32_t) (x - pv.world.x), (int32_t) (y
-					- pv.world.y), color);
+			debris_store((int32_t) (pos->x - pv.world.x), (int32_t) (pos->y - pv.world.y), color);
 			break;
 
 		case OBJ_WRECKAGE:
 			if (spark_rand != 0 || wreckageCollisionMayKill) {
-				Send_wreckage(connp, x, y, (uint8_t) shot->info,
-						shot->size, shot->rotation);
+				Send_wreckage(connp, pos, (uint8_t) obj->info, obj->size, obj->rotation);
 			}
 			break;
 
 		case OBJ_SHOT:
 			if (BIT(World.rules->mode, TEAM_PLAY) && teamImmunity
-					&& shot->team == pl->team && shot->owner
-					!= pl) {
+					&& obj->team == pl->team && obj->owner != pl) {
 				color = BLUE;
 				teamshot = DEBRIS_TYPES;
 			}
@@ -538,17 +533,15 @@ void Frame_shots(connection_t *connp, player_t *pl)
 				teamshot = 0;
 			}
 
-			fastshot_store((int32_t) (x - pv.world.x), (int32_t) (y
-					- pv.world.y), color, teamshot);
+			fastshot_store((int32_t) (pos->x - pv.world.x), (int32_t) (pos->y - pv.world.y), color, teamshot);
 
 			break;
 
 		case OBJ_BALL:
-			Send_ball(connp, x, y, shot);
+			Send_ball(connp, pos, obj);
 			break;
 		default:
-			error("Frame_shots: Shot type %d not defined.",
-					shot->type);
+			error("Frame_shots: Shot type %d not defined.", obj->type);
 			break;
 		}
 	}
@@ -558,70 +551,54 @@ static void Frame_ships(connection_t *connp, player_t *pl)
 {
 	player_t *pl_i;
 	int32_t i, k;
-	int32_t pl_posx, pl_posy, ball_posx = 0, ball_posy = 0;
+	objposition_t *ball_pos;
+	objposition_t *pl_pos;
+
 	for (k = 0; k < NumPlayers; k++) {
 		i = player_shuffle[k];
 		pl_i = Players[i];
 
-		if (frame_cycle == 0) {
-			pl_posx = pl_i->pos.x;
-			pl_posy = pl_i->pos.y;
-			if (pl_i->ball_tmp != NULL) {
-				ball_posx = pl_i->ball_tmp->pos.x;
-				ball_posy = pl_i->ball_tmp->pos.y;
+		ball_pos = NULL;
+
+		if (Frame_is_real()) {
+			pl_pos = &pl_i->pos;
+		}
+		else {
+			pl_pos = &pl_i->pos_interp;
+		}
+
+		if (pl_i->ball_tmp) {
+			if (Frame_is_real()) {
+				ball_pos = &pl_i->ball_tmp->pos;
+			}
+			else {
+				ball_pos = &pl_i->ball_tmp->pos_interp;
 			}
 		}
 
-		if (frame_cycle != 0) {
-			pl_posx = pl_i->pos_interp.x;
-			pl_posy = pl_i->pos_interp.y;
-			if (pl_i->ball_tmp != NULL) {
-				ball_posx = pl_i->ball_tmp->pos_interp.x;
-				ball_posy = pl_i->ball_tmp->pos_interp.y;
-			}
+		if (!Player_is_alive(pl_i)) {
+			continue;
 		}
 
-		if (!BIT(pl_i->status, PLAYING | PAUSE)) {
-			continue;
-		}
-		if (BIT(pl_i->status, GAME_OVER)) {
-			continue;
-		}
-		if (!inview(pl_posx, pl_posy)) {
-			continue;
-		}
-		if (BIT(pl_i->status, PAUSE)) {
-			//	Send_paused(connp,
-			//		    pl_posx,
-			//		    pl_posy,
-			//		    pl_i->count);
+		if (!inview(pl_pos)) {
 			continue;
 		}
 
 		/*
 		 * Transmit ship information
 		 */
-		Send_ship(connp, pl_posx, pl_posy, pl_i->id, pl_i->dir, BIT(
-				pl_i->used, OBJ_SHIELD) != 0, 0 != 0, 0 != 0, 0
-				!= 0, 0 != 0);
+		Send_ship(connp, pl_pos, pl_i->id, pl_i->dir,
+				Player_uses_property(pl_i, USES_SHIELD), 0 != 0, 0 != 0, 0 != 0, 0 != 0);
 
-		if (BIT(pl_i->used, OBJ_REFUEL)) {
-			if (inview(pl_i->fs->pix_pos.x,
-					pl_i->fs->pix_pos.y)) {
-				Send_refuel(
-						connp,
-						(int32_t) pl_i->fs->pix_pos.x,
-						(int32_t) pl_i->fs->pix_pos.y,
-						pl_posx, pl_posy);
+		if (Player_uses_property(pl_i, USES_REFUEL)) {
+			if (inview(&pl_i->fs->pos)) {
+				Send_refuel(connp, &pl_i->fs->pos, pl_pos);
 			}
 		}
 
-		if (pl_i->ball_tmp != NULL && inview(ball_posx, ball_posy)) {
-
-			Send_connector(connp, ball_posx, ball_posy, pl_posx,
-					pl_posy, 0);
+		if (ball_pos && inview(ball_pos)) {
+			Send_connector(connp, ball_pos, pl_pos, 0);
 		}
-
 	}
 }
 
@@ -629,7 +606,7 @@ static void Frame_radar(connection_t *connp, player_t *pl)
 {
 	player_t *pl2;
 	int32_t i, s;
-	DFLOAT x, y;
+	int32_t x, y;
 
 	if (playersOnRadar || BIT(World.rules->mode, TEAM_PLAY)) {
 		for (i = 0; i < NumPlayers; i++) {
@@ -642,46 +619,48 @@ static void Frame_radar(connection_t *connp, player_t *pl)
 			 *		People in other teams if;
 			 *			no playersOnRadar or if not visible
 			 */
-			if (pl2->connp == connp || BIT(
-					pl2->status, PLAYING | PAUSE
-							| GAME_OVER) != PLAYING
-					|| (!TEAM(pl2, pl)
-							&& (!playersOnRadar))) {
+			if (pl2->connp == connp || !Player_is_alive(pl2) || (!TEAM(pl2, pl) && (!playersOnRadar))) {
 				continue;
 			}
-			x = pl2->pos.x;
-			y = pl2->pos.y;
-			if (BIT(pl->used, OBJ_COMPASS) && BIT(pl->lock.flags,
-					LOCK_PLAYER) && pl->lock.object == pl2
-					&& ((frame_loops / frameDivisor)
-					% 5 >= 3)) {
+                        
+			if (Frame_is_real()) {
+				x = pl2->pos.x;
+				y = pl2->pos.y;
+			}
+			else {
+				x = pl2->pos_interp.x;
+				y = pl2->pos_interp.y;
+			}
+
+			if (Player_uses_property(pl, USES_COMPASS)
+					&& BIT(pl->lock.flags, LOCK_PLAYER)
+					&& pl->lock.object == pl2
+					&& ((frame_loops / frameDivisor) % 5 >= 3)) {
 				continue;
 			}
 			s = 3;
 			if (TEAM(pl2, pl)) {
 				s |= 0x80;
 			}
-			Frame_radar_buffer_add((int32_t) x, (int32_t) y, s);
+			Frame_radar_buffer_add(x, y, s);
 		}
 	}
 }
 
 static void Frame_parameters(connection_t *connp, player_t *pl)
 {
-	Get_display_parameters(connp, &view_width, &view_height,
-			&debris_colors, &spark_rand);
+	Get_display_parameters(connp, &view_width, &view_height, &debris_colors, &spark_rand);
 	debris_x_areas = (view_width + 255) >> 8;
 	debris_y_areas = (view_height + 255) >> 8;
 	debris_areas = debris_x_areas * debris_y_areas;
 	horizontal_blocks = (view_width + (BLOCK_SZ - 1)) / BLOCK_SZ;
 	vertical_blocks = (view_height + (BLOCK_SZ - 1)) / BLOCK_SZ;
 
-	if (frame_cycle == 0) {
+	if (Frame_is_real()) {
 		pv.world.x = pl->pos.x - view_width / 2; /* Scroll */
 		pv.world.y = pl->pos.y - view_height / 2;
 	}
-
-	if (frame_cycle != 0) {
+	else {
 		pv.world.x = pl->pos_interp.x - view_width / 2; /* Scroll */
 		pv.world.y = pl->pos_interp.y - view_height / 2;
 	}
@@ -705,11 +684,6 @@ static void Frame_parameters(connection_t *connp, player_t *pl)
 	}
 }
 
-static inline double timeval_to_seconds(struct timeval tv)
-{
-	return ((double) tv.tv_sec) / 1000 + tv.tv_usec * 1e-3;
-}
-
 void Frame_update(void)
 {
 	player_t *pl;
@@ -717,18 +691,19 @@ void Frame_update(void)
 	connection_t *connp;
 	int32_t i, player_fps;
 
-	if (++frame_loops >= LONG_MAX) /* Used for misc. timing purposes */
+	if (++frame_loops >= INT_MAX) /* Used for misc. timing purposes */
 		frame_loops = 0;
 
 	Frame_shuffle();
 
 	for (i = 0; i < NumPlayers; i++) {
 		pl = Players[i];
-		connp = pl->connp;
 
 		if (!Player_is_connected(pl) || Player_is_robot(pl)) {
 			continue;
 		}
+
+		connp = pl->connp;
 
 		/*
 		 * kps - with this implementation player fps can never
@@ -739,11 +714,13 @@ void Frame_update(void)
 		if (player_fps < fps) {
 			int32_t divisor = 2;
 
-			while (fps > player_fps * divisor)
+			while (fps > player_fps * divisor) {
 				divisor *= 2;
+			}
 
-			if ((frame_cycle % divisor) != 0)
+			if ((frame_cycle % divisor) != 0) {
 				continue;
+			}
 		}
 
 #if 0
@@ -772,22 +749,23 @@ void Frame_update(void)
 		}
 
 		/*
-		 * If status is GAME_OVER or PAUSE'd, the user may look through the
-		 * other players 'eyes'. Fixed: This also works for all players -pgm
-		 * We can't use TEAM() macro as PAUSE'd players are always on
-		 * equivalent teams.
-		 *
-		 * This is done by using two indexes, one
-		 * determining which data should be used (ind, set below) and
-		 * one determining which connection to send it to (conn).
+		 * Choose the correct player for generation of the frame content.
+		 * Usually it will be the currently processed player (pl), unless he is
+		 * in WAITING, DEAD or PAUSED state, has an active lock and his
+		 * recovery time hasn't passed yet.
 		 */
 		if (BIT(pl->lock.flags, LOCK_PLAYER)) {
-			if ((BIT(pl->status, (GAME_OVER | PLAYING))
-					== (GAME_OVER | PLAYING)) || (BIT(
-					pl->status, PAUSE) && ((BIT(
-					World.rules->mode, TEAM_PLAY)
-					&& pl->team != NULL)
-					|| pl->isowner))) {
+			/*
+			 * An important consequence of the recovery timer here is that
+			 * DEAD players will see themselves traveling back to home base
+			 * first, and then (as soon as the timer expires) the view will
+			 * switch to the locked player.
+			 * Players in the WAITING and PAUSED state do not get the recovery
+			 * time, so they see the locked player immediately after entering
+			 * the state.
+			 */
+			if (Player_is_recovered(pl) &&
+					(Player_is_waiting(pl) || Player_is_dead(pl) || Player_is_paused(pl))) {
 				pl2 = pl->lock.object;
 			}
 			else {
@@ -819,56 +797,119 @@ void Frame_update(void)
 	Frame_radar_buffer_free();
 }
 
-void Set_message(const int8_t *message)
+/*
+ * Handles high-profile game-related messages (e.g. reason for round end) meant to be seen by all players.
+ * NOTE: the maximum message length is MSG_LEN - 5.
+ * The string will look like this: " < original_messsage >".
+ */
+void Message_game_important_print(const char *fmt, ...)
 {
 	player_t *pl;
 	int32_t i;
-	const int8_t *msg;
-	int8_t tmp[MSG_LEN];
+	int32_t written;
+	va_list ap;
 
-	if ((i = strlen(message)) >= MSG_LEN) {
-#ifndef SILENT
-		errno = 0;
-		error("Max message len exceed (%d,%s)", i, message);
-#endif
-		strncpy(tmp, message, MSG_LEN - 1);
-		tmp[MSG_LEN - 1] = '\0';
-		msg = tmp;
+	va_start(ap, fmt);
+
+	written = vsnprintf(message, sizeof(message) - 1, fmt, ap);
+	message[written] = 0;
+
+	/* Make sure the extended string will fit */
+	message[sizeof(message) - 5] = 0;
+
+	/* Move the whole message to make room for the " < " prefix */
+	i = written;
+	while (i >= 0) {
+		message[i + 3] = message[i];
+		i--;
 	}
-	else {
-		msg = message;
+
+	/* Insert the prefix and suffix */
+	message[0] = ' '; message[1] = '<'; message[2] = ' ';
+	strcat(message, " >");
+
+	/* Send to all human players */
+	for (i = 0; i < NumPlayers; i++) {
+		pl = Players[i];
+
+		if (Player_is_connected(pl)) {
+			Send_message(pl->connp, message);
+		}
 	}
+
+	va_end(ap);
+}
+
+/*
+ * Handles low-profile game-related messages (e.g. joins, leaves, kills) meant to be seen by all players.
+ * NOTE: the maximum message length is MSG_LEN.
+ */
+void Message_game_print(const char *fmt, ...)
+{
+	player_t *pl;
+	int32_t i;
+	int32_t written;
+	va_list ap;
+
+	va_start(ap, fmt);
+
+	written = vsnprintf(message, sizeof(message) - 1, fmt, ap);
+	message[written] = 0;
+
 	for (i = 0; i < NumPlayers; i++) {
 		pl = Players[i];
 		if (Player_is_connected(pl)) {
-			Send_message(pl->connp, msg);
+			Send_message(pl->connp, message);
 		}
 	}
+
+	va_end(ap);
 }
 
-void Set_player_message(player_t *pl, const int8_t *message)
+/*
+ * Handles a message sent privately to one player (a private talk message, a team message
+ * or the server reply to player's action).
+ * NOTE: the maximum message length is MSG_LEN - length_of_the_server_string - 1.
+ */
+void Message_player_print(player_t *pl, player_msg_t type, const char *fmt, ...)
 {
-	int32_t i;
-	const int8_t *msg;
-	int8_t tmp[MSG_LEN];
+	int32_t written;
+	va_list ap;
+	char *server_str;
 
-	if ((i = strlen(message)) >= MSG_LEN) {
-#ifndef SILENT
-		errno = 0;
-		error("Max message len exceed (%d,%s)", i, message);
-#endif
-		memcpy(tmp, message, MSG_LEN - 1);
-		tmp[MSG_LEN - 1] = '\0';
-		msg = tmp;
+	va_start(ap, fmt);
+
+	written = vsnprintf(message, sizeof(message) - 1, fmt, ap);
+	message[written] = 0;
+
+	/* choose and add the server string */
+	if (type == PL_MSG_GREETING) {
+		server_str = (char *) server_greeting_str;
+	}
+	else if (type == PL_MSG_NOTICE) {
+		server_str = (char *) server_notice_str;
+	}
+	else if (type == PL_MSG_REPLY) {
+		server_str = (char *) server_reply_str;
 	}
 	else {
-		msg = message;
+		server_str = NULL;
 	}
+
+	/* attach add the server string at the end of the message */
+	if (server_str) {
+		if (strlen(message) + strlen(server_str) + 1 > sizeof(message)) {
+			message[sizeof(message) - 1 - strlen(server_str)] = 0;
+		}
+		strcat(message, server_str);
+	}
+
 	if (Player_is_connected(pl)) {
-		Send_message(pl->connp, msg);
+		Send_message(pl->connp, message);
 	}
 	else if (Player_is_robot(pl)) {
-		Robot_message(pl, msg);
+		Robot_message(pl, message);
 	}
-}
 
+	va_end(ap);
+}

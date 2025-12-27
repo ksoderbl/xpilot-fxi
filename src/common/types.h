@@ -1,4 +1,4 @@
-/* $Id: types.h,v 1.6 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

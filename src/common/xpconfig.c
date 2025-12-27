@@ -1,4 +1,4 @@
-/* $Id: xpconfig.c,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -87,65 +87,65 @@
 #    define CONTACTADDRESS	"xpilot@xpilot.org"
 #endif
 
-int8_t xpconfig_version[] = VERSION;
+char xpconfig_version[] = VERSION;
 
 
-int8_t *Conf_contactaddress(void);
-int8_t *Conf_datadir(void);
-int8_t *Conf_defaults_file_name(void);
-int8_t *Conf_password_file_name(void);
-int8_t *Conf_mapdir(void);
-int8_t *Conf_default_map(void);
-int8_t *Conf_servermotdfile(void);
-int8_t *Conf_localmotdfile(void);
-int8_t *Conf_logfile(void);
-int8_t *Conf_ship_file(void);
-int8_t *Conf_localguru(void);
-int8_t *Conf_robotfile(void);
-int8_t *Conf_zcat_ext(void);
-int8_t *Conf_zcat_format(void);
+char *Conf_contactaddress(void);
+char *Conf_datadir(void);
+char *Conf_defaults_file_name(void);
+char *Conf_password_file_name(void);
+char *Conf_mapdir(void);
+char *Conf_default_map(void);
+char *Conf_servermotdfile(void);
+char *Conf_localmotdfile(void);
+char *Conf_logfile(void);
+char *Conf_ship_file(void);
+char *Conf_localguru(void);
+char *Conf_robotfile(void);
+char *Conf_zcat_ext(void);
+char *Conf_zcat_format(void);
 
 
-int8_t *Conf_datadir(void)
+char *Conf_datadir(void)
 {
-	static int8_t conf[] = CONF_DATADIR;
+	static char conf[] = CONF_DATADIR;
 
 	return conf;
 }
 
-int8_t *Conf_defaults_file_name(void)
+char *Conf_defaults_file_name(void)
 {
-	static int8_t conf[] = DEFAULTS_FILE_NAME;
+	static char conf[] = DEFAULTS_FILE_NAME;
 
 	return conf;
 }
 
-int8_t *Conf_password_file_name(void)
+char *Conf_password_file_name(void)
 {
-	static int8_t conf[] = PASSWORD_FILE_NAME;
+	static char conf[] = PASSWORD_FILE_NAME;
 
 	return conf;
 }
 
-int8_t *Conf_mapdir(void)
+char *Conf_mapdir(void)
 {
-	static int8_t conf[] = MAPDIR;
+	static char conf[] = MAPDIR;
 
 	return conf;
 }
 
-static int8_t conf_default_map_string[] = DEFAULT_MAP;
+static char conf_default_map_string[] = DEFAULT_MAP;
 
-int8_t *Conf_default_map(void)
+char *Conf_default_map(void)
 {
 	return conf_default_map_string;
 }
 
-int8_t *Conf_servermotdfile(void)
+char *Conf_servermotdfile(void)
 {
-	static int8_t conf[] = SERVERMOTDFILE;
-	static int8_t env[] = "XPILOTSERVERMOTD";
-	int8_t *filename;
+	static char conf[] = SERVERMOTDFILE;
+	static char env[] = "XPILOTSERVERMOTD";
+	char *filename;
 
 	filename = getenv(env);
 	if (filename == NULL) {
@@ -155,59 +155,59 @@ int8_t *Conf_servermotdfile(void)
 	return filename;
 }
 
-int8_t *Conf_localmotdfile(void)
+char *Conf_localmotdfile(void)
 {
-	static int8_t conf[] = LOCALMOTDFILE;
+	static char conf[] = LOCALMOTDFILE;
 
 	return conf;
 }
 
-int8_t conf_logfile_string[] = LOGFILE;
+char conf_logfile_string[] = LOGFILE;
 
-int8_t *Conf_logfile(void)
+char *Conf_logfile(void)
 {
 	return conf_logfile_string;
 }
 
 /* needed by client/default.c */
-int8_t conf_ship_file_string[] = SHIP_FILE;
+char conf_ship_file_string[] = SHIP_FILE;
 
-int8_t *Conf_ship_file(void)
+char *Conf_ship_file(void)
 {
 	return conf_ship_file_string;
 }
 
-int8_t *Conf_localguru(void)
+char *Conf_localguru(void)
 {
-	static int8_t conf[] = LOCALGURU;
+	static char conf[] = LOCALGURU;
 
 	return conf;
 }
 
-int8_t *Conf_contactaddress(void)
+char *Conf_contactaddress(void)
 {
-	static int8_t conf[] = CONTACTADDRESS;
+	static char conf[] = CONTACTADDRESS;
 
 	return conf;
 }
 
-static int8_t conf_robotfile_string[] = ROBOTFILE;
+static char conf_robotfile_string[] = ROBOTFILE;
 
-int8_t *Conf_robotfile(void)
+char *Conf_robotfile(void)
 {
 	return conf_robotfile_string;
 }
 
-int8_t *Conf_zcat_ext(void)
+char *Conf_zcat_ext(void)
 {
-	static int8_t conf[] = ZCAT_EXT;
+	static char conf[] = ZCAT_EXT;
 
 	return conf;
 }
 
-int8_t *Conf_zcat_format(void)
+char *Conf_zcat_format(void)
 {
-	static int8_t conf[] = ZCAT_FORMAT;
+	static char conf[] = ZCAT_FORMAT;
 
 	return conf;
 }

@@ -1,4 +1,4 @@
-/* $Id: net.h,v 1.4 2008/08/15 15:09:52 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -65,10 +65,10 @@
  */
 typedef struct {
 	int32_t sock; /* socket filedescriptor */
-	int8_t *buf; /* i/o data buffer */
+	char *buf; /* i/o data buffer */
 	int32_t size; /* size of buffer */
 	int32_t len; /* amount of data in buffer (writing/reading) */
-	int8_t *ptr; /* current position in buffer (reading) */
+	char *ptr; /* current position in buffer (reading) */
 	int32_t state; /* read/write/locked/error status flags */
 } sockbuf_t;
 
@@ -77,7 +77,7 @@ int32_t Sockbuf_cleanup(sockbuf_t *sbuf);
 int32_t Sockbuf_clear(sockbuf_t *sbuf);
 int32_t Sockbuf_advance(sockbuf_t *sbuf, int32_t len);
 int32_t Sockbuf_flush(sockbuf_t *sbuf);
-int32_t Sockbuf_write(sockbuf_t *sbuf, int8_t *buf, int32_t len);
+int32_t Sockbuf_write(sockbuf_t *sbuf, char *buf, int32_t len);
 int32_t Sockbuf_read(sockbuf_t *sbuf);
 int32_t Sockbuf_copy(sockbuf_t *dest, sockbuf_t *src, int32_t len);
 
@@ -90,8 +90,8 @@ int32_t Sockbuf_copy(sockbuf_t *dest, sockbuf_t *src, int32_t len);
 #endif
 
 #if STDVA
-int32_t Packet_printf(sockbuf_t *, const int8_t *fmt, ...);
-int32_t Packet_scanf(sockbuf_t *, const int8_t *fmt, ...);
+int32_t Packet_printf(sockbuf_t *, const char *fmt, ...);
+int32_t Packet_scanf(sockbuf_t *, const char *fmt, ...);
 #else
 int32_t Packet_printf();
 int32_t Packet_scanf();

@@ -1,4 +1,4 @@
-/* $Id: cmdline.c,v 1.12 2008/10/12 15:45:14 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -28,7 +28,6 @@
 #include <string.h>
 #include <errno.h>
 
-#define SERVER
 #include "version.h"
 #include "xpconfig.h"
 #include "serverconst.h"
@@ -38,21 +37,24 @@
 #include "error.h"
 #include "portability.h"
 #include "checknames.h"
-//#include "commonproto.h"
 #include "tuner.h"
+#include "list.h"
+#include "map.h"
 
-int8_t cmdline_version[] = VERSION;
 
-list_t expandList; /* List of predefined settings. */
+char cmdline_version[] = VERSION;
+
+TList expandList; /* List of predefined settings. */
 DFLOAT ShipMass; /* Default mass of ship */
 DFLOAT ballMass; /* Default mass of balls */
 DFLOAT ShotsMass; /* Default mass of shots */
 DFLOAT ShotsSpeed; /* Default speed of shots */
 int32_t ShotsLife; /* Default number of ticks */
 /* each shot will live */
+
 int32_t maxRobots; /* How many robots should enter */
 int32_t minRobots; /* the game? */
-int8_t *robotFile; /* Filename for robot parameters */
+char *robotFile; /* Filename for robot parameters */
 int32_t robotsTalk; /* Do robots talk? */
 int32_t robotsLeave; /* Do robots leave at all? */
 int32_t robotLeaveLife; /* Max life per robot (0=off)*/
@@ -61,21 +63,22 @@ int32_t robotLeaveRatio; /* Min ratio for robot to live (0=off)*/
 int32_t robotTeam; /* Team for robots */
 bool restrictRobots; /* Restrict robots to robotTeam? */
 bool reserveRobotTeam; /* Allow only robots in robotTeam? */
+
 int32_t ShotsMax; /* Max shots pr. player */
 int32_t fireRepeatRate; /* Frames per autorepeat fire (0=off) */
 
 bool RawMode; /* Let robots live even if there */
 /* are no players logged in */
 bool logRobots; /* log robots coming and going */
-int8_t *mapFileName; /* Name of mapfile... */
-int8_t *mapData; /* Raw map data... */
+char *mapFileName; /* Name of mapfile... */
+char *mapData; /* Raw map data... */
 int32_t mapWidth; /* Width of the universe */
 int32_t mapHeight; /* Height of the universe */
-int8_t *mapName; /* Name of the universe */
-int8_t *mapAuthor; /* Name of the creator */
+char *mapName; /* Name of the universe */
+char *mapAuthor; /* Name of the creator */
 int32_t contactPort; /* Contact port number */
-int8_t *serverHost; /* Host name (for multihomed hosts) */
-int8_t *greeting; /* Greeting for joining players */
+char *serverHost; /* Host name (for multihomed hosts) */
+char *greeting; /* Greeting for joining players */
 
 bool crashWithPlayer; /* Can players overrun other players? */
 bool bounceWithPlayer; /* Can players bounce other players? */
@@ -100,17 +103,13 @@ bool teamPlay; /* Are teams allowed? */
 bool teamFuel; /* Do fuelstations belong to teams? */
 bool keepShots; /* Keep shots when player leaves? */
 
-bool edgeWrap; /* Do objects wrap when they cross
- the edge of the Universe? */
-bool edgeBounce; /* Do objects bounce when they hit
- the edge of the Universe? */
 bool extraBorder; /* Give map an extra border? */
 
-int8_t *defaultsFileName; /* Name of defaults file... */
-int8_t *passwordFileName; /* Name of password file... */
-int8_t *motdFileName; /* Name of motd file */
-int8_t *scoreTableFileName; /* Name of score table file */
-int8_t *adminMessageFileName; /* Name of admin message file */
+char *defaultsFileName; /* Name of defaults file... */
+char *passwordFileName; /* Name of password file... */
+char *motdFileName; /* Name of motd file */
+char *scoreTableFileName; /* Name of score table file */
+char *adminMessageFileName; /* Name of admin message file */
 int32_t adminMessageFileSizeLimit;/* Limit on admin message file size */
 
 bool allowShipShapes;
@@ -119,7 +118,7 @@ bool playersOnRadar; /* Are players visible on radar? */
 
 bool reportToMetaServer; /* Send status to meta-server? */
 bool searchDomainForXPilot; /* Do a DNS lookup for XPilot.domain? */
-int8_t *denyHosts; /* Computers which are denied service */
+char *denyHosts; /* Computers which are denied service */
 
 bool teamAssign; /* Assign player to team if not set? */
 
@@ -145,22 +144,22 @@ int32_t roundsPlayed; /* # of rounds played sofar. */
 
 int32_t maxVisibleObject; /* how many objects a player can see */
 bool pLockServer; /* Is server swappable out of memory?  */
-int8_t *password; /* password for operator status */
+char *password; /* password for operator status */
 int32_t clientPortStart; /* First UDP port for clients */
 int32_t clientPortEnd; /* Last one (these are for firewalls) */
 
-int8_t *robotRealName; /* Real name for robot */
-int8_t *robotHostName; /* Host name for robot */
+char *robotRealName; /* Real name for robot */
+char *robotHostName; /* Host name for robot */
 
 bool selfImmunity; /* Are players immune to their own weapons? */
 
-int8_t *defaultShipShape; /* What ship shape is used for players */
+char *defaultShipShape; /* What ship shape is used for players */
 /* who do not define their own? */
 int32_t maxPauseTime; /* Max. time you can stay paused for */
 
-DFLOAT mainLoopTime;
+float mainLoopTime;
 
-extern int8_t conf_logfile_string[]; /* Default name of log file */
+extern char conf_logfile_string[]; /* Default name of log file */
 
 /*
  ** Two functions which can be used if an option
@@ -364,10 +363,10 @@ static option_desc
 						{
 								"robotTeam",
 								"robotTeam",
-								"0",
+								"-1",
 								&robotTeam,
 								valInt,
-								tuner_dummy,
+								tuner_robotteam,
 								"Team to use for robots.\n",
 								OPT_ORIGIN_ANY
 										| OPT_VISIBLE },
@@ -909,26 +908,6 @@ static option_desc
 								OPT_ORIGIN_ANY
 										| OPT_VISIBLE },
 						{
-								"edgeWrap",
-								"edgeWrap",
-								"no",
-								&edgeWrap,
-								valBool,
-								tuner_none,
-								"Wrap around edges.\n",
-								OPT_ORIGIN_ANY
-										| OPT_VISIBLE },
-						{
-								"edgeBounce",
-								"edgeBounce",
-								"yes",
-								&edgeBounce,
-								valBool,
-								tuner_dummy,
-								"Players and bullets bounce when they hit the (non-wrapping) edge.\n",
-								OPT_ORIGIN_ANY
-										| OPT_VISIBLE },
-						{
 								"extraBorder",
 								"extraBorder",
 								"no",
@@ -1220,13 +1199,24 @@ static option_desc
 								tuner_none,
 								"The filename for the webpage with the server ranking list.\n",
 								OPT_COMMAND
-										| OPT_DEFAULTS } };
+										| OPT_DEFAULTS },
+						{
+								"rankWebpageCSS",
+								"rankCSS",
+								NULL,
+								&rankWebpageCSS,
+								valString,
+								tuner_none,
+								"The URL of an optional style sheet for the ranking webpage.\n",
+								OPT_COMMAND
+										| OPT_DEFAULTS },
+			};
 
-static bool options_inited = FALSE;
+static bool options_inited = false;
 
 option_desc* Get_option_descs(int32_t *count_ptr)
 {
-	if (options_inited != TRUE) {
+	if (options_inited != true) {
 		dumpcore("options not initialized");
 	}
 
@@ -1269,21 +1259,21 @@ bool Init_options(void)
 	int32_t i;
 	int32_t option_count = NELEM(options);
 
-	if (options_inited != FALSE) {
+	if (options_inited != false) {
 		dumpcore("Can't init options twice.");
 	}
 
 	Init_default_options();
 
 	for (i = 0; i < option_count; i++) {
-		if (Option_add_desc(&options[i]) == FALSE) {
-			return FALSE;
+		if (Option_add_desc(&options[i]) == false) {
+			return false;
 		}
 	}
 
-	options_inited = TRUE;
+	options_inited = true;
 
-	return TRUE;
+	return true;
 }
 
 void Free_options(void)
@@ -1291,12 +1281,12 @@ void Free_options(void)
 	int32_t i;
 	int32_t option_count = NELEM(options);
 
-	if (options_inited == TRUE) {
-		options_inited = FALSE;
+	if (options_inited == true) {
+		options_inited = false;
 		for (i = 0; i < option_count; i++) {
 			if (options[i].type == valString) {
-				int8_t **str_ptr = (int8_t **) options[i].variable;
-				int8_t *str = *str_ptr;
+				char **str_ptr = (char **) options[i].variable;
+				char *str = *str_ptr;
 				if (str != NULL && str
 						!= options[i].defaultValue) {
 					free(str);
@@ -1307,7 +1297,7 @@ void Free_options(void)
 	}
 }
 
-option_desc* Find_option_by_name(const int8_t* name)
+option_desc* Find_option_by_name(const char* name)
 {
 	int32_t j;
 	int32_t option_count = NELEM(options);

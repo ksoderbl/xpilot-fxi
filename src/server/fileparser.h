@@ -8,9 +8,9 @@
 #ifndef FILEPARSER_H_
 #define FILEPARSER_H_
 
-bool parseMapFile(const int8_t *filename);
-bool parseDefaultsFile(const int8_t *filename);
-bool parsePasswordFile(const int8_t *filename);
+bool parseMapFile(const char *filename);
+bool parseDefaultsFile(const char *filename);
+bool parsePasswordFile(const char *filename);
 
 
 #endif /* FILEPARSER_H_ */

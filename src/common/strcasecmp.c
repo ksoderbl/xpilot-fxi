@@ -1,4 +1,4 @@
-/* $Id: strcasecmp.c,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -36,7 +36,7 @@
  * moved the ++ expressions out of the macro.
  * Only test for the null byte in one string.
  */
-int32_t strcasecmp(const int8_t *str1, const int8_t *str2)
+int32_t strcasecmp(const char *str1, const char *str2)
 {
 	int32_t c1, c2;
 
@@ -53,7 +53,7 @@ int32_t strcasecmp(const int8_t *str1, const int8_t *str2)
 /*
  * By Bert Gijsbers, derived from Ian Malcom Brown's strcasecmp().
  */
-int32_t strncasecmp(const int8_t *str1, const int8_t *str2, size_t n)
+int32_t strncasecmp(const char *str1, const char *str2, size_t n)
 {
 	int32_t c1, c2;
 

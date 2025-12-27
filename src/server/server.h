@@ -1,4 +1,4 @@
-/* $Id: server.h,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -25,11 +25,18 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-enum TeamPickType {
-	PickForHuman = 1, PickForRobot = 2
-};
+static inline double timeval_to_seconds(struct timeval tv)
+{
+	return (double) tv.tv_sec + tv.tv_usec * 1e-6;
+}
 
 void Main_loop(int32_t argv);
 void Queue_loop(void);
+
+void End_game(void);
+void Game_Over(void);
+void Log_game(const char *heading);
+void Server_info(char *str, uint32_t max_size);
+int32_t plock_server(int32_t onoff);
 
 #endif

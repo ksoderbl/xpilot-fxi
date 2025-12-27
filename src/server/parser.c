@@ -1,4 +1,4 @@
-/* $Id: parser.c,v 1.8 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -28,9 +28,9 @@
 #include <string.h>
 #include <errno.h>
 
-#define SERVER
 #include "version.h"
 #include "xpconfig.h"
+#include "debug.h"
 #include "serverconst.h"
 #include "global.h"
 #include "proto.h"
@@ -41,22 +41,23 @@
 #include "commonproto.h"
 #include "fileparser.h"
 #include "parser.h"
+#include "map.h"
 
 
-int8_t parser_version[] = VERSION;
+char parser_version[] = VERSION;
 
 /*
  * Print the option list in "-help" format.
  * NT uses this to generate the ServerOpts.txt file
  */
-static void Parse_help(int8_t *progname)
+static void Parse_help(char *progname)
 {
 	int32_t j;
 	int32_t flags, all_flags;
-	const int8_t *str;
+	const char *str;
 	option_desc *options;
 	int32_t option_count;
-	int8_t msg[MSG_LEN];
+	char msg[MSG_LEN];
 
 	options = Get_option_descs(&option_count);
 
@@ -134,7 +135,7 @@ static void Parse_help(int8_t *progname)
 /*
  * Print the option list.
  */
-static void Parser_dump_options(int8_t *progname)
+static void Parser_dump_options(char *progname)
 {
 	int32_t j;
 	option_desc *options;
@@ -160,12 +161,12 @@ static void Parser_dump_options(int8_t *progname)
 /*
  * Print the option flags.
  */
-static void Parser_dump_flags(int8_t *progname)
+static void Parser_dump_flags(char *progname)
 {
 	int32_t j;
 	option_desc *options;
 	int32_t option_count;
-	int8_t msg[MSG_LEN];
+	char msg[MSG_LEN];
 
 	options = Get_option_descs(&option_count);
 
@@ -200,7 +201,7 @@ static void Parser_dump_flags(int8_t *progname)
 /*
  * Print some compile time configuration parameters.
  */
-static void Parser_dump_config(int8_t *progname)
+static void Parser_dump_config(char *progname)
 {
 	option_desc *options;
 	int32_t option_count;
@@ -224,7 +225,7 @@ static void Parser_dump_config(int8_t *progname)
  * Print the option list and
  * some compile time configuration parameters.
  */
-static void Parser_dump_all(int8_t *progname)
+static void Parser_dump_all(char *progname)
 {
 	Parser_dump_config(progname);
 	Parser_dump_options(progname);
@@ -237,7 +238,7 @@ static void Parser_dump_all(int8_t *progname)
  * This is called when a client requests
  * to see the current server parameter list.
  */
-int32_t Parser_list_option(int32_t *index, int8_t *buf)
+int32_t Parser_list_option(int32_t *index, char *buf)
 {
 	int32_t i = *index;
 	option_desc *options;
@@ -269,17 +270,17 @@ int32_t Parser_list_option(int32_t *index, int8_t *buf)
 		break;
 	case valString:
 		sprintf(buf, "%s:%s", options[i].name,
-				*(int8_t **) options[i].variable);
+				*(char **) options[i].variable);
 		break;
 	case valList: {
-		list_t list = *(list_t *) options[i].variable;
+		TList list = *(TList *) options[i].variable;
 		sprintf(buf, "%s:", options[i].name);
 		if (list) {
-			list_iter_t iter;
-			for (iter = List_begin(list); iter != List_end(list); LI_FORWARD(
+			TListIter iter;
+			for (iter = LIST_GetFirstItem(list); iter != LIST_GetLastItem(list); LI_FORWARD(
 					iter)) {
-				int8_t *str = LI_DATA(iter);
-				if (iter != List_begin(list)) {
+				char *str = LI_DATA(iter);
+				if (iter != LIST_GetFirstItem(list)) {
 					strlcat(buf, ",", MSG_LEN);
 				}
 				if (strlcat(buf, str, MSG_LEN) >= MSG_LEN) {
@@ -299,9 +300,9 @@ int32_t Parser_list_option(int32_t *index, int8_t *buf)
  * Check if the i-th command line argument
  * is a request for help or info.
  */
-static bool Parse_check_info_request(int8_t **argv, int32_t i)
+static bool Parse_check_info_request(char **argv, int32_t i)
 {
-	int8_t *arg = argv[i];
+	char *arg = argv[i];
 
 	if (arg[0] == '-' && arg[1] == '-') {
 		/* when arg starts with two dashes skip first one */
@@ -309,30 +310,30 @@ static bool Parse_check_info_request(int8_t **argv, int32_t i)
 	}
 	if (strcmp(arg, "-help") == 0 || strcmp(arg, "-h") == 0) {
 		Parse_help(*argv);
-		return TRUE;
+		return true;
 	}
 	if (strcmp(arg, "-dump") == 0) {
 		Parser_dump_all(*argv);
-		return TRUE;
+		return true;
 	}
 	if (strcmp(arg, "-dumpMan") == 0) {
 		Parser_dump_options(*argv);
-		return TRUE;
+		return true;
 	}
 	if (strcmp(arg, "-dumpWindows") == 0) {
 		Parser_dump_options(*argv);
-		return TRUE;
+		return true;
 	}
 	if (strcmp(arg, "-dumpFlags") == 0) {
 		Parser_dump_flags(*argv);
-		return TRUE;
+		return true;
 	}
 	if (strcmp(arg, "-version") == 0 || strcmp(arg, "-v") == 0) {
 		puts(TITLE);
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }
 
 /*
@@ -340,27 +341,27 @@ static bool Parse_check_info_request(int8_t **argv, int32_t i)
  * and read the server defaults file and map file.
  * Then convert the map data into a World structure.
  */
-bool Parser(int32_t argc, int8_t **argv)
+bool Parser(int32_t argc, char **argv)
 {
 	int32_t i;
 	bool status;
-	int8_t *fname;
+	char *fname;
 	option_desc *desc;
 
-	if (Init_options() == FALSE) {
-		return FALSE;
+	if (Init_options() == false) {
+		return false;
 	}
 
 	for (i = 1; i < argc; i++) {
-		if (Parse_check_info_request(argv, i) == TRUE) {
-			return FALSE;
+		if (Parse_check_info_request(argv, i) == true) {
+			return false;
 		}
 
 		if (argv[i][0] == '-' || argv[i][0] == '+') {
 			desc = Find_option_by_name(argv[i] + 1);
 			if (desc != NULL) {
 				if (desc->type == valBool) {
-					const int8_t *bool_value;
+					const char *bool_value;
 					if (argv[i][0] == '-') {
 						bool_value = "true";
 					}
@@ -452,9 +453,9 @@ bool Parser(int32_t argc, int8_t **argv)
 	Options_free();
 
 	/*
-	 * Construct the World structure from the options.
+	 * Construct the World structure.
 	 */
-	status = Grok_map();
+	status = Map_parse();
 
 	return status;
 }
@@ -468,7 +469,7 @@ bool Parser(int32_t argc, int8_t **argv)
  * Options which don't need such a tuner function set it to `tuner_dummy'.
  * Options which cannot be modified have the tuner set to `tuner_none'.
  */
-int32_t Tune_option(int8_t *name, int8_t *val)
+int32_t Tune_option(char *name, char *val)
 {
 	int32_t ival;
 	DFLOAT fval;
@@ -484,17 +485,17 @@ int32_t Tune_option(int8_t *name, int8_t *val)
 
 	switch (opt->type) {
 	case valInt:
-		if (Convert_string_to_int(val, &ival) != TRUE) {
+		if (Convert_string_to_int(val, &ival) != true) {
 			return 0;
 		}
 		*(int32_t *) opt->variable = ival;
 		(*opt->tuner)();
 		return 1;
 	case valBool:
-		if (ON(val)) {
+		if (string_is_true(val)) {
 			*(bool *) opt->variable = true;
 		}
-		else if (OFF(val)) {
+		else if (string_is_false(val)) {
 			*(bool *) opt->variable = false;
 		}
 		else {
@@ -503,21 +504,21 @@ int32_t Tune_option(int8_t *name, int8_t *val)
 		(*opt->tuner)();
 		return 1;
 	case valReal:
-		if (Convert_string_to_float(val, &fval) != TRUE) {
+		if (Convert_string_to_float(val, &fval) != true) {
 			return 0;
 		}
 		*(DFLOAT *) opt->variable = fval;
 		(*opt->tuner)();
 		return 1;
 	case valString: {
-		int8_t *s = xp_strdup(val);
+		char *s = xp_strdup(val);
 		if (!s) {
 			return 0;
 		}
-		if (*(int8_t **) (opt->variable) != opt->defaultValue) {
-			free(*(int8_t **) opt->variable);
+		if (*(char **) (opt->variable) != opt->defaultValue) {
+			free(*(char **) opt->variable);
 		}
-		*(int8_t **) opt->variable = s;
+		*(char **) opt->variable = s;
 		(*opt->tuner)();
 		return 1;
 	}
@@ -526,7 +527,7 @@ int32_t Tune_option(int8_t *name, int8_t *val)
 	}
 }
 
-int32_t Get_option_value(const int8_t *name, int8_t *value, uint32_t size)
+int32_t Get_option_value(const char *name, char *value, uint32_t size)
 {
 	option_desc *opt;
 
@@ -553,9 +554,9 @@ int32_t Get_option_value(const int8_t *name, int8_t *value, uint32_t size)
 				: "false");
 		break;
 	case valString:
-		if (*((int8_t **) opt->variable) == NULL)
+		if (*((char **) opt->variable) == NULL)
 			return -4;
-		strlcpy(value, *((int8_t **) opt->variable), size);
+		strlcpy(value, *((char **) opt->variable), size);
 		break;
 	default:
 		return -1; /* Generic error. */

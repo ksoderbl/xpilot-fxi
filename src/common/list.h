@@ -1,8 +1,7 @@
-/* $Id: list.h,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
- *
+/*
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
- *      Bjørn Stabell        <bjoern@xpilot.org>
+ *      Bjoern Stabell       <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
  *      Bert Gijsbers        <bert@xpilot.org>
  *      Dick Balaska         <dick@xpilot.org>
@@ -25,99 +24,124 @@
 #ifndef LIST_H_INCLUDED
 #define LIST_H_INCLUDED
 
-#include <stdint.h>
-
+#include <sys/types.h>
 
 /*
  * A double linked list similar to the STL list, but implemented in C.
  */
 
-typedef struct List *list_t;
-typedef struct ListNode *list_iter_t;
+/* store a list node. */
+struct TListNode_ {
+	struct TListNode_ *Next;
+	struct TListNode_ *Prev;
+	void *Data;
+};
+typedef struct TListNode_ TListNode;
+
+/* store the list header. */
+struct TList_ {
+	TListNode Tail;
+	int32_t Size;
+};
+typedef struct TList_ *TList;
+typedef struct TListNode_ *TListIter;
 
 /* create a new list and return the new list or NULL on failure. */
-list_t List_new(void);
+TList LIST_New(void);
 
 /* delete a list. */
-void List_delete(list_t);
+void LIST_Delete(TList);
+
+void LIST_DeleteNodesOnly(TList l);
 
 /* return a list iterator pointing to the first element of the list. */
-list_iter_t List_begin(list_t);
+TListIter LIST_GetFirstItem(TList);
 
 /* return a list iterator pointing to the one past the last element of the list. */
-list_iter_t List_end(list_t);
+TListIter LIST_GetLastItem(TList);
 
 /* return a pointer to the last list element. */
-void* List_back(list_t);
+void* LIST_GetLastData(TList);
 
 /* return a pointer to the first list element. */
-void* List_front(list_t);
+void* LIST_GetFirstData(TList);
 
 /* erase all elements from the list. */
-void List_clear(list_t);
+void LIST_Clear(TList);
 
 /* return true if list is empty. */
-int32_t List_empty(list_t);
+int32_t LIST_IsEmpty(TList);
 
 /* erase element at list position. */
-list_iter_t List_erase(list_t, list_iter_t);
+TListIter LIST_RemoveItem(TList, TListIter);
 
 /* erase a range of list elements excluding last. */
-list_iter_t List_erase_range(list_t alist, list_iter_t first, list_iter_t last);
+TListIter LIST_RemoveItemRange(TList alist, TListIter first, TListIter last);
 
-/* insert a new element into the list at position
+/* insert a new element int32_to the list at position
  * and return the new position or NULL on failure. */
-list_iter_t List_insert(list_t alist, list_iter_t position, void *element);
+TListIter LIST_AddItem(TList alist, TListIter position, void *element);
 
 /* remove the first element from the list and return a pointer to it. */
-void* List_pop_front(list_t);
+void* LIST_RemoveFirstItem(TList);
 
 /* remove the last element from the list and return a pointer to it. */
-void* List_pop_back(list_t);
+void* LIST_RemoveLastItem(TList);
+
+void LIST_MoveItemTop(TList list, TListIter iter);
+void LIST_MoveItemBottom(TList list, TListIter iter);
+
+void LIST_SetIterFirst(TList list, TListIter iter);
+void LIST_SetIterLast(TList list, TListIter iter);
 
 /* add a new element to the beginning of the list.
  * and return the new position or NULL on failure. */
-list_iter_t List_push_front(list_t list, void *data);
+TListIter LIST_AddItemTop(TList list, void *data);
 
 /* append a new element at the end of the list.
  * and return the new position or NULL on failure. */
-list_iter_t List_push_back(list_t list, void *data);
+TListIter LIST_AddItemBottom(TList list, void *data);
 
 /*
  * Find an element in the list and return an iterator pointing to it.
  * Note that this is very slow because it traverses the entire list
  * searching for an element.
  */
-list_iter_t List_find(list_t list, void *data);
+TListIter LIST_FindItem(TList list, void *data, int32_t offset, int32_t size);
 
 /*
  * Find an element in a range of elements (excluding last) and return
  * an iterator pointing to it.  Note that this is a very slow operation.
  */
-list_iter_t List_find_range(list_iter_t first, list_iter_t last, void *data);
+TListIter LIST_FindItemRange(TListIter first, TListIter last, void *data, int32_t offset, int32_t size);
 
 /*
- * Remove all element from the list which are equal to data.
+ * Remove all element from the list which are equal to Data.
  * Note that this is very slow because it traverses the entire list.
- * The return value is the number of successful removals.
+ * The return Value is the number of successful removals.
  */
-int32_t List_remove(list_t list, void *data);
+int32_t LIST_RemoveData(TList list, void *data);
 
 /* return the number of elements in the list. */
-int32_t List_size(list_t);
+int32_t LIST_GetItemCount(TList);
 
 /* advance list iterator one position and return new position. */
-list_iter_t List_iter_forward(list_iter_t *pos);
+TListIter LIST_ForwardIter(TListIter *pos);
 
 /* move list iterator one position backwards and return new position. */
-list_iter_t List_iter_backward(list_iter_t *pos);
+TListIter LIST_BackIter(TListIter *pos);
 
-/* return data at list position. */
-void* List_iter_data(list_iter_t pos);
+/* return Data at list position. */
+void* LIST_GetItemData(TListIter pos);
+
+int32_t LIST_GetListCount(void);
+int32_t LIST_GetNodeCount(void);
+void LIST_GetItemsToBuffer(TList list, char *buf, int32_t item_size);
+void LIST_AddItemsFromBuffer(TList list, char *buf, int32_t item_size, int32_t num_items);
 
 /* macros to reduce typing. */
-#define LI_FORWARD(pos_)	List_iter_forward(&(pos_))
-#define LI_BACKWARD(pos_)	List_iter_backward(&(pos_))
-#define LI_DATA(pos_)		List_iter_data((pos_))
+#define LI_FORWARD(pos_)	LIST_ForwardIter(&(pos_))
+#define LI_BACKWARD(pos_)	LIST_BackIter(&(pos_))
+#define LI_DATA(pos_)		LIST_GetItemData((pos_))
 
 #endif

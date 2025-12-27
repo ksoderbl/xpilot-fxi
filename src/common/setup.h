@@ -1,4 +1,4 @@
-/* $Id: setup.h,v 1.4 2008/08/15 15:09:52 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -123,22 +123,11 @@ typedef struct {
 	int16_t height; /* height in pixels */
 	int16_t frames_per_second; /* FPS */
 	int16_t map_order; /* row major or col major */
-	int8_t name[MAX_CHARS]; /* name of map */
-	int8_t author[MAX_CHARS]; /* name of author of map */
+	char name[MAX_CHARS]; /* name of map */
+	char author[MAX_CHARS]; /* name of author of map */
 	uint8_t map_data[4]; /* compressed map data */
 /* plus more mapdata here (HACK) */
 } setup_t;
-
-#ifndef NETSERVER_C
-# ifdef FPS
-#  error "FPS needs a different definition in the client"
-#  undef FPS
-# endif
-# define FPS		(Setup->frames_per_second)
-
-extern setup_t *Setup;
-
-#endif
 
 #endif
 

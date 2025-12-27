@@ -1,4 +1,4 @@
-/* $Id: robot.h,v 1.11 2008/08/15 15:09:53 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -25,6 +25,8 @@
 
 #ifndef ROBOT_H
 #define ROBOT_H
+
+#include "pack.h"
 
 /*
  * We should have these configurable for experimentation.
@@ -98,13 +100,13 @@
  * function pointer to the robot_type_setups array.
  */
 typedef struct {
-	const int8_t *name;
-	void (*create)(player_t *pl, int8_t *str);
+	const char *name;
+	void (*create)(player_t *pl, char *str);
 	void (*go_home)(player_t *pl);
 	void (*play)(player_t *pl);
 	void (*set_war)(player_t *pl, player_t *kp);
 	player_t *(*war_on_player)(player_t *pl);
-	void (*message)(player_t *pl, const int8_t *str);
+	void (*message)(player_t *pl, const char *str);
 	void (*destroy)(player_t *pl);
 } robot_type_t;
 
@@ -125,11 +127,11 @@ enum robot_talk_t {
  * Configuration data for each robot available.
  */
 typedef struct {
-	int8_t driver[MAX_NAME_LEN]; /* which robot code controls robot? */
-	int8_t name[MAX_NAME_LEN]; /* Name of this robot. */
-	int8_t config[MAX_CHARS]; /* Attack + defense ~ 100 */
+	char driver[MAX_NAME_LEN]; /* which robot code controls robot? */
+	char name[MAX_NAME_LEN]; /* Name of this robot. */
+	char config[MAX_CHARS]; /* Attack + defense ~ 100 */
 	uint32_t used; /* How often has this robot been used */
-	int8_t shape[2 * MSG_LEN]; /* shipshape string definition */
+	char shape[2 * MSG_LEN]; /* shipshape string definition */
 } robot_t;
 
 /*
@@ -162,5 +164,21 @@ typedef struct robot_default_data {
 	int32_t lock_last_seen; /* last time robot saw target */
 	position_t lock_last_pos; /* last known position of target */
 } robot_default_data_t;
+
+void Robot_add_remove(void);
+bool Robot_should_leave(player_t *pl);
+void Robot_play(player_t *pl);
+
+void Parse_robot_file(void);
+bool Robots_init(void);
+void Robot_remove(player_t *pl);
+void Robot_kick(player_t *pl);
+void Robot_destroy(player_t *pl);
+void Robot_war(player_t *pl, player_t *kp);
+void Robot_reset_war(player_t *pl);
+player_t *Robot_war_on_player(player_t *pl);
+void Robot_go_home(player_t *pl);
+void Robot_program(player_t *pl, player_t *kp);
+void Robot_message(player_t *pl, const char *message);
 
 #endif

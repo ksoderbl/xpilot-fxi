@@ -1,4 +1,4 @@
-/* $Id: error.h,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -40,10 +40,10 @@
 
 # if (defined(__STDC__) && !defined(__sun__) || defined(__cplusplus) || defined(_WINDOWS))
 #  include <stdarg.h>
-extern void warn(const int8_t *fmt, ...);
-extern void error(const int8_t *fmt, ...);
-extern void fatal(const int8_t *fmt, ...);
-extern void dumpcore(const int8_t *fmt, ...);
+extern void warn(const char *fmt, ...);
+extern void error(const char *fmt, ...);
+extern void fatal(const char *fmt, ...);
+extern void dumpcore(const char *fmt, ...);
 # else
 #  include <varargs.h>
 extern void warn();
@@ -60,6 +60,6 @@ extern void dumpcore();
 # endif
 #endif
 
-extern void init_error(const int8_t *prog);
+extern void init_error(const char *prog);
 
 #endif	/* ERROR_H */

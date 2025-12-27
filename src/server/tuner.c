@@ -1,4 +1,4 @@
-/* $Id: tuner.c,v 1.9 2008/09/02 19:08:52 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -22,18 +22,25 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#define	SERVER
 #include <stdlib.h>
 #include <time.h>
+
 #include "serverconst.h"
 #include "global.h"
-#include "proto.h"
 #include "error.h"
 #include "commonproto.h"
+
+#include "proto.h"
+
 #include "sched.h"
 #include "tuner.h"
 
-extern int32_t frame_cycle;
+#include "player.h"
+#include "map.h"
+#include "player_inline.h"
+
+#include "server.h"
+#include "robot.h"
 
 
 void tuner_plock(void)
@@ -64,7 +71,7 @@ void tuner_ballmass(void)
 	int32_t i;
 
 	for (i = 0; i < NumObjs; i++) {
-		if (BIT(Obj[i]->type, OBJ_BALL)) {
+		if (Object_is_type(Obj[i], OBJ_BALL)) {
 			Obj[i]->mass = ballMass;
 		}
 	}
@@ -75,28 +82,44 @@ void tuner_maxrobots(void)
 	if (maxRobots < 0) {
 		maxRobots = World.NumBases;
 	}
+}
 
-	while (maxRobots < NumRobots) {
-		Robot_delete(NULL, true);
-	}
+void tuner_robotteam(void)
+{
+	Robots_init();
 }
 
 void tuner_worldlives(void)
 {
+	int32_t i;
+
 	if (worldLives < 0)
 		worldLives = 0;
 
 	Set_world_rules();
 
 	if (BIT(World.rules->mode, LIMITED_LIVES)) {
-		Reset_all_players();
+		Players_reset();
+
+		Objects_time_out();
+
+		/* Reset the teams */
+		for (i = 0; i < MAX_TEAMS; i++) {
+			World.teams[i].TreasuresDestroyed = 0;
+			World.teams[i].TreasuresLeft = World.teams[i].NumTreasures;
+		}
 	}
 }
 
 void tuner_framedivisor(void)
 {
-
 	LIMIT(frameDivisor, 1, 10);
+
+	/*
+	 * The global variable ticksPerFrame depends on frameDivisor, but we must
+	 * not update it here, because it is likely to cause havoc in frame computations.
+	 */
+
 	frame_cycle = 0;
 	setup_timer(fps);
 	frame_cycle = 0;

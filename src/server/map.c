@@ -1,4 +1,4 @@
-/* $Id: map.c,v 1.11 2008/09/02 19:08:51 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -31,7 +31,6 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 
-#define SERVER
 #include "version.h"
 #include "xpconfig.h"
 #include "serverconst.h"
@@ -41,41 +40,43 @@
 #include "bit.h"
 #include "error.h"
 #include "commonproto.h"
+#include "debug.h"
+#include "objpos.h"
 
-int8_t map_version[] = VERSION;
+char map_version[] = VERSION;
 
 /*
  * Globals.
  */
 World_map World;
 
-static void Init_map(void);
-static void Alloc_map(void);
+static void Map_init(void);
+static void Map_allocate(void);
 
-#ifdef DEBUG
-static void Print_map(void) /* Debugging only. */
-{
-	int32_t x, y;
+//#ifdef DEBUG
+//static void Print_map(void) /* Debugging only. */
+//{
+//	int32_t x, y;
+//
+//	for (y=World.y-1; y>=0; y--) {
+//		for (x=0; x<World.x; x++)
+//		switch (World.block[x][y]) {
+//			case SPACE:
+//			putchar(' ');
+//			break;
+//			case BASE:
+//			putchar('_');
+//			break;
+//			default:
+//			putchar('X');
+//			break;
+//		}
+//		putchar('\n');
+//	}
+//}
+//#endif
 
-	for (y=World.y-1; y>=0; y--) {
-		for (x=0; x<World.x; x++)
-		switch (World.block[x][y]) {
-			case SPACE:
-			putchar(' ');
-			break;
-			case BASE:
-			putchar('_');
-			break;
-			default:
-			putchar('X');
-			break;
-		}
-		putchar('\n');
-	}
-}
-#endif
-
-static void Init_map(void)
+static void Map_init(void)
 {
 	World.x = 256;
 	World.y = 256;
@@ -88,7 +89,7 @@ static void Init_map(void)
 	World.NumTreasures = 0;
 }
 
-void Free_map(void)
+void Map_free(void)
 {
 	if (World.block) {
 		free(World.block);
@@ -108,12 +109,12 @@ void Free_map(void)
 	}
 }
 
-static void Alloc_map(void)
+static void Map_allocate(void)
 {
 	int32_t x;
 
 	if (World.block)
-		Free_map();
+		Map_free();
 
 	World.block = (uint8_t **) malloc(sizeof(uint8_t *)
 			* World.x + World.x * sizeof(uint8_t) * World.y);
@@ -122,7 +123,7 @@ static void Alloc_map(void)
 	World.base = NULL;
 	World.fuel = NULL;
 	if (World.block == NULL || World.itemID == NULL) {
-		Free_map();
+		Map_free();
 		error("Couldn't allocate memory for map (%d bytes)", World.x
 				* (World.y * (sizeof(uint8_t)
 						+ sizeof(vector_t))
@@ -155,7 +156,6 @@ static void Alloc_map(void)
 
 static void Map_extra_error(int32_t line_num)
 {
-#ifndef SILENT
 	static int32_t prev_line_num, error_count;
 	const int32_t max_error = 5;
 
@@ -170,12 +170,10 @@ static void Map_extra_error(int32_t line_num)
 			xpprintf("And so on...\n");
 		}
 	}
-#endif
 }
 
 static void Map_missing_error(int32_t line_num)
 {
-#ifndef SILENT
 	static int32_t prev_line_num, error_count;
 	const int32_t max_error = 5;
 
@@ -189,15 +187,16 @@ static void Map_missing_error(int32_t line_num)
 			xpprintf("And so on...\n");
 		}
 	}
-#endif
 }
 
-bool Grok_map(void)
+bool Map_parse(void)
 {
 	int32_t i, x, y, c;
-	int8_t *s;
+	clpos_t pos;
+	char *s;
 
-	Init_map();
+
+	Map_init();
 
 	if (mapWidth <= 0 || mapWidth > MAX_MAP_SIZE || mapHeight <= 0
 			|| mapHeight > MAX_MAP_SIZE) {
@@ -216,18 +215,22 @@ bool Grok_map(void)
 		World.y += 2;
 	}
 	World.diagonal = (int32_t) LENGTH(World.x, World.y);
+
 	World.width = World.x * BLOCK_SZ;
 	World.height = World.y * BLOCK_SZ;
+	World.cwidth = PIXEL_TO_CLICK(World.width);
+	World.cheight = PIXEL_TO_CLICK(World.height);
+
 	World.hypotenuse = (int32_t) LENGTH(World.width, World.height);
 	strlcpy(World.name, mapName, sizeof(World.name));
 	strlcpy(World.author, mapAuthor, sizeof(World.author));
 
 	if (!mapData) {
 		warn("No mapData.");
-		return FALSE;
+		return false;
 	}
 
-	Alloc_map();
+	Map_allocate();
 
 	x = -1;
 	y = World.y - 1;
@@ -240,8 +243,7 @@ bool Grok_map(void)
 
 		x++;
 
-		if (extraBorder && (x == 0 || x == World.x - 1 || y == 0 || y
-				== World.y - 1)) {
+		if (extraBorder && (x == 0 || x == World.x - 1 || y == 0 || y == World.y - 1)) {
 			if (x >= World.x) {
 				x = -1;
 				y--;
@@ -360,7 +362,10 @@ bool Grok_map(void)
 		World.teams[i].TreasuresDestroyed = 0;
 		World.teams[i].TreasuresLeft = 0;
 		World.teams[i].Swapper = NULL;
+		World.teams[i].Properties = TEAM_DEFAULT;
 	}
+
+	World.teams[PAUSE_TEAM_NUM].Properties = TEAM_ONLY_PAUSERS;
 
 	/*
 	 * Change read tags to internal data, create objects
@@ -371,7 +376,7 @@ bool Grok_map(void)
 			uint16_t *itemID = World.itemID[x];
 
 			for (y = 0; y < World.y; y++) {
-				int8_t c = line[y];
+				char c = line[y];
 
 				itemID[y] = (uint16_t) -1;
 
@@ -401,22 +406,12 @@ bool Grok_map(void)
 				case '#':
 					line[y] = FUEL;
 					itemID[y] = World.NumFuels;
-					World.fuel[World.NumFuels].blk_pos.x
-							= x;
-					World.fuel[World.NumFuels].blk_pos.y
-							= y;
-					World.fuel[World.NumFuels].pix_pos.x
-							= (x + 0.5f) * BLOCK_SZ;
-					World.fuel[World.NumFuels].pix_pos.y
-							= (y + 0.5f) * BLOCK_SZ;
-					World.fuel[World.NumFuels].fuel
-							= START_STATION_FUEL;
-					World.fuel[World.NumFuels].conn_mask
-							= (uint32_t) -1;
-					World.fuel[World.NumFuels].last_change
-							= frame_loops;
-					World.fuel[World.NumFuels].team
-							= NULL;
+					Position_simple_set(&pos, BLOCK_MIDDLE_TO_CLICK(x), BLOCK_MIDDLE_TO_CLICK(y));
+					Position_set(&World.fuel[World.NumFuels].pos, &pos);
+					World.fuel[World.NumFuels].fuel = START_STATION_FUEL;
+					World.fuel[World.NumFuels].conn_mask = (uint32_t) -1;
+					World.fuel[World.NumFuels].last_change = frame_loops;
+					World.fuel[World.NumFuels].team = NULL;
 					World.fuel[World.NumFuels].id = World.NumFuels;
 
 					World.NumFuels++;
@@ -425,20 +420,15 @@ bool Grok_map(void)
 				case '*':
 					line[y] = TREASURE;
 					itemID[y] = World.NumTreasures;
-					World.treasures[World.NumTreasures].pos.x
-							= x;
-					World.treasures[World.NumTreasures].pos.y
-							= y;
-					World.treasures[World.NumTreasures].have
-							= false;
-					World.treasures[World.NumTreasures].destroyed
-							= 0;
+					Position_simple_set(&pos, BLOCK_MIDDLE_TO_CLICK(x), BLOCK_MIDDLE_TO_CLICK(y));
+					Position_set(&World.treasures[World.NumTreasures].pos, &pos);
+					World.treasures[World.NumTreasures].have = false;
+					World.treasures[World.NumTreasures].destroyed = 0;
 					/*
 					 * Determining which team it belongs to is done later,
 					 * in Find_closest_team().
 					 */
-					World.treasures[World.NumTreasures].team
-							= NULL;
+					World.treasures[World.NumTreasures].team = NULL;
 
 					World.treasures[World.NumTreasures].id = World.NumTreasures;
 					World.NumTreasures++;
@@ -461,8 +451,8 @@ bool Grok_map(void)
 					line[y] = BASE;
 					itemID[y] = World.NumBases;
 					World.base[World.NumBases].id = World.NumBases;
-					World.base[World.NumBases].pos.x = x;
-					World.base[World.NumBases].pos.y = y;
+					Position_simple_set(&pos, BLOCK_MIDDLE_TO_CLICK(x), BLOCK_MIDDLE_TO_CLICK(y));
+					Position_set(&World.base[World.NumBases].pos, &pos);
 					/*
 					 * The direction of the base should be so that it points
 					 * up with respect to the gravity in the region.  This
@@ -471,20 +461,19 @@ bool Grok_map(void)
 					 */
 					World.base[World.NumBases].dir = DIR_UP;
 					if (BIT(World.rules->mode, TEAM_PLAY)) {
-						if (c >= '0' && c <= '9') {
+						if (c >= '0' && c < '0' + MAX_TEAMS) {
 							World.base[World.NumBases].team = &World.teams[c - '0'];
 						}
 						else {
 							World.base[World.NumBases].team = &World.teams[0];
 						}
 						World.base[World.NumBases].team->NumBases++;
-						if (World.base[World.NumBases].team->NumBases
-								== 1)
+						if (World.base[World.NumBases].team->NumBases == 1) {
 							World.NumTeamBases++;
+						}
 					}
 					else {
-						World.base[World.NumBases].team
-								= NULL;
+						World.base[World.NumBases].team = NULL;
 					}
 					World.NumBases++;
 					break;
@@ -497,29 +486,25 @@ bool Grok_map(void)
 		 */
 		if (BIT(World.rules->mode, TEAM_PLAY)) {
 			team_t *team = NULL;
+
 			for (i = 0; i < World.NumTreasures; i++) {
-				team = Find_closest_team(
-						World.treasures[i].pos.x,
-						World.treasures[i].pos.y);
+				team = Map_get_closest_team(&World.treasures[i].pos);
 				World.treasures[i].team = team;
 				if (team == NULL) {
-					error(
-							"Couldn't find a matching team for the treasure.");
+					error("Couldn't find a matching team for the treasure.");
 				}
 				else {
 					team->NumTreasures++;
 					team->TreasuresLeft++;
 				}
 			}
+
 			for (i = 0; i < World.NumFuels; i++) {
-				team = Find_closest_team(
-						World.fuel[i].blk_pos.x,
-						World.fuel[i].blk_pos.y);
-				if (team == NULL) {
-					error(
-							"Couldn't find a matching team for fuelstation.");
-				}
+				team = Map_get_closest_team(&World.fuel[i].pos);
 				World.fuel[i].team = team;
+				if (team == NULL) {
+					error("Couldn't find a matching team for fuelstation.");
+				}
 			}
 		}
 	}
@@ -528,17 +513,13 @@ bool Grok_map(void)
 		maxRobots = World.NumBases;
 	}
 
-#ifndef	SILENT
 	xpprintf(
 			"World....: %s\nBases....: %d\nMapsize..: %dx%d\nTeam play: %s\n",
 			World.name, World.NumBases, World.x, World.y, BIT(
 					World.rules->mode, TEAM_PLAY) ? "on"
 					: "off");
-#endif
 
-	D(Print_map(); )
-
-	return TRUE;
+	return true;
 }
 
 /*
@@ -548,15 +529,15 @@ bool Grok_map(void)
  * If a base attractor is adjacent to a base then the base will point
  * to the attractor.
  */
-void Find_base_direction(void)
+void Map_compute_base_direction(void)
 {
 	int32_t i;
 
 	for (i = 0; i < World.NumBases; i++) {
-		int32_t x = World.base[i].pos.x,
-		y = World.base[i].pos.y,
-		dir,
-		att;
+		int32_t x = World.base[i].pos.bx;
+		int32_t y = World.base[i].pos.by;
+		int32_t dir;
+		int32_t att;
 
 		dir = DIR_UP;
 		att = -1;
@@ -622,18 +603,19 @@ void Find_base_direction(void)
 /*
  * Return the team that is closest to this position.
  */
-team_t *Find_closest_team(int32_t posx, int32_t posy)
+team_t *Map_get_closest_team(objposition_t *pos)
 {
 	team_t *team = NULL;
 	int32_t i;
-	DFLOAT closest = FLT_MAX, l;
+	DFLOAT closest = FLT_MAX;
+	DFLOAT l;
 
 	for (i = 0; i < World.NumBases; i++) {
-		if (World.base[i].team == NULL)
-		continue;
+		if (World.base[i].team == NULL) {
+			continue;
+		}
 
-		l = Wrap_length((posx - World.base[i].pos.x)*BLOCK_SZ,
-		(posy - World.base[i].pos.y)*BLOCK_SZ);
+		l = Map_get_distance(&World.base[i].pos, pos);
 
 		if (l < closest) {
 			team = World.base[i].team;
@@ -644,16 +626,55 @@ team_t *Find_closest_team(int32_t posx, int32_t posy)
 	return team;
 }
 
-DFLOAT Wrap_findDir(DFLOAT dx, DFLOAT dy)
+/* expects positions expressed in pixels */
+DFLOAT Map_get_discrete_angle(objposition_t *p1, objposition_t *p2)
 {
-	dx = WRAP_DX(dx);
-	dy = WRAP_DY(dy);
-	return findDir(dx, dy);
+	return discrete_angle(WRAP_DX(p2->x - p1->x), WRAP_DY(p2->y - p1->y));
 }
 
-DFLOAT Wrap_length(DFLOAT dx, DFLOAT dy)
+/* expects positions expressed in pixels */
+DFLOAT Map_get_distance(objposition_t *p1, objposition_t *p2)
 {
-	dx = WRAP_DX(dx);
-	dy = WRAP_DY(dy);
-	return LENGTH(dx, dy);
+	return LENGTH(WRAP_DX(p2->x - p1->x), WRAP_DY(p2->y - p1->y));
+}
+
+base_t *Map_get_base_by_pos(objposition_t *pos)
+{
+	int32_t i;
+	base_t *base = NULL;
+
+	for (i = 0; i < World.NumBases; i++) {
+		base = &World.base[i];
+		if (base->pos.bx == pos->bx && base->pos.by == pos->by) {
+			return base;
+		}
+	}
+
+	return NULL;
+}
+
+treasure_t *Map_get_treasure_by_pos(objposition_t *pos)
+{
+	int32_t i;
+	treasure_t *treasure = NULL;
+
+	for (i = 0; i < World.NumBases; i++) {
+		treasure = &World.treasures[i];
+		if (treasure->pos.bx == pos->bx && treasure->pos.by == pos->by) {
+			return treasure;
+		}
+	}
+
+	return NULL;
+}
+
+void Fuelstation_add_fuel(fuel_t *fs, int32_t fuel)
+{
+	if (fuel == 0) {
+		return;
+	}
+
+	fs->fuel += fuel;
+	fs->conn_mask = 0;
+	fs->last_change = frame_loops;
 }

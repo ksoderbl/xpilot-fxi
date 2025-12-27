@@ -1,4 +1,4 @@
-/* $Id: score.h,v 1.3 2008/08/15 15:09:53 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -25,6 +25,11 @@
 #ifndef SCORE_H
 #define SCORE_H
 
+#include "types.h"
+
+#include "structs.h"
+#include "walls.h"
+
 #define ED_SHOT			(-0.2*FUEL_SCALE_FACT)
 #define ED_SHIELD		(-0.20*FUEL_SCALE_FACT)
 #define ED_SHOT_HIT		(-25.0*FUEL_SCALE_FACT)
@@ -36,5 +41,20 @@
 
 #define RATE_SIZE	    	20
 #define RATE_RANGE	    	1024
+
+#define crashScoreMult 0.33
+
+inline double Get_Score(player_t *pl);
+inline void Score_set(player_t *pl, double score);
+inline void Score_add(player_t *pl, double score);
+
+void SCORE(player_t *pl, int32_t points, objposition_t *pos, const char *msg);
+int32_t Rate(int32_t winner, int32_t looser);
+int32_t Punish_team(player_t *pl, treasure_t *td, treasure_t *tt);
+void Score_players(player_t *winner, int32_t winner_score, char *winner_msg, player_t *loser, int32_t loser_score, char *loser_msg);
+void Score_compute_end_of_round(int32_t *average_score, int32_t *num_best_players, DFLOAT *best_ratio, player_t **best_players);
+void Score_give_bonus(int32_t average_score, int32_t num_best_players, DFLOAT best_ratio, player_t **best_players);
+void Score_give_individual_bonus(player_t *pl, int32_t average_score);
+void SCORE_LegacyBallCash(move_state_t *ms, double loose_time);
 
 #endif

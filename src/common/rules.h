@@ -1,4 +1,4 @@
-/* $Id: rules.h,v 1.5 2008/08/15 15:09:52 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -37,6 +37,7 @@
 #define PLAYER_SHIELDING	(1<<6)
 #define TEAM_PLAY		(1<<8)
 #define WRAP_PLAY		(1<<9)
+#define PRACTISE_PLAY		(1<<10)
 
 /*
  * Client uses only a subset of them:
@@ -49,26 +50,16 @@
  * The bits that the client needs must fit into a byte,
  * so the first 8 bitvalues are reserved for that purpose.
  */
-#define PLAYING			(1L<<0)		/* Not returning to base */
-#define PAUSE			(1L<<1) 	/* Must stay below 8 */
-#define GAME_OVER		(1L<<2)		/* Must stay below 8 */
-#define THRUSTING		(1L<<3)		/* not used by client? */
-#define SELF_DESTRUCT		(1L<<4)		/* not used by client? */
-
-#define KILLED			(1L<<10)
-#define CONFUSED		(1L<<14)
-
-#define IS_ATTACHED		(1L<<16)	/* Ball was stolen from its box */
-//#define RECREATE		(1L<<17)	/* Ball should be recreated, after it's been destroyed */
-#define FROMBOUNCE		(1L<<18)	/* Spark from wall bounce */
-#define OWNERIMMUNE		(1L<<19)	/* Owner is immune to object */
-#define REPROGRAM		(1L<<20)	/* Player reprogramming */
-#define NOEXPLOSION		(1L<<21)	/* No ball recreate explosion */
-#define COLLISIONSHOVE		(1L<<22)	/* Collision counts as shove */
+#define OLD_PLAYING			(1L<<0)		/* alive or killed */
+#define OLD_PAUSE			(1L<<1) 	/* paused */
+#define OLD_GAME_OVER			(1L<<2)		/* waiting or dead */
+#define OLD_KILLED			(1L<<10)
 
 typedef struct {
 	int32_t lives;
 	int32_t mode;
 } rules_t;
+
+extern int32_t KILL_OBJ_BITS;
 
 #endif

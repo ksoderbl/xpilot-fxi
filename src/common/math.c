@@ -1,4 +1,4 @@
-/* $Id: math.c,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -32,23 +32,23 @@
 #include "error.h"
 #include "commonproto.h"
 
-int8_t math_version[] = VERSION;
+char math_version[] = VERSION;
 
 DFLOAT tbl_sin[TABLE_SIZE];
 DFLOAT tbl_cos[TABLE_SIZE];
 
-int32_t ON(int8_t *optval);
-int32_t OFF(int8_t *optval);
+int32_t string_is_true(char *optval);
+int32_t string_is_false(char *optval);
 int32_t f2i(DFLOAT f);
-DFLOAT findDir(DFLOAT x, DFLOAT y);
+DFLOAT discrete_angle(DFLOAT x, DFLOAT y);
 
-int32_t ON(int8_t *optval)
+int32_t string_is_true(char *optval)
 {
 	return (strncasecmp(optval, "true", 4) == 0 || strncasecmp(optval,
 			"on", 2) == 0 || strncasecmp(optval, "yes", 3) == 0);
 }
 
-int32_t OFF(int8_t *optval)
+int32_t string_is_false(char *optval)
 {
 	return (strncasecmp(optval, "false", 5) == 0 || strncasecmp(optval,
 			"off", 3) == 0 || strncasecmp(optval, "no", 2) == 0);
@@ -56,11 +56,13 @@ int32_t OFF(int8_t *optval)
 
 int32_t mod(int32_t x, int32_t y)
 {
-	if (x >= y || x < 0)
+	if (x >= y || x < 0) {
 		x = x - y * (x / y);
+	}
 
-	if (x < 0)
+	if (x < 0) {
 		x += y;
+	}
 
 	return x;
 }
@@ -70,18 +72,21 @@ int32_t f2i(DFLOAT f)
 	return (f < 0) ? -(int32_t) (0.5f - f) : (int32_t) (f + 0.5f);
 }
 
-DFLOAT findDir(DFLOAT x, DFLOAT y)
+DFLOAT discrete_angle(DFLOAT x, DFLOAT y)
 {
 	DFLOAT angle;
 
-	if (x != 0.0 || y != 0.0)
+	if (x != 0.0 || y != 0.0) {
 		angle = atan2(y, x) / (2 * PI);
-	else
+	}
+	else {
 		angle = 0.0;
+	}
 
-	if (angle < 0)
+	if (angle < 0) {
 		angle++;
-	return angle * RES;
+	}
+	return angle * ANGLE_RESOLUTION;
 }
 
 double rfrac(void)
@@ -93,7 +98,7 @@ double rfrac(void)
 	return (double) randomMT() * 0.00000000023283064365386962890625;
 }
 
-void Make_table(void)
+void make_trig_table(void)
 {
 	int32_t i;
 

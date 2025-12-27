@@ -1,4 +1,4 @@
-/* $Id: contact.c,v 1.16 2008/09/02 19:08:51 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -30,13 +30,16 @@
 #include <time.h>
 #include <sys/time.h>
 
-#define SERVER
 #include "version.h"
 #include "xpconfig.h"
 #include "types.h"
 #include "serverconst.h"
 #include "global.h"
 #include "proto.h"
+#include "error.h"
+#include "commonproto.h"
+#include "debug.h"
+
 #include "socklib.h"
 #include "map.h"
 #include "pack.h"
@@ -44,14 +47,32 @@
 #include "net.h"
 #include "netserver.h"
 #include "sched.h"
-#include "error.h"
 #include "checknames.h"
 #include "server.h"
-#include "commonproto.h"
 #include "parser.h"
+#include "player.h"
+#include "player_inline.h"
+#include "frame.h"
+#include "robot.h"
+#include "metaserver.h"
+
+struct queued_player {
+	struct queued_player *next;
+	char real_name[MAX_CHARS];
+	char nick_name[MAX_CHARS];
+	char disp_name[MAX_CHARS];
+	char host_name[MAX_CHARS];
+	char host_addr[24];
+	int32_t port;
+	team_t *team;
+	uint32_t version;
+	int32_t login_port;
+	int32_t last_ack_sent;
+	int32_t last_ack_recv;
+};
 
 
-int8_t contact_version[] = VERSION;
+char contact_version[] = VERSION;
 
 /*
  * Global variables
@@ -59,19 +80,19 @@ int8_t contact_version[] = VERSION;
 int32_t NumQueuedPlayers = 0;
 int32_t MaxQueuedPlayers = 20;
 
+static struct queued_player *qp_list;
+
+
 extern connection_t *Conn;
 
 static int32_t contactSocket;
 static sockbuf_t ibuf;
-static int8_t msg[MSG_LEN];
-extern time_t serverTime;
-extern int8_t ShutdownReason[];
-extern int32_t frame_cycle;
-static bool Owner(int8_t request, int8_t *real_name, int8_t *host_addr,
-		int32_t host_port, int32_t pass);
-static int32_t Queue_player(int8_t *real, int8_t *nick, int8_t *disp, int32_t team,
-		int8_t *addr, int8_t *host, uint32_t version, int32_t port, int32_t *qpos);
-static int32_t Check_address(int8_t *addr);
+extern time_t serverStartTime;
+extern char ShutdownReason[];
+
+static bool Is_owner(char request, char *real_name, char *host_addr, int32_t host_port, int32_t pass);
+static int32_t Queue_player(char *real, char *nick, char *disp, int32_t team, char *addr, char *host, uint32_t version, int32_t port, int32_t *qpos);
+static int32_t Check_address(char *addr);
 void Contact(int32_t fd, void *arg);
 
 
@@ -113,17 +134,18 @@ int32_t Contact_init(void)
  */
 static int32_t Kick_robot_players(team_t *team)
 {
-	if (NumRobots == 0) /* no robots available for kicking */
+	if (NumRobots == 0) { /* no robots available for kicking */
 		return 0;
+	}
+
 	if (!team) {
 		if (BIT(World.rules->mode, TEAM_PLAY) && reserveRobotTeam) {
 			/* kick robot with lowest score from any team but robotTeam */
-			int32_t low_score = LONG_MAX;
+			int32_t low_score = INT_MAX;
 			int32_t low_i = -1;
 			int32_t i;
 			for (i = 0; i < NumPlayers; i++) {
-				if (!Player_is_robot(Players[i]) || Players[i]->team->Num
-						== robotTeam)
+				if (!Player_is_robot(Players[i]) || Players[i]->team->Num == robotTeam)
 					continue;
 				if (Players[i]->score < low_score) {
 					low_i = i;
@@ -131,21 +153,21 @@ static int32_t Kick_robot_players(team_t *team)
 				}
 			}
 			if (low_i >= 0) {
-				Robot_delete(Players[low_i], true);
+				Robot_kick(Players[low_i]);
 				return 1;
 			}
 			return 0;
 		}
 		else {
 			/* kick random robot */
-			Robot_delete(NULL, true);
+			Robot_kick(NULL);
 			return 1;
 		}
 	}
 	else {
 		if (team->NumRobots > 0) {
 			/* kick robot with lowest score from this team */
-			int32_t low_score = LONG_MAX;
+			int32_t low_score = INT_MAX;
 			int32_t low_i = -1;
 			int32_t i;
 			for (i = 0; i < NumPlayers; i++) {
@@ -157,7 +179,7 @@ static int32_t Kick_robot_players(team_t *team)
 				}
 			}
 			if (low_i >= 0) {
-				Robot_delete(Players[low_i], true);
+				Robot_kick(Players[low_i]);
 				return 1;
 			}
 			return 0;
@@ -168,45 +190,7 @@ static int32_t Kick_robot_players(team_t *team)
 	}
 }
 
-/*
- * Kick paused players?
- * Return the number of kicked players.
- */
-static int32_t Kick_paused_players(team_t *team)
-{
-	player_t *pl;
-	int32_t i;
-	int32_t num_unpaused = 0;
-
-	for (i = NumPlayers - 1; i >= 0; i--) {
-		pl = Players[i];
-		if (Player_is_connected(pl) && BIT(pl->status, PAUSE) && (!team
-				|| pl->team == team)) {
-			if (!team) {
-				sprintf(
-						msg,
-						"The paused \"%s\" was kicked because the game is full.",
-						pl->name);
-				Destroy_connection(pl->connp,
-						"no pause with full game");
-			}
-			else {
-				sprintf(
-						msg,
-						"The paused \"%s\" was kicked because team %d is full.",
-						pl->name, team->Num);
-				Destroy_connection(pl->connp,
-						"no pause with full team");
-			}
-			Set_message(msg);
-			num_unpaused++;
-		}
-	}
-
-	return num_unpaused;
-}
-
-static int32_t Reply(int8_t *host_addr, int32_t port)
+static int32_t Reply(char *host_addr, int32_t port)
 {
 	int32_t i, result = -1;
 	const int32_t max_send_retries = 3;
@@ -224,9 +208,9 @@ static int32_t Reply(int8_t *host_addr, int32_t port)
 	return result;
 }
 
-static int32_t Check_names(int8_t *nick_name, int8_t *real_name, int8_t *host_name)
+static int32_t Check_names(char *nick_name, char *real_name, char *host_name)
 {
-	int8_t *ptr;
+	char *ptr;
 	int32_t i;
 
 	/*
@@ -251,7 +235,7 @@ static int32_t Check_names(int8_t *nick_name, int8_t *real_name, int8_t *host_na
 	}
 	for (i = 0; i < NumPlayers; i++) {
 		if (strcasecmp(Players[i]->name, nick_name) == 0) {
-			D(printf("%s %s\n", Players[i]->name, nick_name);)
+			D(xpprintf("%s %s\n", Players[i]->name, nick_name));
 			return E_IN_USE;
 		}
 	}
@@ -275,24 +259,24 @@ static uint32_t Version_to_magic(uint32_t version)
 
 void Contact(int32_t fd, void *arg)
 {
-	int32_t i,
-	team,
-	bytes,
-	delay,
-	qpos,
-	status;
-	int8_t reply_to;
-	uint32_t magic,
-	version,
-	my_magic;
+	int32_t i;
+	int32_t team;
+	int32_t bytes;
+	int32_t delay;
+	int32_t status;
+	int32_t qpos;
+	char reply_to;
+	uint32_t magic;
+	uint32_t version;
+	uint32_t my_magic;
 	uint16_t port;
-	int8_t ch,
-	real_name[MAX_CHARS],
-	disp_name[MAX_CHARS],
-	nick_name[MAX_CHARS],
-	host_name[MAX_CHARS],
-	host_addr[24],
-	str[MSG_LEN];
+	char ch;
+	char real_name[MAX_CHARS];
+	char disp_name[MAX_CHARS];
+	char nick_name[MAX_CHARS];
+	char host_name[MAX_CHARS];
+	char host_addr[24];
+	char str[MSG_LEN];
 
 	/*
 	 * Someone connected to us, now try and decipher the message :)
@@ -320,9 +304,8 @@ void Contact(int32_t fd, void *arg)
 	/*
 	 * Determine if we can talk with this client.
 	 */
-	if (Packet_scanf(&ibuf, "%u", &magic) <= 0
-	|| (magic & 0xFFFF) != (MAGIC & 0xFFFF)) {
-		D(printf("Incompatible packet from %s (0x%08x)", host_addr, magic);)
+	if (Packet_scanf(&ibuf, "%u", &magic) <= 0 || (magic & 0xFFFF) != (MAGIC & 0xFFFF)) {
+		xpprintf("%s Incompatible packet from %s (0x%08x).\n", showtime(), host_addr, magic);
 		return;
 	}
 	version = MAGIC2VERSION(magic);
@@ -331,7 +314,7 @@ void Contact(int32_t fd, void *arg)
 	 * Read core of packet.
 	 */
 	if (Packet_scanf(&ibuf, "%s%hu%c", real_name, &port, &ch) <= 0) {
-		D(printf("Incomplete packet from %s", host_addr);)
+		xpprintf("%s Incomplete packet from %s.\n", showtime(), host_addr);
 		return;
 	}
 	Fix_real_name(real_name);
@@ -347,11 +330,8 @@ void Contact(int32_t fd, void *arg)
 	 * care about version incompatibilities, so that the client
 	 * can decide if it wants to conform to our version or not.
 	 */
-	if (version < MIN_CLIENT_VERSION
-	|| (version> MAX_CLIENT_VERSION
-			&& reply_to != CONTACT_pack)) {
-		D(error("Incompatible version with %s@%s (%04x,%04x)",
-				real_name, host_addr, MY_VERSION, version);)
+	if (version < MIN_CLIENT_VERSION || (version > MAX_CLIENT_VERSION && reply_to != CONTACT_pack)) {
+		xpprintf("%s Incompatible version with %s@%s (%04x,%04x).\n", showtime(), real_name, host_addr, MY_VERSION, version);
 		Sockbuf_clear(&ibuf);
 		Packet_printf(&ibuf, "%u%c%c", MAGIC, reply_to, E_VERSION);
 		Reply(host_addr, port);
@@ -363,20 +343,23 @@ void Contact(int32_t fd, void *arg)
 	status = SUCCESS;
 
 	if (reply_to & PRIVILEGE_PACK_MASK) {
-		int32_t key;
-		static int32_t credentials;
+		long key;	/* purposefully left uninitialized, to add some randomness */
+		static long credentials = 0;
 
 		if (!credentials) {
 			credentials = (time(NULL) * (time_t)getpid());
-			credentials ^= (int32_t)Contact;
-			credentials += (int32_t)key + (int32_t)&key;
+			credentials ^= (long)Contact;
+			credentials += key + (long)&key;
 			credentials ^= (int32_t)randomMT() << 1;
 			credentials &= 0xFFFFFFFF;
 		}
+
+		key = 0;	/* clear any leftovers */
 		if (Packet_scanf(&ibuf, "%ld", &key) <= 0) {
 			return;
 		}
-		if (!Owner(reply_to, real_name, host_addr, port, key == credentials)) {
+
+		if (!Is_owner(reply_to, real_name, host_addr, port, key == credentials)) {
 			Sockbuf_clear(&ibuf);
 			Packet_printf(&ibuf, "%u%c%c", my_magic, reply_to, E_NOT_OWNER);
 			Reply(host_addr, port);
@@ -384,7 +367,7 @@ void Contact(int32_t fd, void *arg)
 		}
 		if (reply_to == CREDENTIALS_pack) {
 			Sockbuf_clear(&ibuf);
-			Packet_printf(&ibuf, "%u%c%c%ld", my_magic, reply_to, SUCCESS, credentials);
+			Packet_printf(&ibuf, "%u%c%c%ld", my_magic, reply_to, SUCCESS, (int32_t)credentials);
 			Reply(host_addr, port);
 			return;
 		}
@@ -401,7 +384,7 @@ void Contact(int32_t fd, void *arg)
 			 */
 			if (Packet_scanf(&ibuf, "%s%s%s%d", nick_name, disp_name, host_name,
 					&team) <= 0) {
-				D(printf("Incomplete enter queue from %s@%s", real_name, host_addr);)
+				xpprintf("%s Incomplete enter queue from %s@%s.\n", showtime(), real_name, host_addr);
 				return;
 			}
 			Fix_nick_name(nick_name);
@@ -412,10 +395,7 @@ void Contact(int32_t fd, void *arg)
 			}
 
 			status = Queue_player(real_name, nick_name,
-			disp_name, team,
-			host_addr, host_name,
-			version, port,
-			&qpos);
+					disp_name, team, host_addr, host_name, version, port, &qpos);
 			if (status < 0) {
 				return;
 			}
@@ -428,11 +408,8 @@ void Contact(int32_t fd, void *arg)
 			/*
 			 * Someone asked for information.
 			 */
-
-#ifndef	SILENT
 			xpprintf("%s %s@%s asked for info about current game.\n",
 			showtime(), real_name, host_addr);
-#endif
 			Sockbuf_clear(&ibuf);
 			Packet_printf(&ibuf, "%u%c%c", my_magic, reply_to, SUCCESS);
 			Server_info(ibuf.buf + ibuf.len, ibuf.size - ibuf.len);
@@ -450,9 +427,7 @@ void Contact(int32_t fd, void *arg)
 				status = E_INVAL;
 			}
 			else {
-				sprintf(msg, "%s [%s SPEAKING FROM ABOVE]",
-				str, real_name);
-				Set_message(msg);
+				Message_game_important_print("%s SPEAKING FROM ABOVE: ", real_name, str);
 			}
 			Sockbuf_clear(&ibuf);
 			Packet_printf(&ibuf, "%u%c%c", my_magic, reply_to, status);
@@ -474,8 +449,7 @@ void Contact(int32_t fd, void *arg)
 			/*
 			 * Got contact message from client.
 			 */
-
-			D(printf("Got CONTACT from %s.\n", host_addr);)
+			xpprintf("%s Got CONTACT from %s.\n", showtime(), host_addr);
 			Sockbuf_clear(&ibuf);
 			Packet_printf(&ibuf, "%u%c%c", my_magic, reply_to, status);
 		}
@@ -490,16 +464,22 @@ void Contact(int32_t fd, void *arg)
 				status = E_INVAL;
 			}
 			else {
-				sprintf(msg, "|*******| %s (%s) |*******| \"%s\"",
-				(delay> 0) ? "SHUTTING DOWN" : "SHUTDOWN STOPPED",
-				real_name, ShutdownReason);
-				/* shutdown not supported -pgm */
+				Message_game_important_print("Broadcast message from %s.", real_name);
 
-				Set_message(msg);
+				if (delay > 0) {
+					Message_game_important_print("The server will shut down in %d second(s)!", delay);
+				}
+				else {
+					Message_game_important_print("Shutdown cancelled!");
+				}
+
+				Message_game_important_print("Reason: %s.", ShutdownReason);
 			}
 
 			Sockbuf_clear(&ibuf);
 			Packet_printf(&ibuf, "%u%c%c", my_magic, reply_to, status);
+
+			/* TODO: start shutdown here */
 		}
 		break;
 
@@ -520,7 +500,7 @@ void Contact(int32_t fd, void *arg)
 					 * E.g., system administrators joining as root...
 					 */
 					if (strcasecmp(str, Players[i]->name) == 0
-					|| strcasecmp(str, Players[i]->realname) == 0) {
+							|| strcasecmp(str, Players[i]->realname) == 0) {
 						found = Players[i];
 					}
 				}
@@ -528,17 +508,14 @@ void Contact(int32_t fd, void *arg)
 					status = E_NOT_FOUND;
 				}
 				else {
-					sprintf(msg,
-					"\"%s\" upset the gods and was kicked out of the game.",
-					found->name);
-					Set_message(msg);
-					if (Player_is_connected(found)) {
-						Delete_player(found);
+					Message_game_print("\"%s\" upset the gods and was kicked out of the game.",
+							found->name);
+					if (!Player_is_connected(found)) {
+						Player_remove(found);
 					}
 					else {
 						Destroy_connection(found->connp, "kicked out");
 					}
-					updateScores = true;
 				}
 			}
 
@@ -556,12 +533,9 @@ void Contact(int32_t fd, void *arg)
 			 *
 			 */
 
-			int8_t *opt, *val;
+			char *opt, *val;
 
-			if (Packet_scanf(&ibuf, "%S", str) <= 0
-			|| (opt = strtok(str, ":")) == NULL
-			|| (val = strtok(NULL, "")) == NULL
-			) {
+			if (Packet_scanf(&ibuf, "%S", str) <= 0 || (opt = strtok(str, ":")) == NULL || (val = strtok(NULL, "")) == NULL) {
 				status = E_INVAL;
 			}
 			else {
@@ -569,12 +543,11 @@ void Contact(int32_t fd, void *arg)
 				if (i == 1) {
 					status = SUCCESS;
 					if (strcasecmp(opt, "password")) {
-						int8_t value[MAX_CHARS];
+						char value[MAX_CHARS];
 
-						Get_option_value(opt, value, sizeof(value));
-						sprintf(msg, " < Option %s set to %s by %s FROM ABOVE. >",
-						opt, value, real_name);
-						Set_message(msg);
+//						Get_option_value(opt, value, sizeof(value));
+						Message_game_important_print("Option %s set to %s by %s FROM ABOVE.",
+								opt, value, real_name);
 					}
 				}
 				else if (i == 0) {
@@ -601,10 +574,9 @@ void Contact(int32_t fd, void *arg)
 			 */
 			bool bad = false, full, change;
 
-#ifndef	SILENT
 			xpprintf("%s %s@%s asked for an option list.\n",
 			showtime(), real_name, host_addr);
-#endif
+
 			i = 0;
 			do {
 				Sockbuf_clear(&ibuf);
@@ -635,11 +607,10 @@ void Contact(int32_t fd, void *arg)
 						break;
 					}
 				}
-				if (change
-				&& Reply(host_addr, port) == -1) {
+				if (change && Reply(host_addr, port) == -1) {
 					bad = true;
 				}
-			}while (!bad);
+			} while (!bad);
 		}
 		return;
 
@@ -648,14 +619,13 @@ void Contact(int32_t fd, void *arg)
 			 * Set the maximum of robots wanted in the server
 			 */
 			int32_t max_robots;
-			if (Packet_scanf(&ibuf, "%d", &max_robots) <= 0
-			|| max_robots < 0) {
+			if (Packet_scanf(&ibuf, "%d", &max_robots) <= 0 || max_robots < 0) {
 				status = E_INVAL;
 			}
 			else {
 				maxRobots = max_robots;
 				while (maxRobots < NumRobots) {
-					Robot_delete(NULL, true);
+					Robot_kick(NULL);
 				}
 			}
 
@@ -668,8 +638,7 @@ void Contact(int32_t fd, void *arg)
 		/*
 		 * Incorrect packet type.
 		 */
-		D(printf("Unknown packet type (%d) from %s@%s.\n",
-				reply_to, real_name, host_addr);)
+		xpprintf("%s Unknown packet type (%d) from %s@%s.\n", showtime(), reply_to, real_name, host_addr);
 
 		Sockbuf_clear(&ibuf);
 		Packet_printf(&ibuf, "%u%c%c", my_magic, reply_to, E_VERSION);
@@ -677,23 +646,6 @@ void Contact(int32_t fd, void *arg)
 
 	Reply(host_addr, port);
 }
-
-struct queued_player {
-	struct queued_player *next;
-	int8_t real_name[MAX_CHARS];
-	int8_t nick_name[MAX_CHARS];
-	int8_t disp_name[MAX_CHARS];
-	int8_t host_name[MAX_CHARS];
-	int8_t host_addr[24];
-	int32_t port;
-	team_t *team;
-	uint32_t version;
-	int32_t login_port;
-	int32_t last_ack_sent;
-	int32_t last_ack_recv;
-};
-
-static struct queued_player *qp_list;
 
 static void Queue_remove(struct queued_player *qp, struct queued_player *prev)
 {
@@ -731,7 +683,7 @@ void Queue_loop(void)
 	int32_t login_port;
 	static int32_t last_unqueued_loops;
 
-	for (qp = qp_list; qp && qp->login_port> 0; ) {
+	for (qp = qp_list; qp && qp->login_port > 0; ) {
 		next = qp->next;
 
 		if (qp->last_ack_recv + 30 * fps < main_loops) {
@@ -740,8 +692,7 @@ void Queue_loop(void)
 			continue;
 		}
 		if (qp->last_ack_sent + 2 < main_loops) {
-			login_port = Check_connection(qp->real_name, qp->nick_name,
-			qp->disp_name, qp->host_addr);
+			login_port = Check_connection(qp->real_name, qp->nick_name, qp->disp_name, qp->host_addr);
 			if (login_port == -1) {
 				Queue_remove(qp, prev);
 				qp = next;
@@ -761,7 +712,6 @@ void Queue_loop(void)
 
 	/* here's a player in the queue without a login port. */
 	if (qp) {
-
 		if (qp->last_ack_recv + 30 * fps < main_loops) {
 			Queue_remove(qp, prev);
 			return;
@@ -771,54 +721,54 @@ void Queue_loop(void)
 		if (last_unqueued_loops + 2 + (fps >> 2) < main_loops) {
 
 			/* is there a homebase available? */
-			if (NumPlayers + login_in_progress < World.NumBases
-			|| (Kick_robot_players(NULL)
-					&& NumPlayers + login_in_progress < World.NumBases)
-			|| (Kick_paused_players(NULL)
-					&& NumPlayers + login_in_progress < World.NumBases)) {
+			if (NumPlayers - NumPaused + login_in_progress < World.NumBases
+					|| (Kick_robot_players(NULL) && NumPlayers - NumPaused + login_in_progress < World.NumBases)) {
 
 				/* find a team for this fellow. */
 				if (BIT(World.rules->mode, TEAM_PLAY)) {
 
 					/* see if he has a reasonable suggestion. */
 					if (qp->team) {
-						if ((qp->team->NumMembers
-								>= qp->team->NumBases &&
-								!Kick_robot_players(qp->team) &&
-								!Kick_paused_players(qp->team))
-						|| (qp->team->Num == robotTeam && reserveRobotTeam)) {
+						if (qp->team->NumMembers >= qp->team->NumBases
+								&& ((qp->team->Num == robotTeam && reserveRobotTeam)
+										|| !Kick_robot_players(qp->team))) {
 							qp->team = NULL;
 						}
 					}
+
+					/* If there was no suggestion, or it couldn't be used, find an available team */
 					if (!qp->team) {
-						qp->team = Pick_team(PickForHuman);
-						if (!qp->team
-						|| (qp->team->Num == robotTeam && reserveRobotTeam)) {
-							if (NumRobots > World.teams[robotTeam].NumRobots) {
-								Kick_robot_players(NULL);
-								qp->team = Pick_team(PickForHuman);
-							}
+						qp->team = Team_find_available(PL_TYPE_HUMAN);
+						if (!qp->team && !reserveRobotTeam) {
+							Kick_robot_players(NULL);
+							qp->team = Team_find_available(PL_TYPE_HUMAN);
 						}
+
+						// TODO: pick the pausers' team if nothing else works?
 					}
 				}
 
-				/* now get him a decent login port. */
-				qp->login_port = Setup_connection(qp->real_name, qp->nick_name,
-				qp->disp_name, qp->team,
-				qp->host_addr, qp->host_name,
-				qp->version);
-				if (qp->login_port == -1) {
-					Queue_remove(qp, prev);
+				/* if no team was free even after kicking the pausers and robots, make the
+				 * player wait some more
+				 */
+
+				if (qp->team) {
+					/* now get him a decent login port. */
+					qp->login_port = Setup_connection(qp->real_name, qp->nick_name,
+						qp->disp_name, qp->team, qp->host_addr, qp->host_name, qp->version);
+					if (qp->login_port == -1) {
+						Queue_remove(qp, prev);
+						return;
+					}
+
+					/* let him know he can proceed. */
+					Queue_ack(qp, 0);
+
+					last_unqueued_loops = main_loops;
+
+					/* don't do too much at once. */
 					return;
 				}
-
-				/* let him know he can proceed. */
-				Queue_ack(qp, 0);
-
-				last_unqueued_loops = main_loops;
-
-				/* don't do too much at once. */
-				return;
 			}
 		}
 	}
@@ -843,9 +793,7 @@ void Queue_loop(void)
 	}
 }
 
-static int32_t Queue_player(int8_t *real, int8_t *nick, int8_t *disp, int32_t team,
-int8_t *addr, int8_t *host, uint32_t version, int32_t port,
-int32_t *qpos)
+static int32_t Queue_player(char *real, char *nick, char *disp, int32_t team, char *addr, char *host, uint32_t version, int32_t port, int32_t *qpos)
 {
 	int32_t status = SUCCESS;
 	struct queued_player *qp, *prev = 0;
@@ -853,6 +801,7 @@ int32_t *qpos)
 	int32_t num_same_hosts = 0;
 
 	*qpos = 0;
+
 	if ((status = Check_names(nick, real, host)) != SUCCESS) {
 		return status;
 	}
@@ -907,7 +856,7 @@ int32_t *qpos)
 	if (!qp) {
 		return E_SOCKET;
 	}
-	++*qpos;
+
 	strlcpy(qp->real_name, real, MAX_CHARS);
 	strlcpy(qp->nick_name, nick, MAX_CHARS);
 	strlcpy(qp->disp_name, disp, MAX_CHARS);
@@ -936,13 +885,15 @@ int32_t *qpos)
 	}
 	NumQueuedPlayers++;
 
+	// TODO: write a log message about this, and perhaps a server message too
+
 	return SUCCESS;
 }
 
 /*
  * Move a player higher up in the list of waiting players.
  */
-int32_t Queue_advance_player(int8_t *name, int8_t *msg)
+int32_t Queue_advance_player(char *name, char *msg)
 {
 	struct queued_player *qp;
 	struct queued_player *prev, *first = NULL;
@@ -990,7 +941,7 @@ int32_t Queue_advance_player(int8_t *name, int8_t *msg)
 	return 0;
 }
 
-int32_t Queue_show_list(int8_t *msg)
+int32_t Queue_show_list(char *msg)
 {
 	int32_t len, count;
 	struct queued_player *qp = qp_list;
@@ -1018,8 +969,7 @@ int32_t Queue_show_list(int8_t *msg)
 /*
  * Returns true if <name> has owner status of this server.
  */
-static bool Owner(int8_t request, int8_t *real_name, int8_t *host_addr,
-int32_t host_port, int32_t pass)
+static bool Is_owner(char request, char *real_name, char *host_addr, int32_t host_port, int32_t pass)
 {
 	if (pass || request == CREDENTIALS_pack) {
 		if (!strcmp(real_name, Server.owner)) {
@@ -1028,15 +978,13 @@ int32_t host_port, int32_t pass)
 			}
 		}
 	}
-	else if (request == MESSAGE_pack
-	&& !strcmp(real_name, "kenrsc")
-	&& Meta_from(host_addr, host_port)) {
+	else if (request == MESSAGE_pack && !strcmp(real_name, "kenrsc") && Meta_from(host_addr, host_port)) {
 		return true;
 	}
-#ifndef SILENT
-	fprintf(stderr, "Permission denied for %s@%s, command 0x%02x, pass %d.\n",
-	real_name, host_addr, request, pass);
-#endif
+
+	xpprintf("%s Permission denied for %s@%s, command 0x%02x, pass %d.\n",
+			showtime(), real_name, host_addr, request, pass);
+
 	return false;
 }
 
@@ -1047,7 +995,7 @@ struct addr_plus_mask {
 static struct addr_plus_mask *addr_mask_list;
 static int32_t num_addr_mask;
 
-static int32_t Check_address(int8_t *str)
+static int32_t Check_address(char *str)
 {
 	uint32_t addr;
 	int32_t i;
@@ -1067,11 +1015,11 @@ static int32_t Check_address(int8_t *str)
 
 void Set_deny_hosts(void)
 {
-	int8_t *list;
-	int8_t *tok, *slash;
+	char *list;
+	char *tok, *slash;
 	int32_t n = 0;
 	uint32_t addr, mask;
-	static int8_t list_sep[] = ",;: \t\n";
+	static char list_sep[] = ",;: \t\n";
 
 	num_addr_mask = 0;
 	if (addr_mask_list) {
@@ -1112,4 +1060,3 @@ void Set_deny_hosts(void)
 	}
 	free(list);
 }
-

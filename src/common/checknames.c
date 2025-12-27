@@ -1,4 +1,4 @@
-/* $Id: checknames.c,v 1.4 2008/08/15 15:09:52 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -38,9 +38,9 @@
 #include "pack.h"
 #include "checknames.h"
 
-int8_t checknames_version[] = VERSION;
+char checknames_version[] = VERSION;
 
-int32_t Check_real_name(int8_t *name)
+int32_t Check_real_name(char *name)
 {
 	uint8_t *str;
 
@@ -58,7 +58,7 @@ int32_t Check_real_name(int8_t *name)
 	return NAME_OK;
 }
 
-void Fix_real_name(int8_t *name)
+void Fix_real_name(char *name)
 {
 	uint8_t *str;
 
@@ -75,7 +75,7 @@ void Fix_real_name(int8_t *name)
 	}
 }
 
-int32_t Check_nick_name(int8_t *name)
+int32_t Check_nick_name(char *name)
 {
 	uint8_t *str;
 
@@ -100,7 +100,7 @@ int32_t Check_nick_name(int8_t *name)
 	return NAME_OK;
 }
 
-void Fix_nick_name(int8_t *name)
+void Fix_nick_name(char *name)
 {
 	uint8_t *str;
 
@@ -142,7 +142,7 @@ static int32_t is_alpha_numeric(uint8_t c)
 	return 0;
 }
 
-int32_t Check_host_name(int8_t *name)
+int32_t Check_host_name(char *name)
 {
 	uint8_t *str;
 
@@ -166,7 +166,7 @@ int32_t Check_host_name(int8_t *name)
 	return NAME_OK;
 }
 
-void Fix_host_name(int8_t *name)
+void Fix_host_name(char *name)
 {
 	uint8_t *str;
 
@@ -192,7 +192,7 @@ void Fix_host_name(int8_t *name)
 
 /*
  */
-int32_t Check_disp_name(int8_t *name)
+int32_t Check_disp_name(char *name)
 {
 	uint8_t *str;
 
@@ -206,7 +206,7 @@ int32_t Check_disp_name(int8_t *name)
 	return NAME_OK;
 }
 
-void Fix_disp_name(int8_t *name)
+void Fix_disp_name(char *name)
 {
 	uint8_t *str;
 

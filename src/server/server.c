@@ -1,4 +1,4 @@
-/* $Id: server.c,v 1.19 2008/09/02 19:08:52 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -41,10 +41,11 @@
 # endif
 #endif
 
-#define	SERVER
 #include "version.h"
 #include "commonproto.h"
 #include "xpconfig.h"
+#include "serverconst.h"
+#include "debug.h"
 #include "types.h"
 #include "const.h"
 #include "global.h"
@@ -59,32 +60,17 @@
 #include "server.h"
 #include "rank.h"
 #include "parser.h"
+#include "frame.h"
+#include "robot.h"
+#include "update.h"
+#include "player_inline.h"
+#include "collision.h"
+#include "metaserver.h"
 
-
-int8_t server_version[] = VERSION;
-
-player_t **Players;
-int32_t GetInd[NUM_IDS + 1];
-
-/** @brief Number of players in game (including paused and waiting)
- *
- * This variable is modified only in @ref Init_player and @ref Delete_player.
- */
-int32_t NumPlayers = 0;
-
-/** @brief Number of objects in game (including: balls, shots, pieces of
- * debris)
- *
- * This variable is modified only in @ref Make_debris, @ref Make_wreckage,
- * @ref Make_treasure_ball, @ref Fire_normal_shots, @ref Delete_object
- */
-int32_t NumObjs = 0;
-object_t *Obj[MAX_TOTAL_SHOTS];
+char server_version[] = VERSION;
 
 server_t Server;
-int8_t ShutdownReason[MAX_CHARS];
-int32_t main_loops = 0; /* needed in events.c */
-int32_t main_loops_slow = 0;
+char ShutdownReason[MAX_CHARS];
 
 /** @brief Number of operators currently logged and authorized
  *
@@ -96,25 +82,116 @@ static int32_t serverSocket;
 #ifdef LOG
 static bool Log = true;
 #endif
-static bool NoPlayersEnteredYet = true;
 int32_t game_lock = false;
-time_t serverTime = 0;
+time_t serverStartTime = 0;
 
 extern bool limitedRoundsGameOver;
 extern int32_t received_packets;
-int32_t frameDivisor;
-int32_t fps;
-int32_t frame_cycle = 0;
-int32_t intGameSpeed = 12;
-float ticksPerFrame = 1.0;
-DFLOAT gameSpeed;
 
 extern connection_t *Conn;
 
-static inline double timeval_to_seconds(struct timeval tv);
-static void Check_server_versions(void);
-static void Handle_signal(int32_t sig_no);
+/*
+ * Frame counters and FPS-related global variables
+ */
+int32_t main_loops = 0;		/* frame counter, needed in events.c */
+int32_t main_loops_slow = 0;	/* tick counter, used for marking the time a player fired a shot */
+int32_t frameDivisor;
+int32_t fps;
+int32_t frame_cycle = 0;	/* Intermediate frame counter */
+float ticksPerFrame = 1.0;
+double gameSpeed = 12.5;
+double realTimeStep = 1.0;	/* Game time step between two consecutive real frames */
 
+
+/*
+ * Verify that all source files making up this program have been
+ * compiled for the same version.  Too often bugs have been reported
+ * for incorrectly compiled programs.
+ */
+static void Check_server_versions(void)
+{
+	extern char cmdline_version[], collision_version[], error_version[],
+			event_version[], frame_version[], id_version[],
+			map_version[], math_version[], metaserver_version[],
+			net_version[], netserver_version[], option_version[],
+			player_version[],
+			portability_version[], robot_version[],
+			rules_version[], /*server_version[],*/ socklib_version[],
+			sched_version[], ship_version[], shot_version[],
+			update_version[];
+
+	static struct file_version {
+		char filename[16];
+		char *versionstr;
+	} file_versions[] =
+		{
+			{ "cmdline", cmdline_version },
+			{ "collision", collision_version },
+			{ "error", error_version },
+			{ "event", event_version },
+			{ "frame", frame_version },
+			{ "id", id_version },
+			{ "map", map_version },
+			{ "math", math_version },
+			{ "metaserver", metaserver_version },
+			{ "net", net_version },
+			{ "netserver", netserver_version },
+			{ "option", option_version },
+			{ "player", player_version },
+			{ "portability", portability_version },
+			{ "robot", robot_version },
+			{ "rules", rules_version },
+			{ "server", server_version },
+			{ "socklib", socklib_version },
+			{ "sched", sched_version },
+			{ "ship", ship_version },
+			{ "shot", shot_version },
+			{ "update", update_version },
+			{ "walls", walls_version }, };
+	int32_t i;
+	int32_t oops = 0;
+
+	for (i = 0; i < NELEM(file_versions); i++) {
+		if (strcmp(VERSION, file_versions[i].versionstr)) {
+			oops++;
+			error("Source file %s.c (\"%s\") is not compiled "
+				"for the current version (\"%s\")!",
+					file_versions[i].filename,
+					file_versions[i].versionstr, VERSION);
+		}
+	}
+	if (oops) {
+		error("%d version inconsistency errors, cannot continue.", oops);
+		error("Please recompile this program properly.");
+		exit(1);
+	}
+}
+
+static void Handle_signal(int32_t sig_no)
+{
+	errno = 0;
+
+	switch (sig_no) {
+
+	case SIGHUP:
+		signal(SIGHUP, SIG_IGN);
+		return;
+	case SIGINT:
+		error("Caught SIGINT, terminating.");
+		End_game();
+		break;
+	case SIGTERM:
+		error("Caught SIGTERM, terminating.");
+		End_game();
+		break;
+
+	default:
+		error("Caught unkown signal: %d", sig_no);
+		End_game();
+		break;
+	}
+	_exit(sig_no); /* just in case */
+}
 
 int main(int argc, char **argv)
 {
@@ -138,29 +215,31 @@ int main(int argc, char **argv)
 	srand(time((time_t *) 0) * Get_process_id());
 	Check_server_versions();
 
-	if (!Parser(argc, (int8_t **)argv)) {
+	if (!Parser(argc, (char **)argv)) {
 		exit(0);
 	}
 
 	plock_server(pLockServer); /* Lock the server into memory */
-	Make_table(); /* Make trigonometric tables */
-	Find_base_direction();
+	make_trig_table(); /* Make trigonometric tables */
+	Map_compute_base_direction();
 	Walls_init();
 
 	/* Allocate memory for players, shots and messages */
-	Alloc_players(World.NumBases + MAX_PSEUDO_PLAYERS);
-	Alloc_shots(MAX_TOTAL_SHOTS);
-	Alloc_cells();
+	Players_allocate(World.NumBases + MAX_PSEUDO_PLAYERS);
+	Shots_allocate(MAX_TOTAL_OBJECTS);
+	Collision_cells_allocate();
 
 	Move_init();
 
-	Robot_init();
+	Robots_init();
 
 	if (BIT(World.rules->mode, TEAM_PLAY)) {
 		int32_t i;
-		for (i = 0; i < World.NumTreasures; i++)
-			if (World.treasures[i].team != NULL)
-				Make_treasure_ball(&World.treasures[i]);
+		for (i = 0; i < World.NumTreasures; i++) {
+			if (World.treasures[i].team != NULL) {
+				Ball_treasure_add(&World.treasures[i]);
+			}
+		}
 	}
 
 	Rank_init_saved_scores();
@@ -172,8 +251,7 @@ int main(int argc, char **argv)
 		strlcpy(Server.host, serverHost, sizeof Server.host);
 	else
 		GetLocalHostName(Server.host, sizeof Server.host,
-				(reportToMetaServer != 0
-						&& searchDomainForXPilot != 0));
+				(reportToMetaServer != 0 && searchDomainForXPilot != 0));
 
 	Get_login_name(Server.owner, sizeof Server.owner);
 
@@ -202,13 +280,10 @@ int main(int argc, char **argv)
 	/*
 	 * Set the time the server started
 	 */
-	serverTime = time(NULL);
+	serverStartTime = time(NULL);
 
-#ifndef SILENT
-	xpprintf(
-			"%s Server runs at %d frames per second, correction factor is %f\n",
+	xpprintf("%s Server runs at %d frames per second, correction factor is %f\n",
 			showtime(), fps, 1.0 / frameDivisor);
-#endif
 
 	setup_timer(fps);
 	main_loops = 0;
@@ -221,71 +296,131 @@ int main(int argc, char **argv)
 void Main_loop(int32_t argv)
 {
 	struct timeval tv1, tv2;
+	bool update_meta = false;
+	bool update_rank = false;
 
 	gettimeofday(&tv1, NULL);
+
 	main_loops++;
+
+	/* recalculate, if frameDivisor was changed */
 	ticksPerFrame = 1.0f / frameDivisor;
 
-	//printf("mainloop: %e\n",timeval_to_seconds(tv1));
-
-	//printf("%d\n",received_packets);
-
-	if (frame_cycle == frameDivisor)
+	if (frame_cycle == frameDivisor) {
 		frame_cycle = 0;
+	}
 
-	if (frame_cycle == 0)
+	if (Frame_is_real()) {
+		main_loops_slow++;
 		insert_measure();
 
-	if ((main_loops & 0x3F) == 0) {
-		Meta_update(false);
-	}
-
-	if (frame_cycle == 0) {
 		/* uses mainloops + FPS for timings */
 		Input();
-	}
 
-	if (NumPlayers > NumRobots || RawMode) {
+		/*
+		 * Update the ranking files and the information on meta servers if
+		 * anyone enters or leaves the game. This includes also pausing
+		 * and unpausing.
+		 */
+		meta_update_count -= realTimeStep;
 
-		if (NoPlayersEnteredYet) {
-			if (NumPlayers > NumRobots) {
-				NoPlayersEnteredYet = false;
+		/* Reset teams and time out objects when the last player leaves the game */
+		if (num_logouts > 0 || num_pause > 0) {
+			if (NumPlayers - NumPaused == 0) {
+				Objects_time_out();
+				Teams_reset();
 			}
 		}
 
-		if (frame_cycle == 0) {
-			Update_objects();
-			Init_interpolation_data();
-			//printf("nointerp: %d\n", frame_cycle);
-			Frame_update();
-			main_loops_slow++;
+		/* Determine whether a meta or rank updates are necessary */
+		if (num_logins > 0 || num_logouts > 0 || num_pause > 0 || num_unpause > 0) {
+			update_rank = true;
+			update_meta = true;
+
+			num_logins = 0;
+			num_logouts = 0;
+			num_pause = 0;
+			num_unpause = 0;
 		}
 
-		if (frame_cycle != 0) {
-
-			Update_objects_interpolation();
-			//printf("interp: %d\n", frame_cycle);
-			Frame_update();
+		if (update_rank) {
+			Rank_write_webpage();
+			Rank_write_rankfile();
+			update_rank = false;
 		}
 
+		if (update_meta || meta_update_count <= 0.0) {
+			Meta_update();
+			meta_update_count = META_UPDATE_DELAY_TICKS;
+			update_meta = false;
+		}
+	}
+
+	if (NumPlayers > NumRobots || RawMode) {
+		if (Frame_is_real()) {
+			if (NumRobots > 0) {
+				Update_robots();
+			}
+
+			if (fireRepeatRate > 0) {
+				Players_shoot();
+			}
+
+			Update_fuel_stations();
+			Update_mobile_objects();
+			Update_players();
+
+			Collision_cells_init();
+			Collision_players_check();
+			Collision_cells_cleanup();
+
+			Objects_interpolation_init();
+			Players_interpolation_init();
+		}
+		else {
+			Update_mobile_objects();
+			Update_players();
+		}
+
+		/*
+		 * Here some players may be in PL_STATE_KILLED state. The following code should perform
+		 * a transition to either PL_STATE_APPEARING, PL_STATE_DEAD or PL_STATE_PAUSED.
+		 */
+
+		Players_handle_after_kill();
+
+		/*
+		 * Here no player should be in PL_STATE_KILLED any more.
+		 */
+
+		Update_game_status();
+
+		Objects_remove_timed_out();
+
+		/*
+		 * Now update labels if need be.
+		 */
+		if (updateScores) {
+			Players_send_score();
+		}
+
+		Frame_update();
 	}
 
 	Queue_loop();
+
+	if (Frame_is_real()) {
+		Robot_add_remove();
+
 #if 0
-	if (frame_cycle == 0) {
 		measure_time();
-	}
 #endif
+	}
 
 	gettimeofday(&tv2, NULL);
-	mainLoopTime = (timeval_to_seconds(tv2) - timeval_to_seconds(tv1))
-			* 1e3;
-	frame_cycle++;
-}
+	mainLoopTime = (timeval_to_seconds(tv2) - timeval_to_seconds(tv1)) * 1e3;
 
-static inline double timeval_to_seconds(struct timeval tv)
-{
-	return (double) tv.tv_sec + tv.tv_usec * 1e-6;
+	frame_cycle++;
 }
 
 /*
@@ -293,173 +428,33 @@ static inline double timeval_to_seconds(struct timeval tv)
  */
 void End_game(void)
 {
-	player_t *pl;
-	int8_t msg[MSG_LEN];
-
-	sprintf(msg, "server exiting");
-
-	while (NumPlayers > 0) { /* Kick out all remaining players */
-		pl = Players[NumPlayers - 1];
-		if (!Player_is_connected(pl)) {
-			Delete_player(pl);
-		}
-		else {
-			Destroy_connection(pl->connp, msg);
-		}
-	}
+	Players_remove();
 
 	/* Tell meta server that we are gone. */
 	Meta_gone();
 
 	Contact_cleanup();
 
-	Free_players();
-	Free_shots();
-	Free_map();
-	Free_cells();
+	Players_free();
+	Shots_free();
+	Map_free();
+	Collision_cells_free();
 	Log_game("END"); /* Log end */
 	exit(0);
 }
 
 /*
- * Return a good team number for a player.
- *
- * If the team is not specified, the player is assigned
- * to a non-empty team which has space.
- *
- * If there is none or only one team with playing (i.e. non-paused)
- * players the player will be assigned to a randomly chosen empty team.
- *
- * If there is more than one team with playing players,
- * the player will be assigned randomly to a team which
- * has the least number of playing players.
- *
- * If all non-empty teams are full, the player is assigned
- * to a randomly chosen available team.
- *
- * Prefer not to place players in the robotTeam if possible.
- */
-team_t *Pick_team(int32_t pick_for_type)
-{
-	int32_t i, least_players, num_available_teams = 0, playing_teams = 0,
-			losing_team;
-	player_t *pl;
-	int32_t playing[MAX_TEAMS];
-	int32_t free_bases[MAX_TEAMS];
-	int32_t available_teams[MAX_TEAMS];
-	int32_t team_score[MAX_TEAMS];
-	int32_t losing_score;
-
-	for (i = 0; i < MAX_TEAMS; i++) {
-		free_bases[i] = World.teams[i].NumBases
-				- World.teams[i].NumMembers;
-		playing[i] = 0;
-		team_score[i] = 0;
-		available_teams[i] = 0;
-	}
-	if (restrictRobots) {
-		if (pick_for_type == PickForRobot) {
-			if (free_bases[robotTeam] > 0) {
-				return &World.teams[robotTeam];
-			}
-			else {
-				return NULL;
-			}
-		}
-	}
-	if (reserveRobotTeam) {
-		if (pick_for_type != PickForRobot) {
-			free_bases[robotTeam] = 0;
-		}
-	}
-
-	/*
-	 * Find out which teams have actively playing members.
-	 * Exclude paused players and tanks.
-	 * And calculate the score for each team.
-	 */
-	for (i = 0; i < NumPlayers; i++) {
-		pl = Players[i];
-		if (BIT(pl->status, PAUSE)) {
-			continue;
-		}
-		if (!playing[pl->team->Num]++) {
-			playing_teams++;
-		}
-		if (Player_is_human(pl) || Player_is_robot(pl)) {
-			team_score[pl->team->Num] += pl->score;
-		}
-	}
-	if (playing_teams <= 1) {
-		for (i = 0; i < MAX_TEAMS; i++) {
-			if (!playing[i] && free_bases[i] > 0) {
-				available_teams[num_available_teams++] = i;
-			}
-		}
-	}
-	else {
-		least_players = NumPlayers;
-		for (i = 0; i < MAX_TEAMS; i++) {
-			/* We fill teams with players first. */
-			if (playing[i] > 0 && free_bases[i] > 0) {
-				if (playing[i] < least_players) {
-					least_players = playing[i];
-				}
-			}
-		}
-
-		for (i = 0; i < MAX_TEAMS; i++) {
-			if (free_bases[i] > 0) {
-				if (least_players == NumPlayers || playing[i]
-						== least_players) {
-					available_teams[num_available_teams++]
-							= i;
-				}
-			}
-		}
-	}
-
-	if (!num_available_teams) {
-		for (i = 0; i < MAX_TEAMS; i++) {
-			if (free_bases[i] > 0) {
-				available_teams[num_available_teams++] = i;
-			}
-		}
-	}
-
-	if (num_available_teams == 1) {
-		return &World.teams[available_teams[0]];
-	}
-
-	if (num_available_teams > 1) {
-		losing_team = -1;
-		losing_score = LONG_MAX;
-		for (i = 0; i < num_available_teams; i++) {
-			if (team_score[available_teams[i]] < losing_score
-					&& available_teams[i] != robotTeam) {
-				losing_team = available_teams[i];
-				losing_score = team_score[losing_team];
-			}
-		}
-		return &World.teams[losing_team];
-	}
-
-	/*NOTREACHED*/
-	return NULL;
-}
-
-/*
  * Return status for server
  */
-void Server_info(int8_t *str, uint32_t max_size)
+void Server_info(char *str, uint32_t max_size)
 {
 	int32_t i, j, k;
 	player_t *pl_in_war;
 	player_t *pl, **order, *best = NULL;
 	DFLOAT ratio, best_ratio = -1e7;
-	int8_t name[MAX_CHARS];
-	int8_t lblstr[MAX_CHARS];
-	int8_t msg[MSG_LEN];
+	char name[MAX_CHARS];
+	char lblstr[MAX_CHARS];
+	char msg[MSG_LEN];
 
 	sprintf(str, "SERVER VERSION...: %s\n"
 		"STATUS...........: %s\n"
@@ -498,10 +493,9 @@ void Server_info(int8_t *str, uint32_t max_size)
 			ratio = (DFLOAT) pl->score;
 		}
 		else {
-			ratio = (DFLOAT) pl->score / (pl->life + 1);
+			ratio = (DFLOAT) pl->score / (pl->pl_life + 1);
 		}
-		if ((best == NULL || ratio > best_ratio) && !BIT(pl->status,
-				PAUSE)) {
+		if ((best == NULL || ratio > best_ratio) && !Player_is_paused(pl)) {
 			best_ratio = ratio;
 			best = pl;
 		}
@@ -529,7 +523,7 @@ void Server_info(int8_t *str, uint32_t max_size)
 		}
 		sprintf(lblstr, "%c%c %-19s%03d%6d", (pl == best) ? '*'
 				: pl->mychar, (pl->team == NULL) ? ' '
-				: pl->team->Num + '0', name, pl->life,
+				: pl->team->Num + '0', name, pl->pl_life,
 				(int32_t) pl->score);
 		sprintf(msg, "%2d... %-36s%s@%s\n", i + 1, lblstr,
 				pl->realname, Player_is_human(pl) ? ((const char *)(pl->hostname))
@@ -541,38 +535,12 @@ void Server_info(int8_t *str, uint32_t max_size)
 	free(order);
 }
 
-static void Handle_signal(int32_t sig_no)
-{
-	errno = 0;
-
-	switch (sig_no) {
-
-	case SIGHUP:
-		signal(SIGHUP, SIG_IGN);
-		return;
-	case SIGINT:
-		error("Caught SIGINT, terminating.");
-		End_game();
-		break;
-	case SIGTERM:
-		error("Caught SIGTERM, terminating.");
-		End_game();
-		break;
-
-	default:
-		error("Caught unkown signal: %d", sig_no);
-		End_game();
-		break;
-	}
-	_exit(sig_no); /* just in case */
-}
-
-void Log_game(const int8_t *heading)
+void Log_game(const char *heading)
 {
 #ifdef LOG
-	int8_t str[1024];
+	char str[1024];
 	FILE *fp;
-	int8_t timenow[81];
+	char timenow[81];
 	struct tm *ptr;
 	time_t lt;
 
@@ -604,9 +572,9 @@ void Game_Over(void)
 {
 	int32_t maxsc, minsc;
 	int32_t i, win, loose;
-	int8_t msg[128];
+	char msg[128];
 
-	Set_message("Game over...");
+	Message_game_important_print("Game over...");
 
 	if (BIT(World.rules->mode, TEAM_PLAY)) {
 		int32_t teamscore[MAX_TEAMS];
@@ -643,14 +611,14 @@ void Game_Over(void)
 
 		if (win != -1) {
 			sprintf(msg, "Best team (%d Pts): Team %d", maxsc, win);
-			Set_message(msg);
+			Message_game_print(msg);
 			xpprintf("%s\n", msg);
 		}
 
 		if (loose != -1 && loose != win) {
 			sprintf(msg, "Worst team (%d Pts): Team %d", minsc,
 					loose);
-			Set_message(msg);
+			Message_game_print(msg);
 			xpprintf("%s\n", msg);
 		}
 	}
@@ -660,7 +628,8 @@ void Game_Over(void)
 	win = loose = -1;
 
 	for (i = 0; i < NumPlayers; i++) {
-		SET_BIT(Players[i]->status, GAME_OVER);
+		Player_set_state(Players[i], PL_STATE_WAITING);
+
 		if (Player_is_human(Players[i])) {
 			if (Players[i]->score > maxsc) {
 				maxsc = Players[i]->score;
@@ -672,84 +641,22 @@ void Game_Over(void)
 			}
 		}
 	}
+
+	updateScores = true;
+
 	if (win != -1) {
 		sprintf(msg, "Best human player: %s", Players[win]->name);
-		Set_message(msg);
+		Message_game_print(msg);
 		xpprintf("%s\n", msg);
 	}
 	if (loose != -1 && loose != win) {
 		sprintf(msg, "Worst human player: %s", Players[loose]->name);
-		Set_message(msg);
+		Message_game_print(msg);
 		xpprintf("%s\n", msg);
 	}
 	Rank_write_webpage();
 	Rank_write_rankfile();
 	limitedRoundsGameOver = true;
-}
-
-/*
- * Verify that all source files making up this program have been
- * compiled for the same version.  Too often bugs have been reported
- * for incorrectly compiled programs.
- */
-static void Check_server_versions(void)
-{
-	extern int8_t cmdline_version[], collision_version[], error_version[],
-			event_version[], frame_version[], id_version[],
-			map_version[], math_version[], metaserver_version[],
-			net_version[], netserver_version[], option_version[],
-			play_version[], player_version[],
-			portability_version[], robot_version[],
-			rules_version[], /*server_version[],*/ socklib_version[],
-			sched_version[], ship_version[], shot_version[],
-			update_version[], walls_version[];
-
-	static struct file_version {
-		int8_t filename[16];
-		int8_t *versionstr;
-	} file_versions[] =
-		{
-			{ "cmdline", cmdline_version },
-			{ "collision", collision_version },
-			{ "error", error_version },
-			{ "event", event_version },
-			{ "frame", frame_version },
-			{ "id", id_version },
-			{ "map", map_version },
-			{ "math", math_version },
-			{ "metaserver", metaserver_version },
-			{ "net", net_version },
-			{ "netserver", netserver_version },
-			{ "option", option_version },
-			{ "play", play_version },
-			{ "player", player_version },
-			{ "portability", portability_version },
-			{ "robot", robot_version },
-			{ "rules", rules_version },
-			{ "server", server_version },
-			{ "socklib", socklib_version },
-			{ "sched", sched_version },
-			{ "ship", ship_version },
-			{ "shot", shot_version },
-			{ "update", update_version },
-			{ "walls", walls_version }, };
-	int32_t i;
-	int32_t oops = 0;
-
-	for (i = 0; i < NELEM(file_versions); i++) {
-		if (strcmp(VERSION, file_versions[i].versionstr)) {
-			oops++;
-			error("Source file %s.c (\"%s\") is not compiled "
-				"for the current version (\"%s\")!",
-					file_versions[i].filename,
-					file_versions[i].versionstr, VERSION);
-		}
-	}
-	if (oops) {
-		error("%d version inconsistency errors, cannot continue.", oops);
-		error("Please recompile this program properly.");
-		exit(1);
-	}
 }
 
 #if defined(PLOCKSERVER) && defined(__linux__)

@@ -1,4 +1,4 @@
-/* $Id: const.h,v 1.5 2008/08/15 15:09:52 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -79,11 +79,11 @@
 #   define LINE_MAX 2048
 #endif
 
-#define RES		128
+#define ANGLE_RESOLUTION		128
 
 #define BLOCK_SZ	35
 
-#define TABLE_SIZE	RES
+#define TABLE_SIZE	ANGLE_RESOLUTION
 
 extern DFLOAT tbl_sin[];
 extern DFLOAT tbl_cos[];
@@ -130,7 +130,9 @@ extern DFLOAT tbl_cos[];
 
 /* Do NOT change these! */
 #define MAX_CHECKS		26
+
 #define MAX_TEAMS		10
+#define PAUSE_TEAM_NUM		0
 
 #define EXPIRED_MINE_ID		4096   /* assume no player has this id */
 
@@ -177,12 +179,5 @@ extern DFLOAT tbl_cos[];
 #define TEAM_NOT_SET_STR	"4095"
 
 #define DEBRIS_TYPES		(8 * 4 * 4)
-
-#ifndef FALSE
-#define FALSE   0
-#endif
-#ifndef TRUE
-#define TRUE    1
-#endif
 
 #endif

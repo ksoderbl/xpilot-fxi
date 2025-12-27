@@ -1,4 +1,4 @@
-/* $Id: tuner.h,v 1.4 2008/08/15 15:09:53 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -29,6 +29,7 @@ void tuner_plock(void);
 void tuner_shotsmax(void);
 void tuner_shipmass(void);
 void tuner_ballmass(void);
+void tuner_robotteam(void);
 void tuner_maxrobots(void);
 void tuner_minrobots(void);
 void tuner_worldlives(void);

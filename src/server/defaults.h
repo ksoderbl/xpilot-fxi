@@ -1,4 +1,4 @@
-/* $Id: defaults.h,v 1.8 2008/08/15 15:09:53 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -58,43 +58,43 @@ enum _optOriginAny {
 };
 
 typedef struct _option_desc {
-	const int8_t *name;
-	const int8_t *commandLineOption;
-	const int8_t *defaultValue;
+	const char *name;
+	const char *commandLineOption;
+	const char *defaultValue;
 	void *variable;
 	enum valType type;
 	void (*tuner)(void);
-	const int8_t *helpLine;
+	const char *helpLine;
 	int32_t flags; /* allowable option origins. */
 } option_desc;
 
-option_desc* Find_option_by_name(const int8_t *name);
+option_desc* Find_option_by_name(const char *name);
 option_desc* Get_option_descs(int32_t *count_ptr);
 bool Option_add_desc(option_desc *desc);
-void Option_set_value(const int8_t *name, const int8_t *value, int32_t override,
+void Option_set_value(const char *name, const char *value, int32_t override,
 		optOrigin opt_origin);
-int8_t* Option_get_value(const int8_t *name, optOrigin *origin_ptr);
+char* Option_get_value(const char *name, optOrigin *origin_ptr);
 
 /* old */
 
 typedef struct _valPair {
 	struct _valPair *next;
-	int8_t *name;
-	int8_t *value;
+	char *name;
+	char *value;
 	void *def;
 } valPair;
 
 typedef struct {
-	const int8_t *name;
-	const int8_t *commandLineOption;
-	const int8_t *defaultValue;
+	const char *name;
+	const char *commandLineOption;
+	const char *defaultValue;
 	void *variable;
 	enum valType type;
 	void (*tuner)(void);
-	const int8_t *helpLine;
-	const int8_t *mapperPos; /* where in the xpmapper table this item appears */
+	const char *helpLine;
+	const char *mapperPos; /* where in the xpmapper table this item appears */
 } optionDesc;
 
-optionDesc* findOption(const int8_t *name);
+optionDesc* findOption(const char *name);
 
 #endif

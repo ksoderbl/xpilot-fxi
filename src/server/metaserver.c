@@ -1,4 +1,4 @@
-/* $Id: metaserver.c,v 1.8 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -30,10 +30,11 @@
 #include <time.h>
 #include <sys/time.h>
 
-#define SERVER
 #include "xpconfig.h"
+#include "debug.h"
 #include "version.h"
 #include "const.h"
+#include "serverconst.h"
 #include "types.h"
 #include "global.h"
 #include "proto.h"
@@ -43,27 +44,32 @@
 #include "metaserver.h"
 #include "error.h"
 #include "netserver.h"
+#include "player.h"
+#include "player_inline.h"
+#include "server.h"
 
 #define META_VERSION	VERSION
 
-int8_t metaserver_version[] = VERSION;
+char metaserver_version[] = VERSION;
 
 struct MetaServer {
-	int8_t name[64];
-	int8_t addr[16];
+	char name[64];
+	char addr[16];
 };
-struct MetaServer meta_servers[2] =
-	{
+struct MetaServer meta_servers[2] = {
 		{ META_HOST, META_IP },
-		{ META_HOST_TWO, META_IP_TWO }, };
+		{ META_HOST_TWO, META_IP_TWO },
+};
 
 static int32_t Socket = -1;
-static int8_t msg[MSG_LEN];
+static char msg[MSG_LEN];
 
-extern time_t serverTime;
+double meta_update_count = 0.0;
+
+extern time_t serverStartTime;
 
 
-void Meta_send(int8_t *mesg, int32_t len)
+void Meta_send(char *mesg, int32_t len)
 {
 	int32_t i;
 
@@ -72,16 +78,14 @@ void Meta_send(int8_t *mesg, int32_t len)
 	}
 
 	for (i = 0; i < NELEM(meta_servers); i++) {
-		if (DgramSend(Socket, meta_servers[i].addr, META_PORT, mesg,
-				len) != len) {
+		if (DgramSend(Socket, meta_servers[i].addr, META_PORT, mesg, len) != len) {
 			GetSocketError(Socket);
-			DgramSend(Socket, meta_servers[i].addr, META_PORT,
-					mesg, len);
+			DgramSend(Socket, meta_servers[i].addr, META_PORT, mesg, len);
 		}
 	}
 }
 
-int32_t Meta_from(int8_t *addr, int32_t port)
+int32_t Meta_from(char *addr, int32_t port)
 {
 	int32_t i;
 
@@ -104,7 +108,7 @@ void Meta_gone(void)
 void Meta_init(int32_t fd)
 {
 	int32_t i;
-	int8_t *addr;
+	char *addr;
 
 	Socket = fd;
 
@@ -112,10 +116,9 @@ void Meta_init(int32_t fd)
 		return;
 	}
 
-#ifndef SILENT
 	xpprintf("%s Locating Internet Meta server... ", showtime());
 	fflush(stdout);
-#endif
+
 	for (i = 0; i < NELEM(meta_servers); i++) {
 		addr = GetAddrByName(meta_servers[i].name);
 		if (addr) {
@@ -124,7 +127,7 @@ void Meta_init(int32_t fd)
 			meta_servers[i].addr[sizeof(meta_servers[i].addr) - 1]
 					= '\0';
 		}
-#ifndef SILENT
+
 		if (addr) {
 			xpprintf("found %d", i + 1);
 		}
@@ -138,42 +141,27 @@ void Meta_init(int32_t fd)
 			xpprintf("... ");
 		}
 		fflush(stdout);
-#endif
 	}
 }
 
-void Meta_update(bool change)
+void Meta_update(void)
 {
 
 #define SOUND_SUPPORT_STR	"no"
-#define GIVE_META_SERVER_A_HINT	180
 
-	int8_t string[MAX_STR_LEN];
-	int8_t status[MAX_STR_LEN];
+	char string[MAX_STR_LEN];
+	char status[MAX_STR_LEN];
 	int32_t i, j;
 	int32_t num_active_players;
 	bool first = true;
-	time_t currentTime;
-	const int8_t *game_mode;
-	int8_t freebases[120];
+	const char *game_mode;
+	char freebases[120];
 	int32_t active_per_team[MAX_TEAMS];
-	static time_t lastMetaSendTime = 0;
-	static int32_t queue_length = 0;
+	player_t *pl;
 
-	if (!reportToMetaServer)
+	if (!reportToMetaServer) {
 		return;
-
-	currentTime = time(NULL);
-	if (!change) {
-		if (currentTime - lastMetaSendTime < GIVE_META_SERVER_A_HINT) {
-			if (NumQueuedPlayers == queue_length || currentTime
-					- lastMetaSendTime < 5) {
-				return;
-			}
-		}
 	}
-	lastMetaSendTime = currentTime;
-	queue_length = NumQueuedPlayers;
 
 	Server_info(status, sizeof(status));
 
@@ -181,7 +169,10 @@ void Meta_update(bool change)
 	num_active_players = 0;
 	memset(active_per_team, 0, sizeof active_per_team);
 	for (i = 0; i < NumPlayers; i++) {
-		if (Player_is_human(Players[i])) {
+		pl = Players[i];
+
+		/* Report only human players who are currently in game, dead or waiting */
+		if (Player_is_human(pl) && (Player_is_active(pl))) {
 			num_active_players++;
 			if (BIT(World.rules->mode, TEAM_PLAY)) {
 				active_per_team[i]++;
@@ -200,12 +191,7 @@ void Meta_update(bool change)
 				continue;
 			}
 			if (World.teams[i].NumBases > 0) {
-				sprintf(
-						&freebases[j],
-						"%d=%d,",
-						i,
-						World.teams[i].NumBases
-								- active_per_team[i]);
+				sprintf(&freebases[j], "%d=%d,", i, World.teams[i].NumBases - active_per_team[i]);
 				j += strlen(&freebases[j]);
 			}
 		}
@@ -215,8 +201,7 @@ void Meta_update(bool change)
 		}
 	}
 	else {
-		sprintf(freebases, "=%d", World.NumBases - num_active_players
-				- login_in_progress);
+		sprintf(freebases, "=%d", World.NumBases - num_active_players - login_in_progress);
 	}
 
 	sprintf(string, "add server %s\n"
@@ -238,16 +223,19 @@ void Meta_update(bool change)
 			num_active_players, META_VERSION, World.name, World.x,
 			World.y, World.author, World.NumBases, fps,
 			contactPort, game_mode, World.NumTeamBases, freebases,
-			0, (int32_t) (time(NULL) - serverTime), queue_length);
+			0, (int32_t) (time(NULL) - serverStartTime), NumQueuedPlayers);
 
 	for (i = 0; i < NumPlayers; i++) {
-		if (Player_is_human(Players[i])) {
+		pl = Players[i];
+
+		if (Player_is_human(pl)
+				&& (Player_is_alive(pl) || Player_is_appearing(pl) || Player_is_waiting(pl) || Player_is_dead(pl))) {
 			sprintf(string + strlen(string), "%s%s=%s@%s",
 					(first) ? "add players " : ",",
-					Players[i]->name, Players[i]->realname,
-					Players[i]->hostname);
+					pl->name, pl->realname,
+					pl->hostname);
 			if (BIT(World.rules->mode, TEAM_PLAY)) {
-				sprintf(status, "{%d}", Players[i]->team->Num);
+				sprintf(status, "{%d}", pl->team->Num);
 				strcat(string, status);
 			}
 
@@ -264,4 +252,3 @@ void Meta_update(bool change)
 
 	Meta_send(string, strlen(string) + 1);
 }
-

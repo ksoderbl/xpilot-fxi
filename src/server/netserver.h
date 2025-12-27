@@ -1,4 +1,4 @@
-/* $Id: netserver.h,v 1.18 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -74,6 +74,18 @@
 #endif
 
 /*
+ * Types of player attributes, that need to be sent to them
+ */
+typedef enum {
+	PL_SEND_GENERAL = 1<<1,
+	PL_SEND_SCORE = 1<<2,
+	PL_SEND_BASE = 1<<3,
+	PL_SEND_WAR = 1<<4,
+
+	PL_SEND_ALL = 0xFFFFFFFF
+} pl_send_t;
+
+/*
  * All the connection state info.
  * Some of it is hardly ever used, if at all.
  */
@@ -107,64 +119,74 @@ struct _connection {
 	int32_t view_width, view_height;/* Viewable area dimensions */
 	int32_t debris_colors; /* Max. debris intensities */
 	int32_t spark_rand; /* Sparkling effect */
-	int8_t *real; /* real login name of player */
-	int8_t *nick; /* nickname of player */
-	int8_t *dpy; /* display of player */
+	char *real; /* real login name of player */
+	char *nick; /* nickname of player */
+	char *dpy; /* display of player */
 	shipshape_t *ship; /* ship shape of player */
-	int8_t *addr; /* address of players host */
-	int8_t *host; /* hostname of players host */
+	char *addr; /* address of players host */
+	char *host; /* hostname of players host */
 	player_t *pl; /* pointer to the player's structure */
 };
 
+extern int32_t num_logins;
+extern int32_t num_logouts;
+extern int32_t num_pause;
+extern int32_t num_unpause;
 
-int8_t *showtime(void);
-int32_t Get_motd(int8_t *buf, int32_t offset, int32_t maxlen, int32_t *size_ptr);
+int32_t Get_motd(char *buf, int32_t offset, int32_t maxlen, int32_t *size_ptr);
 int32_t Setup_net_server(void);
-void Destroy_connection(connection_t *connp, const int8_t *reason);
-int32_t Check_connection(int8_t *real, int8_t *nick, int8_t *dpy, int8_t *addr);
-int32_t Setup_connection(int8_t *real, int8_t *nick, int8_t *dpy, team_t *team, int8_t *addr,
-		int8_t *host, uint32_t version);
+void Destroy_connection(connection_t *connp, const char *reason);
+int32_t Check_connection(char *real, char *nick, char *dpy, char *addr);
+int32_t Setup_connection(char *real, char *nick, char *dpy, team_t *team, char *addr,
+		char *host, uint32_t version);
+
 int32_t Input(void);
+
+int32_t Handle_keyboard(player_t *pl);
+void Handle_player_command(player_t *pl, char *cmd);
+
 int32_t Send_reply(connection_t *connp, int32_t replyto, int32_t result);
 int32_t Send_self(connection_t *connp, player_t *pl, player_t *lock_pl, int32_t lock_dist,
-		int32_t lock_dir, int32_t autopilotlight, int32_t status, int8_t *mods);
+		int32_t lock_dir, int32_t autopilotlight, int32_t status, char *mods);
 int32_t Send_leave(connection_t *connp, int32_t id);
 int32_t Send_war(connection_t *connp, player_t *war_src_pl, player_t *war_dst_pl);
 int32_t Send_seek(connection_t *connp, int32_t programmer_id, int32_t robot_id,
 		int32_t sought_id);
 int32_t Send_player(connection_t *connp, player_t *pl);
 int32_t Send_score(connection_t *connp, player_t *pl);
-int32_t Send_score_object(connection_t *connp, int32_t score, int32_t x, int32_t y,
-		const int8_t *string);
+int32_t Send_score_object(connection_t *connp, int32_t score, objposition_t *pos, const char *string);
 int32_t Send_base(connection_t *connp, player_t *pl);
+int32_t Send_release_base(connection_t *connp, player_t *pl);
 int32_t Send_fuel(connection_t *connp, fuel_t *f);
 int32_t Send_destruct(connection_t *connp, int32_t count);
 int32_t Send_shutdown(connection_t *connp, int32_t count, int32_t delay);
 int32_t Send_debris(connection_t *connp, int32_t type, uint8_t *p, int32_t n);
-int32_t Send_wreckage(connection_t *connp, int32_t x, int32_t y, uint8_t wrtype,
-		uint8_t size, uint8_t rot);
+int32_t Send_wreckage(connection_t *connp, objposition_t *wr_pos, uint8_t wrtype, uint8_t size, uint8_t rot);
 int32_t Send_fastshot(connection_t *connp, int32_t type, uint8_t *p, int32_t n);
-int32_t Send_ball(connection_t *connp, int32_t x, int32_t y, object_t *ball);
+int32_t Send_ball(connection_t *connp, objposition_t *ball_pos, object_t *ball);
 int32_t Send_paused(connection_t *connp, int32_t x, int32_t y, int32_t count);
-int32_t Send_ship(connection_t *connp, int32_t x, int32_t y, int32_t id, int32_t dir, int32_t shield,
+int32_t Send_ship(connection_t *connp, objposition_t *pl_pos, int32_t id, int32_t dir, int32_t shield,
 		int32_t cloak, int32_t eshield, int32_t phased, int32_t deflector);
-int32_t Send_refuel(connection_t *connp, int32_t x0, int32_t y0, int32_t x1, int32_t y1);
-int32_t Send_connector(connection_t *connp, int32_t x0, int32_t y0, int32_t x1, int32_t y1,
-		int32_t tractor);
+int32_t Send_refuel(connection_t *connp, objposition_t *fs_pos, objposition_t *pl_pos);
+int32_t Send_connector(connection_t *connp, objposition_t *ball_pos, objposition_t *pl_pos, int32_t tractor);
 int32_t Send_radar(connection_t *connp, int32_t x, int32_t y, int32_t size);
 int32_t Send_fastradar(connection_t *connp, uint8_t *buf, int32_t n);
 int32_t Send_damaged(connection_t *connp, int32_t damaged);
-int32_t Send_message(connection_t *connp, const int8_t *msg);
+int32_t Send_message(connection_t *connp, const char *msg);
 int32_t Send_start_of_frame(connection_t *connp);
 int32_t Send_end_of_frame(connection_t *connp);
 int32_t Send_reliable(connection_t *connp);
 int32_t Send_time_left(connection_t *connp, int32_t sec);
 int32_t Send_eyes(connection_t *connp, player_t *pl);
-void Get_display_parameters(connection_t *connp, int32_t *width, int32_t *height,
-		int32_t *debris_colors, int32_t *spark_rand);
-//int32_t Get_player_id(int32_t);
+void Get_display_parameters(connection_t *connp, int32_t *width, int32_t *height, int32_t *debris_colors, int32_t *spark_rand);
 int32_t Send_shape(connection_t *connp, int32_t shape);
-const int8_t *Player_get_addr(player_t *pl);
+const char *Player_get_addr(player_t *pl);
+
+void Send_info(connection_t *connp, player_t *pl, pl_send_t attr);
+
+void Send_info_about_myself(player_t *pl, pl_send_t attr);
+void Send_info_about_others(player_t *pl, pl_send_t attr);
+void Send_info_about_player(player_t *pl, pl_send_t attr);
 
 #endif
 

@@ -1,4 +1,4 @@
-/* $Id: portability.h,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -104,7 +104,7 @@ extern int32_t ServerKilled;
  * Prototypes for OS function wrappers in portability.c.
  */
 int32_t Get_process_id(void); /* getpid */
-void Get_login_name(int8_t *buf, int32_t size);
+void Get_login_name(char *buf, int32_t size);
 
 /*
  * Prototypes for other (ANSI C library) wrapper functions.

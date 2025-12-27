@@ -49,7 +49,7 @@
  **	Indentation.
  **	No typedefs in external interface.
  **
- ** $Id: randommt.c,v 1.4 2008/08/16 21:07:33 rotunda_pk Exp $
+ **
  */
 
 

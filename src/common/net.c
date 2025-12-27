@@ -1,4 +1,4 @@
-/* $Id: net.c,v 1.4 2008/08/15 15:09:52 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -67,13 +67,13 @@
 #include "bit.h"
 #include "socklib.h"
 
-int8_t net_version[] = VERSION;
+char net_version[] = VERSION;
 
 int32_t last_packet_of_frame;
 
 int32_t Sockbuf_init(sockbuf_t *sbuf, int32_t sock, int32_t size, int32_t state)
 {
-	if ((sbuf->buf = sbuf->ptr = (int8_t *) malloc(size)) == NULL) {
+	if ((sbuf->buf = sbuf->ptr = (char *) malloc(size)) == NULL) {
 		return -1;
 	}
 	sbuf->sock = sock;
@@ -274,7 +274,7 @@ int32_t Sockbuf_flush(sockbuf_t *sbuf)
 	return len;
 }
 
-int32_t Sockbuf_write(sockbuf_t *sbuf, int8_t *buf, int32_t len)
+int32_t Sockbuf_write(sockbuf_t *sbuf, char *buf, int32_t len)
 {
 	if (BIT(sbuf->state, SOCKBUF_WRITE) == 0) {
 		errno = 0;
@@ -420,7 +420,7 @@ int32_t Sockbuf_copy(sockbuf_t *dest, sockbuf_t *src, int32_t len)
 }
 
 #if STDVA
-int32_t Packet_printf(sockbuf_t *sbuf, const int8_t *fmt, ...)
+int32_t Packet_printf(sockbuf_t *sbuf, const char *fmt, ...)
 #else
 int32_t Packet_printf(va_alist)
 va_dcl
@@ -436,15 +436,15 @@ va_dcl
 	uint16_t usval;
 	int32_t lval;
 	uint32_t ulval;
-	int8_t *str, *end, *buf, *stop;
+	char *str, *end, *buf, *stop;
 	va_list ap;
 #if !STDVA
-	int8_t *fmt;
+	char *fmt;
 	sockbuf_t *sbuf;
 
 	va_start(ap);
 	sbuf = va_arg(ap, sockbuf_t *);
-	fmt = va_arg(ap, int8_t *);
+	fmt = va_arg(ap, char *);
 #else
 	va_start(ap, fmt);
 #endif
@@ -510,12 +510,12 @@ va_dcl
 				case 'd':
 					sval = va_arg(ap, int32_t);
 					*buf++ = sval >> 8;
-					*buf++ = (int8_t) sval;
+					*buf++ = (char) sval;
 					break;
 				case 'u':
 					usval = va_arg(ap, uint32_t);
 					*buf++ = usval >> 8;
-					*buf++ = (int8_t) usval;
+					*buf++ = (char) usval;
 					break;
 				default:
 					failure = PRINTF_FMT;
@@ -530,17 +530,17 @@ va_dcl
 				switch (fmt[++i]) {
 				case 'd':
 					lval = va_arg(ap, int32_t);
-					*buf++ = (int8_t) (lval >> 24);
-					*buf++ = (int8_t) (lval >> 16);
-					*buf++ = (int8_t) (lval >> 8);
-					*buf++ = (int8_t) lval;
+					*buf++ = (char) (lval >> 24);
+					*buf++ = (char) (lval >> 16);
+					*buf++ = (char) (lval >> 8);
+					*buf++ = (char) lval;
 					break;
 				case 'u':
 					ulval = va_arg(ap, uint32_t);
-					*buf++ = (int8_t) (ulval >> 24);
-					*buf++ = (int8_t) (ulval >> 16);
-					*buf++ = (int8_t) (ulval >> 8);
-					*buf++ = (int8_t) ulval;
+					*buf++ = (char) (ulval >> 24);
+					*buf++ = (char) (ulval >> 16);
+					*buf++ = (char) (ulval >> 8);
+					*buf++ = (char) ulval;
 					break;
 				default:
 					failure = PRINTF_FMT;
@@ -551,7 +551,7 @@ va_dcl
 			case 's': /* Small strings */
 				max_str_size = (fmt[i] == 'S') ? MSG_LEN
 						: MAX_CHARS;
-				str = va_arg(ap, int8_t *);
+				str = va_arg(ap, char *);
 				if (buf + max_str_size >= end) {
 					stop = end;
 				}
@@ -608,7 +608,7 @@ va_dcl
 }
 
 #if STDVA
-inline int32_t Packet_scanf(sockbuf_t *sbuf, const int8_t *fmt, ...)
+inline int32_t Packet_scanf(sockbuf_t *sbuf, const char *fmt, ...)
 #else
 inline int32_t Packet_scanf(va_alist)
 va_dcl
@@ -620,15 +620,15 @@ va_dcl
 	uint16_t *usptr;
 	int32_t *lptr;
 	uint32_t *ulptr;
-	int8_t *cptr, *str;
+	char *cptr, *str;
 	va_list ap;
 #if !STDVA
-	int8_t *fmt;
+	char *fmt;
 	sockbuf_t *sbuf;
 
 	va_start(ap);
 	sbuf = va_arg(ap, sockbuf_t *);
-	fmt = va_arg(ap, int8_t *);
+	fmt = va_arg(ap, char *);
 #else
 	va_start(ap, fmt);
 #endif
@@ -654,7 +654,7 @@ va_dcl
 						break;
 					}
 				}
-				cptr = va_arg(ap, int8_t *);
+				cptr = va_arg(ap, char *);
 				*cptr = sbuf->ptr[j++];
 				break;
 			case 'd':
@@ -777,7 +777,7 @@ va_dcl
 			case 's': /* Small strings */
 				max_str_size = (fmt[i] == 'S') ? MSG_LEN
 						: MAX_CHARS;
-				str = va_arg(ap, int8_t *);
+				str = va_arg(ap, char *);
 				k = 0;
 				for (;;) {
 					if (&sbuf->buf[sbuf->len]
@@ -808,14 +808,9 @@ va_dcl
 						 * the client has more difficulty with that
 						 * if this is the reliable data buffer.
 						 */
-#ifndef SILENT
 						errno = 0;
-						error(
-								"String overflow while scanning (%d,%d)",
-								k, max_str_size);
-#endif
-						if (BIT(sbuf->state, SOCKBUF_LOCK)
-								!= 0) {
+						error("String overflow while scanning (%d,%d)", k, max_str_size);
+						if (BIT(sbuf->state, SOCKBUF_LOCK) != 0) {
 							failure = 2;
 						}
 						else {

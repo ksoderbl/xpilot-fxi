@@ -21,14 +21,11 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 #include <errno.h>
 #include <expat.h>
 #include <unistd.h>
 
-#define SERVER
 #include "xpconfig.h"
-#include "rank.h"
 #include "version.h"
 #include "commonproto.h"
 #include "config.h"
@@ -37,12 +34,18 @@
 #include "types.h"
 #include "proto.h"
 #include "error.h"
+#include "debug.h"
+
+#include "rank.h"
 #include "netserver.h"
+#include "map.h"
+#include "player_inline.h"
 
-int8_t rank_version[] = VERSION;
+char rank_version[] = VERSION;
 
-int8_t *rankFileName;
-int8_t *rankWebpageFileName;
+char *rankFileName;
+char *rankWebpageFileName;
+char *rankWebpageCSS;
 
 /* MAX_SCORES = how many players we remember */
 #define MAX_SCORES 300
@@ -90,19 +93,20 @@ static int32_t rank_cmp(const void *p1, const void *p2)
 	return 0;
 }
 
-static int8_t *rank_showtime(const time_t t)
+static char *rank_showtime(const time_t t)
 {
 	struct tm *tmp;
-	static int8_t buf[80];
+	static char buf[80];
 	time_t t2 = t;
 
 	tmp = localtime(&t2);
 	snprintf(buf, sizeof(buf), "%d-%02d-%02d&nbsp;%02d:%02d", tmp->tm_year
-			+ 1900, tmp->tm_mon, tmp->tm_mday, tmp->tm_hour,
+			+ 1900, tmp->tm_mon + 1, tmp->tm_mday, tmp->tm_hour,
 			tmp->tm_min);
 	return buf;
 }
 
+#if 0
 /*
  * http://wolfwiki.anime.net/index.php/Color_Codes
  * says these originate in Quake III Arena, therefore
@@ -142,23 +146,25 @@ static int32_t q3_colors[] =
 	0xffffbf, /* e.g. . N n */
 	0xffff7f /* e.g. / O o */
 	};
+#endif
 
 static inline int32_t Index_by_color_code(int32_t ascii_char)
 {
 	return (ascii_char + 16) & 31;
 }
 
+#if 0
 /*
  * Turn Q3A style color codes into HTML font tags.
  * Example: "XX^1Foo^2Bar^^" becomes
  * "XX<font color="#ff0000">Foo</font><font color="#00ff00">Bar</font>^".
  */
-static const int8_t *colorize(const int8_t *str)
+static const char *colorize(const char *str)
 {
-	static int8_t result[4096];
-	static int8_t tmpstr[1024]; /* copy of str so we can modify it. */
-	int8_t *s;
-	int8_t *caret;
+	static char result[4096];
+	static char tmpstr[1024]; /* copy of str so we can modify it. */
+	char *s;
+	char *caret;
 	int32_t color = -1; /* -1 mean no color. */
 
 	strlcpy(tmpstr, str, sizeof(tmpstr));
@@ -167,7 +173,7 @@ static const int8_t *colorize(const int8_t *str)
 	s = tmpstr;
 
 	while ((caret = strchr(s, '^')) != NULL) {
-		int8_t c;
+		char c;
 
 		*caret = '\0';
 
@@ -191,7 +197,7 @@ static const int8_t *colorize(const int8_t *str)
 			s = caret + 1;
 		}
 		else { /* A new color. */
-			static int8_t fontcolor[32];
+			static char fontcolor[32];
 			if (color >= 0) {
 				/*printf("old color = %d #%06x\n", color, q3_colors[color]);*/
 				strlcat(result, "</font>", sizeof(result));
@@ -218,14 +224,15 @@ static const int8_t *colorize(const int8_t *str)
 
 	return result;
 }
+#endif
 
 /*
  * Encode 'str' for XML or HTML.
  */
-static int8_t *encode(const int8_t *str)
+static char *encode(const char *str, int32_t xml)
 {
-	static int8_t result[1024];
-	int8_t c;
+	static char result[MAX_CHARS];
+	char c;
 
 	result[0] = '\0';
 	while ((c = *str++) != '\0') {
@@ -235,12 +242,12 @@ static int8_t *encode(const int8_t *str)
 			strlcat(result, "&gt;", sizeof(result));
 		else if (c == '&')
 			strlcat(result, "&amp;", sizeof(result));
-		else if (c == '\'')
+		else if (c == '\'' && xml)
 			strlcat(result, "&apos;", sizeof(result));
 		else if (c == '"')
 			strlcat(result, "&quot;", sizeof(result));
 		else {
-			int8_t tmp[2];
+			char tmp[2];
 
 			sprintf(tmp, "%c", c);
 			strlcat(result, tmp, sizeof(result));
@@ -250,10 +257,10 @@ static int8_t *encode(const int8_t *str)
 	return result;
 }
 
-static int32_t encode_to_file(const int8_t *str, FILE *file)
+static int32_t encode_to_file(const char *str, FILE *file)
 {
-	int8_t c;
-	const int8_t *entity;
+	char c;
+	const char *entity;
 
 	/*printf("e2f \"%s\"...", str);*/
 
@@ -294,7 +301,7 @@ static int32_t encode_to_file(const int8_t *str, FILE *file)
 }
 
 /* Here's where we calculate the ranks. Figure it out yourselves! */
-static void SortRankings(void)
+static void Rank_sort(void)
 {
 	double lowSC = 0.0, highSC = 0.0;
 	double lowKD = 0.0, highKD = 0.0;
@@ -412,18 +419,20 @@ static void SortRankings(void)
 	}
 }
 
-static const int8_t *Rank_get_logout_message(ranknode_t *rank)
+static const char *Rank_get_logout_message(ranknode_t *rank)
 {
-	static int8_t msg[MSG_LEN];
+	static char msg[MSG_LEN];
 	player_t *pl;
 
-	assert(strlen(rank->name)> 0);
-	pl = Get_player_by_name(rank->name, NULL, NULL);
+	ASSERT(strlen(rank->name)> 0)
+	pl = Player_get_by_name_exact(rank->name);
 	if (pl) {
-		if (BIT(pl->status, PAUSE))
+		if (Player_is_paused(pl)) {
 			snprintf(msg, sizeof(msg), "paused");
-		else
+		}
+		else {
 			snprintf(msg, sizeof(msg), "playing");
+		}
 	}
 	else
 		snprintf(msg, sizeof(msg), "%s", rank_showtime(rank->timestamp));
@@ -431,6 +440,7 @@ static const int8_t *Rank_get_logout_message(ranknode_t *rank)
 	return msg;
 }
 
+#if 0
 #define TABLEHEAD \
 "<table><tr><td></td>" /* First column is the position */ \
 "<td align=left><h1><u><b>Player</b></u></h1></td>" \
@@ -470,11 +480,11 @@ void Rank_write_webpage(void)
 		"<hr>Page generated %s<br>\n\n" /* <-- Insert time here. */
 		"</body></html>";
 
-	int8_t *filename;
+	char *filename;
 	FILE *file;
 	int32_t i;
 
-	SortRankings();
+	Rank_sort();
 
 	filename = rankWebpageFileName;
 	if (!filename)
@@ -502,7 +512,7 @@ void Rank_write_webpage(void)
 			"<td align=right>%u"
 			"<td align=right>%u"
 			"<td align=right>%u"
-			"<td align=center>%u/%u/%u/%u/%u"
+			"<td align=center>%u/%u/%u/%u/%.2f"
 			"<td align=right>%.2f"
 			"<td align=right>", rank->score, rank->kills,
 				rank->deaths, rank->rounds, rank->ballsCashed,
@@ -522,28 +532,182 @@ void Rank_write_webpage(void)
 	fprintf(file, footer, rank_showtime(time(NULL)));
 	fclose(file);
 }
+#endif
 
-bool Rank_get_stats(const int8_t *name, int8_t *buf)
+/* Sort the ranks and save them to the webpage. */
+void Rank_write_webpage(void)
+{
+	static const char stdcss[] = "  <style type=\"text/css\">\n"
+		"    body {\n"
+		"      font-family: sans-serif;\n"
+		"      color: #000000;\n"
+		"      background-color: #ffffff;\n"
+		"    }\n"
+		"    table {\n"
+		"      font-size: small;\n"
+		"      border-collapse: collapse;\n"
+		"      border-spacing: 0;\n"
+		"    }\n"
+		"    tr.odd {\n"
+		"      color: #000000;\n"
+		"      background-color: #d0d8e0;\n"
+		"    }\n"
+		"    tr.even {\n"
+		"      color: #000000;\n"
+		"      background-color: #e0e8f0;\n"
+		"    }\n"
+		"    th, td {\n"
+		"      padding: 0.2em 0.5em;\n"
+		"    }\n"
+		"    th {\n"
+		"      color: #000000;\n"
+		"      background-color: #ffffff;\n"
+		"      border: solid #808890;\n"
+		"      border-width: 1px 0 1px 0;\n"
+		"      font-weight: bold;\n"
+		"    }\n"
+		"    td.player {\n"
+		"      font-weight: bold;\n"
+		"    }\n"
+		"    a:link {\n"
+		"      color: #0000c0;\n"
+		"      background-color: #ffffff;\n"
+		"    }\n"
+		"    a:visited {\n"
+		"      color: #c000c0;\n"
+		"      background-color: #ffffff;\n"
+		"    }\n"
+		"  </style>\n";
+
+	char *filename;
+	FILE *file;
+	int i;
+
+	Rank_sort();
+
+	filename = rankWebpageFileName;
+	if (!filename)
+		return;
+
+	file = fopen(filename, "w");
+	if (!file) {
+		error("Couldn't open ranking file \"%s\" for writing", filename);
+		return;
+	}
+
+	fprintf(file, "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\"\n"
+		"    \"http://www.w3.org/TR/HTML4/strict.dtd\">\n"
+		"<html lang=\"en\">\n"
+		"<head>\n"
+		"  <title>%s @ %s</title>\n"
+		"  <meta http-equiv=\"Content-Type\" "
+		"content=\"text/html; charset=ISO-8859-1\">\n", mapName, Server.host);
+
+	if (rankWebpageCSS != NULL)
+		fprintf(file, "  <link rel=\"StyleSheet\" type=\"text/css\" href=\"%s\" />\n", rankWebpageCSS);
+	else
+		fprintf(file, "%s", stdcss);
+
+	fprintf(file, "</head>\n"
+		"\n"
+		"<body>\n"
+		"  <h1>%s @ %s</h1>\n" /* mapname @ servername */
+		"\n"
+// TODO: have to verify this first
+//		"  <p>\n"
+//		"    <a href=\"http://xpilot.sourceforge.net/rank-info.html\">"
+//		"How does the ranking work?</a>\n"
+//		"  </p>\n"
+//		"\n"
+		"  <table>\n", mapName, Server.host);
+
+	for (i = 0; i < MAX_SCORES; i++) {
+		ranknode_t *rank = &ranknodes[rank_base[i].ind];
+
+		if (strlen(rank->name) == 0)
+			continue;
+
+		if (i % 20 == 0)
+			fprintf(file, "    <tr>\n"
+				"      <th class=\"rank\" align=\"left\">Rank</th>\n"
+				"      <th class=\"player\" align=\"left\">Player</th>\n"
+				"      <th class=\"score\" align=\"left\">Score</th>\n"
+				"      <th class=\"kills\" align=\"left\">Kills</th>\n"
+				"      <th class=\"deaths\" align=\"left\">Deaths</th>\n"
+				"      <th class=\"rounds\" align=\"left\">Rounds</th>\n"
+				"      <th class=\"shots\" align=\"left\">Shots</th>\n"
+				"      <th class=\"deadliest\" align=\"left\">Deadliest</th>\n"
+				"      <th class=\"balls\" align=\"left\">Balls</th>\n"
+				"      <th class=\"ratio\" align=\"left\">Ratio</th>\n"
+				"      <th class=\"user\" align=\"right\">User</th>\n"
+				"      <th class=\"host\" align=\"left\">Host</th>\n"
+				"      <th class=\"logout\" align=\"left\">Logout</th>\n"
+				"    </tr>\n");
+
+		fprintf(file, "    <tr class=\"%s\">\n"
+			"      <td class=\"rank\" align=\"right\">%d</td>\n"
+			"      <td class=\"player\" align=\"left\">%s</td>\n", i
+				% 2 == 0 ? "odd" : "even", /* sic */
+		i + 1, encode(rank->name, 0));
+
+		fprintf(file, "      <td class=\"score\" align=\"right\">%.1f</td>\n"
+			"      <td class=\"kills\" align=\"right\">%u</td>\n"
+			"      <td class=\"deaths\" align=\"right\">%u</td>\n"
+			"      <td class=\"rounds\" align=\"right\">%u</td>\n"
+			"      <td class=\"shots\" align=\"right\">%u</td>\n"
+			"      <td class=\"deadliest\" align=\"right\">%u</td>\n"
+			"      <td class=\"balls\" align=\"left\">%u/%u/%u/%u/%.2f</td>\n"
+			"      <td class=\"ratio\" align=\"right\">%.2f</td>\n"
+			"      <td class=\"user\" align=\"right\">%s</td>\n",
+			(double) rank->score, rank->kills, rank->deaths, rank->rounds, rank->shots, rank->deadliest, rank->ballsCashed, rank->ballsSaved, rank->ballsWon, rank->ballsLost, rank->bestball, rank_base[i].ratio, encode(rank->user, 0));
+
+		fprintf(file, "      <td class=\"host\" align=\"left\">%s</td>\n"
+			"      <td class=\"logout\" align=\"left\">%s</td>\n"
+			"    </tr>\n", encode(rank->host, 0), Rank_get_logout_message(rank));
+	}
+
+	fprintf(file, "  </table>\n"
+		"\n"
+		"  <p>\n"
+		"    <em>Explanation for ballstats</em>:<br>\n"
+		"    The numbers are c/s/w/l/b, where<br>\n"
+		"    c = The number of enemy balls you have cashed.<br>\n"
+		"    s = The number of your own balls you have returned.<br>\n"
+		"    w = The number of enemy balls your team has cashed.<br>\n"
+		"    l = The number of your own balls you have lost.<br>\n"
+		"    b = The fastest ballrun you have made.<br>\n"
+		"  </p>\n"
+		"\n"
+		"  <p>\n"
+		"    Page generated by " PACKAGE_STRING " on %s\n"
+	"  </p>\n"
+	"</body>\n"
+	"</html>\n", rank_showtime(time(NULL)));
+
+	fclose(file);
+}
+
+bool Rank_get_stats(const char *name, char *buf)
 {
 	ranknode_t *r = Rank_get_by_name(name);
 
 	if (r == NULL)
 		return false;
 
-	sprintf(buf, "%-15s  SC: %d  K/D: %5d/%5d  R: %4d  SH: %6d  "
-		"B: %d/%d/%d/%d/%d", r->name, r->score, r->kills, r->deaths,
-			r->rounds, r->shots, r->ballsCashed, r->ballsSaved,
-			r->ballsWon, r->ballsLost, r->bestball);
+	sprintf(buf, "%-15s  SC: %d  K/D: %5d/%5d  R: %4d  SH: %6d  Dl: %d "
+		"B: %d/%d/%d/%d/%.2f TM: %.2f", r->name, r->score, r->kills, r->deaths,
+			r->rounds, r->shots, r->deadliest, r->ballsCashed, r->ballsSaved,
+			r->ballsWon, r->ballsLost, r->bestball, r->max_survival_time);
 
 	return true;
 }
 
-ranknode_t *Rank_get_by_name(const int8_t *name)
+ranknode_t *Rank_get_by_name(const char *name)
 {
 	int32_t i;
 	player_t *pl;
 
-	assert(name != NULL);
+	ASSERT(name != NULL)
 
 	for (i = 0; i < MAX_SCORES; i++) {
 		ranknode_t *rank = &ranknodes[i];
@@ -557,15 +721,15 @@ ranknode_t *Rank_get_by_name(const int8_t *name)
 	 * let's see if it could be an abbreviation of the nick of some player
 	 * who is currently playing.
 	 */
-	pl = Get_player_by_name(name, NULL, NULL);
+	pl = Player_get_by_name(name, NULL, NULL);
 	if (pl && pl->rank)
 		return pl->rank;
 
 	return NULL;
 }
 
-static void Init_ranknode(ranknode_t *rank, const int8_t *name, const int8_t *user,
-		const int8_t *host)
+static void Init_ranknode(ranknode_t *rank, const char *name, const char *user,
+		const char *host)
 {
 	memset(rank, 0, sizeof(ranknode_t));
 	strlcpy(rank->name, name, sizeof(rank->name));
@@ -614,20 +778,18 @@ void Rank_get_saved_score(player_t * pl)
 	ranknode_t *rank, *unused = NULL;
 	int32_t i;
 
-	updateScores = true;
-
 	for (i = 0; i < MAX_SCORES; i++) {
 		rank = &ranknodes[i];
 		if (!strcasecmp(pl->name, rank->name)) {
 			if (rank->pl == NULL) {
 				/* Ok, found it. */
 				rank->pl = pl;
-				Player_set_score(pl, rank->score);
+				Score_set(pl, rank->score);
 				pl->rank = rank;
 			}
 			else {
 				/* That ranknode is already in use by another player! */
-				Player_set_score(pl, 0);
+				Score_set(pl, 0);
 				pl->rank = NULL;
 			}
 			return;
@@ -667,13 +829,13 @@ void Rank_get_saved_score(player_t * pl)
 	Init_ranknode(rank, pl->name, pl->realname, pl->hostname);
 	rank->pl = pl;
 	rank->timestamp = time(NULL);
-	Player_set_score(pl, 0);
+	Score_set(pl, 0);
 	pl->rank = rank;
 }
 
 static bool Rank_parse_rankfile(FILE *file)
 {
-	int8_t buf[8192];
+	char buf[8192];
 	int32_t len, fd;
 	XML_Parser p = XML_ParserCreate(NULL);
 
@@ -761,6 +923,8 @@ static void tagstart(void *data, const char *el, const char **attr)
 				rank->rounds = atoi(*(attr + 1));
 			if (!strcasecmp(*attr, "shots"))
 				rank->shots = atoi(*(attr + 1));
+			if (!strcasecmp(*attr, "deadliest"))
+				rank->deadliest = atoi(*(attr + 1));
 			if (!strcasecmp(*attr, "ballssaved"))
 				rank->ballsSaved = atoi(*(attr + 1));
 			if (!strcasecmp(*attr, "ballslost"))
@@ -771,6 +935,8 @@ static void tagstart(void *data, const char *el, const char **attr)
 				rank->ballsCashed = atoi(*(attr + 1));
 			if (!strcasecmp(*attr, "bestball"))
 				rank->bestball = atof(*(attr + 1));
+			if (!strcasecmp(*attr, "max_survival_time"))
+				rank->max_survival_time = atof(*(attr + 1));
 			if (!strcasecmp(*attr, "timestamp"))
 				rank->timestamp = atoi(*(attr + 1));
 
@@ -812,7 +978,7 @@ void Rank_save_score(player_t *pl)
 void Rank_write_rankfile(void)
 {
 	FILE *file = NULL;
-	int8_t tmp_file[PATH_MAX];
+	char tmp_file[PATH_MAX];
 	int32_t i;
 
 	if (!rankFileName)
@@ -878,6 +1044,10 @@ void Rank_write_rankfile(void)
 				rank->shots) < 0)
 			goto writefailed;
 
+	        if (rank->deadliest > 0 && fprintf(file, "deadliest=\"%d\" ",
+				rank->deadliest) < 0)
+			goto writefailed;
+
 		if (rank->ballsCashed > 0 && fprintf(file,
 				"ballscashed=\"%d\" ", rank->ballsCashed) < 0)
 			goto writefailed;
@@ -894,8 +1064,12 @@ void Rank_write_rankfile(void)
 				rank->ballsLost) < 0)
 			goto writefailed;
 
-		if (rank->bestball > 0 && fprintf(file, "bestball=\"%d\" ",
+		if (rank->bestball > 0.0 && fprintf(file, "bestball=\"%.2f\" ",
 				rank->bestball) < 0)
+			goto writefailed;
+
+	        if (rank->max_survival_time > 0 && fprintf(file, "max_survival_time=\"%.2f\" ",
+	        		rank->max_survival_time) < 0)
 			goto writefailed;
 
 		if (fprintf(file, "timestamp=\"%u\" ",

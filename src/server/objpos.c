@@ -1,4 +1,4 @@
-/* $Id: objpos.c,v 1.6 2008/08/15 15:09:53 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -24,165 +24,39 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
-#define SERVER
 #include "version.h"
 #include "config.h"
 #include "const.h"
-#include "global.h"
-#include "proto.h"
-#include "map.h"
-#include "object.h"
+#include "debug.h"
+
 #include "objpos.h"
+#include "map.h"
 
-int8_t objpos_version[] = VERSION;
+char objpos_version[] = VERSION;
 
-#define TESTING 1
 
-void Object_position_set_clicks(object_t *obj, int32_t cx, int32_t cy)
+void Position_copy(objposition_t *dstpos, objposition_t *srcpos)
 {
-	struct _objposition *pos = (struct _objposition *) &obj->pos;
-
-#ifdef TESTING
-	if (cx < 0 || cx >= World.cwidth || cy < 0 || cy >= World.cheight) {
-		printf("BUG!  Illegal object position %d,%d\n", cx, cy);
-		*(double *) (-1) = 4321.0;
-		abort();
-	}
-#endif
-	pos->cx = cx;
-	pos->x = CLICK_TO_PIXEL(cx);
-	pos->bx = pos->x / BLOCK_SZ;
-	pos->cy = cy;
-	pos->y = CLICK_TO_PIXEL(cy);
-	pos->by = pos->y / BLOCK_SZ;
+	memcpy(dstpos, srcpos, sizeof(objposition_t));
 }
 
-void Object_position_set_clicks_interpolation(object_t *obj, int32_t cx, int32_t cy)
+void Position_set(objposition_t *pos, clpos_t *clpos)
 {
-	struct _objposition *pos = (struct _objposition *) &obj->pos_interp;
+	int32_t cx, cy;
 
-#ifdef TESTING
-	if (cx < 0 || cx >= World.cwidth || cy < 0 || cy >= World.cheight) {
-		printf("BUG!  Illegal object position interpolation %d,%d\n",
-				cx, cy);
-		*(double *) (-1) = 4321.0;
-		abort();
-	}
+	cx = WRAP_XCLICK(clpos->cx);
+	cy = WRAP_YCLICK(clpos->cy);
+
+#if (DEBUG > 0)
+	ASSERT(cx >= 0 && cx < World.cwidth && cy >= 0 && cy < World.cheight)
 #endif
 
 	pos->cx = cx;
 	pos->x = CLICK_TO_PIXEL(cx);
-	pos->bx = pos->x / BLOCK_SZ;
+	pos->bx = PIXEL_TO_BLOCK(pos->x);
 	pos->cy = cy;
 	pos->y = CLICK_TO_PIXEL(cy);
-	pos->by = pos->y / BLOCK_SZ;
+	pos->by = PIXEL_TO_BLOCK(pos->y);
 }
-
-void Object_position_init_clicks(object_t *obj, int32_t cx, int32_t cy)
-{
-	Object_position_set_clicks(obj, cx, cy);
-	Object_position_remember(obj);
-}
-
-void Object_position_init_clicks_interpolation(object_t *obj, int32_t cx, int32_t cy)
-{
-	Object_position_set_clicks_interpolation(obj, cx, cy);
-	Object_position_set_clicks(obj, cx, cy);
-	Object_position_remember(obj);
-}
-
-void Player_position_restore(player_t *pl)
-{
-	Player_position_set_clicks(pl, PIXEL_TO_CLICK(pl->prevpos.x), PIXEL_TO_CLICK(pl->prevpos.y));
-}
-
-void Player_position_set_clicks(player_t *pl, int32_t cx, int32_t cy)
-{
-	struct _objposition *pos = (struct _objposition *) &pl->pos;
-
-#ifdef TESTING
-	if (cx < 0 || cx >= World.cwidth || cy < 0 || cy >= World.cheight) {
-		printf("BUG!  Illegal player position %d,%d\n", cx, cy);
-		*(double *) (-1) = 4321.0;
-		abort();
-	}
-#endif
-	pos->cx = cx;
-	pos->x = CLICK_TO_PIXEL(cx);
-	pos->bx = pos->x / BLOCK_SZ;
-	pos->cy = cy;
-	pos->y = CLICK_TO_PIXEL(cy);
-	pos->by = pos->y / BLOCK_SZ;
-}
-
-void Player_position_set_clicks_interpolation(player_t *pl, int32_t cx, int32_t cy)
-{
-	struct _objposition *pos = (struct _objposition *) &pl->pos_interp;
-
-#ifdef TESTING
-	if (cx < 0 || cx >= World.cwidth || cy < 0 || cy >= World.cheight) {
-		printf("BUG!  Illegal player position interpolation %d,%d\n",
-				cx, cy);
-		*(double *) (-1) = 4321.0;
-		abort();
-	}
-#endif
-	pos->cx = cx;
-	pos->x = CLICK_TO_PIXEL(cx);
-	pos->bx = pos->x / BLOCK_SZ;
-	pos->cy = cy;
-	pos->y = CLICK_TO_PIXEL(cy);
-	pos->by = pos->y / BLOCK_SZ;
-}
-
-void Player_position_init_clicks(player_t *pl, int32_t cx, int32_t cy)
-{
-	Player_position_set_clicks(pl, cx, cy);
-	Player_position_remember(pl);
-}
-
-void Player_position_limit(player_t *pl)
-{
-	int32_t cx = pl->pos.cx, ox = cx;
-	int32_t cy = pl->pos.cy, oy = cy;
-
-	LIMIT(cx, 0, World.cwidth - 1);
-	LIMIT(cy, 0, World.cheight - 1);
-	if (cx != ox || cy != oy) {
-		Player_position_set_clicks(pl, cx, cy);
-	}
-}
-
-void Player_position_debug(player_t *pl, const int8_t *msg)
-{
-#if DEVELOPMENT
-	int32_t i;
-
-	printf("pl %s pos dump: ", pl->name);
-	if (msg) printf("(%s)", msg);
-	printf("\n");
-	printf("\tB %d, %d, P %d, %d, C %d, %d, O %d, %d\n",
-			pl->pos.bx,
-			pl->pos.by,
-			pl->pos.x,
-			pl->pos.y,
-			pl->pos.cx,
-			pl->pos.cy,
-			pl->prevpos.x,
-			pl->prevpos.y);
-	for (i = 0; i < pl->ship->num_points; i++) {
-		printf("\t%2d\tB %d, %d, P %d, %d, C %d, %d, O %d, %d\n",
-				i,
-				(int32_t)((pl->pos.x + pl->ship->pts[i][pl->dir].x) / BLOCK_SZ),
-				(int32_t)((pl->pos.y + pl->ship->pts[i][pl->dir].y) / BLOCK_SZ),
-				(int32_t)(pl->pos.x + pl->ship->pts[i][pl->dir].x),
-				(int32_t)(pl->pos.y + pl->ship->pts[i][pl->dir].y),
-				(int32_t)(pl->pos.cx + FLOAT_TO_CLICK(pl->ship->pts[i][pl->dir].x)),
-				(int32_t)(pl->pos.cy + FLOAT_TO_CLICK(pl->ship->pts[i][pl->dir].y)),
-				(int32_t)(pl->prevpos.x + pl->ship->pts[i][pl->dir].x),
-				(int32_t)(pl->prevpos.y + pl->ship->pts[i][pl->dir].y));
-	}
-#endif
-}
-

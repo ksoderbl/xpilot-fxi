@@ -1,4 +1,4 @@
-/* $Id: metaserver.h,v 1.3 2008/08/15 15:09:53 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -28,7 +28,15 @@
 #define META_PORT	5500
 #define META_HOST	"meta.xpilot.org"
 #define META_HOST_TWO	"meta2.xpilot.org"
-#define META_IP		"129.242.16.101"
-#define META_IP_TWO	"132.235.197.27"
+#define META_IP		"64.235.48.198"
+#define META_IP_TWO	"64.235.48.198"
+
+extern double meta_update_count;
+
+void Meta_send(char *mesg, int32_t len);
+int32_t Meta_from(char *addr, int32_t port);
+void Meta_gone(void);
+void Meta_init(int32_t fd);
+void Meta_update(void);
 
 #endif

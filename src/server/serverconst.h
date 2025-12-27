@@ -1,4 +1,4 @@
-/* $Id: serverconst.h,v 1.7 2008/08/15 15:09:53 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -27,84 +27,12 @@
 
 #include "const.h"
 
-/*
- * Two macros for edge wrap of x and y coordinates measured in pixels.
- * Note that the correction needed shouldn't ever be bigger than one mapsize.
- */
-#define WRAP_XPIXEL(x_)	\
-	(BIT(World.rules->mode, WRAP_PLAY) \
-	    ? ((x_) < 0 \
-		? (x_) + World.width \
-		: ((x_) >= World.width \
-		    ? (x_) - World.width \
-		    : (x_))) \
-	    : (x_))
-
-#define WRAP_YPIXEL(y_)	\
-	(BIT(World.rules->mode, WRAP_PLAY) \
-	    ? ((y_) < 0 \
-		? (y_) + World.height \
-		: ((y_) >= World.height \
-		    ? (y_) - World.height \
-		    : (y_))) \
-	    : (y_))
-
-/*
- * Two macros for edge wrap of x and y coordinates measured in map blocks.
- * Note that the correction needed shouldn't ever be bigger than one mapsize.
- */
-#define WRAP_XBLOCK(x_)	\
-	(BIT(World.rules->mode, WRAP_PLAY) \
-	    ? ((x_) < 0 \
-		? (x_) + World.x \
-		: ((x_) >= World.x \
-		    ? (x_) - World.x \
-		    : (x_))) \
-	    : (x_))
-
-#define WRAP_YBLOCK(y_)	\
-	(BIT(World.rules->mode, WRAP_PLAY) \
-	    ? ((y_) < 0 \
-		? (y_) + World.y \
-		: ((y_) >= World.y \
-		    ? (y_) - World.y \
-		    : (y_))) \
-	    : (y_))
-
-/*
- * Two macros for edge wrap of differences in position.
- * If the absolute value of a difference is bigger than
- * half the map size then it is wrapped.
- */
-#define WRAP_DX(dx)	\
-	(BIT(World.rules->mode, WRAP_PLAY) \
-	    ? ((dx) < - (World.width >> 1) \
-		? (dx) + World.width \
-		: ((dx) > (World.width >> 1) \
-		    ? (dx) - World.width \
-		    : (dx))) \
-	    : (dx))
-
-#define WRAP_DY(dy)	\
-	(BIT(World.rules->mode, WRAP_PLAY) \
-	    ? ((dy) < - (World.height >> 1) \
-		? (dy) + World.height \
-		: ((dy) > (World.height >> 1) \
-		    ? (dy) - World.height \
-		    : (dy))) \
-	    : (dy))
-
 #define PSEUDO_TEAM(pl1, pl2)\
 	((pl1)->pseudo_team == (pl2)->pseudo_team)
 
 /*
  * Used where we wish to know if a player is simply on the same team.
  */
-/* #define TEAM(i, j)							\
-	(BIT(Players[i]->status|Players[j]->status, PAUSE)		\
-	|| (BIT(World.rules->mode, TEAM_PLAY)				\
-	   && (Players[i]->team == Players[j]->team)			\
-	   && (Players[i]->team != TEAM_NOT_SET))) */
 #define TEAM(pl1, pl2) \
 	(BIT(World.rules->mode, TEAM_PLAY) \
 	&& ((pl1)->team == (pl2)->team) \
@@ -116,14 +44,44 @@
  */
 #define TEAM_IMMUNE(pl1, pl2)	(teamImmunity && TEAM(pl1, pl2))
 
-#define RECOVERY_DELAY		(intGameSpeed*3)
-#define ROBOT_CREATE_DELAY	(intGameSpeed*2)
+/*
+ * Delays and timeouts in game (both in seconds and the number real frames (ticks))
+ */
+#define RECOVERY_DELAY			3.0
+#define RECOVERY_DELAY_TICKS		(gameSpeed * RECOVERY_DELAY)
+
+#define UNPAUSE_DELAY			10.0
+#define UNPAUSE_DELAY_TICKS		(gameSpeed * UNPAUSE_DELAY)
+
+#define ROBOT_CREATE_DELAY		2.0
+#define ROBOT_CREATE_DELAY_TICKS	(gameSpeed * ROBOT_CREATE_DELAY)
+
+#define SELF_DESTRUCT_DELAY		15.0
+#define SELF_DESTRUCT_DELAY_TICKS	(gameSpeed * SELF_DESTRUCT_DELAY)
+
+#define MAX_PLAYER_IDLE			60.0
+#define MAX_PLAYER_IDLE_TICKS		(gameSpeed * MAX_PLAYER_IDLE)
+
+#define SHOT_DELAY			1.0
+#define SHOT_DELAY_TICKS		(gameSpeed * SHOT_DELAY)
+
+#define SHOT_LIFE_TICKS			(frameDivisor * ShotsLife)
+
+#define META_UPDATE_DELAY		180.0
+#define META_UPDATE_DELAY_TICKS		(gameSpeed * META_UPDATE_DELAY)
+
+#define SHIELD_DELAY			2.0
+#define SHIELD_DELAY_TICKS		(gameSpeed * SHIELD_DELAY)
+
+
+#define MAX_OBJECT_LIFE		INT_MAX
 
 #define NO_ID			(-1)
 #define NUM_IDS			256
 #define MAX_PSEUDO_PLAYERS      16
+#define MAX_PAUSED_PLAYERS	8
 
-#define MAX_TOTAL_SHOTS		16384	/* must be <= 65536 */
+#define MAX_TOTAL_OBJECTS		16384	/* must be <= 65536 */
 
 #define LG2_MAX_AFTERBURNER     4
 #define ALT_SPARK_MASS_FACT     4.2

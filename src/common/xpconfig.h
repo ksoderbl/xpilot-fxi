@@ -1,4 +1,4 @@
-/* $Id: xpconfig.h,v 1.5 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -54,27 +54,19 @@
 
 #define COMPRESSED_MAPS 1
 
-#ifdef DEBUG
-#    define D(x)	x ;  fflush(stdout);
-#else
-#    define D(x)
-#endif
-
-#define	xpprintf	printf
-
-int8_t *Conf_datadir(void);
-int8_t *Conf_defaults_file_name(void);
-int8_t *Conf_password_file_name(void);
-int8_t *Conf_mapdir(void);
-int8_t *Conf_default_map(void);
-int8_t *Conf_servermotdfile(void);
-int8_t *Conf_localmotdfile(void);
-int8_t *Conf_logfile(void);
-int8_t *Conf_ship_file(void);
-int8_t *Conf_localguru(void);
-int8_t *Conf_contactaddress(void);
-int8_t *Conf_robotfile(void);
-int8_t *Conf_zcat_ext(void);
-int8_t *Conf_zcat_format(void);
+char *Conf_datadir(void);
+char *Conf_defaults_file_name(void);
+char *Conf_password_file_name(void);
+char *Conf_mapdir(void);
+char *Conf_default_map(void);
+char *Conf_servermotdfile(void);
+char *Conf_localmotdfile(void);
+char *Conf_logfile(void);
+char *Conf_ship_file(void);
+char *Conf_localguru(void);
+char *Conf_contactaddress(void);
+char *Conf_robotfile(void);
+char *Conf_zcat_ext(void);
+char *Conf_zcat_format(void);
 
 #endif /* XPCONFIG_H */

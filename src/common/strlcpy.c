@@ -1,4 +1,4 @@
-/* $Id: strlcpy.c,v 1.4 2008/08/15 15:09:52 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -41,11 +41,11 @@
  There was not enough room in dest if the
  return value is bigger or equal than size.
  */
-size_t strlcpy(int8_t *dest, const int8_t *src, size_t size)
+size_t strlcpy(char *dest, const char *src, size_t size)
 {
-	register int8_t *d = dest;
-	register const int8_t *s = src;
-	register int8_t *maxd = dest + (size - 1);
+	register char *d = dest;
+	register const char *s = src;
+	register char *maxd = dest + (size - 1);
 
 	if (size > 0) {
 		while (*s && d < maxd) {
@@ -77,11 +77,11 @@ size_t strlcpy(int8_t *dest, const int8_t *src, size_t size)
  There was not enough room in dest if the
  return value is bigger or equal than size.
  */
-size_t strlcat(int8_t *dest, const int8_t *src, size_t size)
+size_t strlcat(char *dest, const char *src, size_t size)
 {
-	register int8_t *d = dest;
-	register const int8_t *s = src;
-	register int8_t *maxd = dest + (size - 1);
+	register char *d = dest;
+	register const char *s = src;
+	register char *maxd = dest + (size - 1);
 	size_t dlen = 0;
 
 	if (size > 0) {

@@ -1,4 +1,4 @@
-/* $Id: player.c,v 1.23 2008/10/14 20:49:29 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -26,246 +26,159 @@
 #include <string.h>
 #include <stdio.h>
 
-#define SERVER
 #include "version.h"
 #include "commonproto.h"
 #include "config.h"
 #include "const.h"
 #include "global.h"
-#include "proto.h"
-#include "map.h"
-#include "score.h"
+#include "debug.h"
 #include "bit.h"
-#include "netserver.h"
+#include "proto.h"
 #include "error.h"
 #include "objpos.h"
+
+#include "player.h"
+#include "map.h"
+#include "player_inline.h"
+
+#include "score.h"
+#include "netserver.h"
 #include "rank.h"
+#include "frame.h"
+#include "server.h"
+#include "robot.h"
+#include "ship.h"
+#include "update.h"
 
-int8_t player_version[] = VERSION;
+char player_version[] = VERSION;
 
-extern int32_t Rate(int32_t winner, int32_t loser);
+player_t **Players;
+int32_t GetInd[NUM_IDS + 1];
 
-bool updateScores = true;
-bool limitedRoundsGameOver = false;
+/** @brief Number of players in game (including paused and waiting)
+ *
+ * This variable is modified only in @ref Init_player and @ref Delete_player.
+ */
+int32_t NumPlayers = 0;
 
-/********* **********
+/** @brief Number of pausers
+ *
+ */
+int32_t NumPaused = 0;
+
+bool updateScores = false;
+
+
+/*
  * Functions on player array.
  */
 
-void Pick_startpos(player_t *pl)
+/** \brief Sets parameters of player's flight back to the home base
+ *
+ * Transport a corpse from the place where it died back to its home base,
+ * or if in race mode, back to the last passed check point.
+ *
+ * During the first part of the distance we give it a positive constant
+ * acceleration G, during the second part we make this a negative one -G.
+ * This results in a visually pleasing take off and landing.
+ *
+ * \param pl	player
+ */
+void Player_proceed_return_home(player_t *pl)
 {
-	int32_t i, num_free;
-	int32_t pick = 0, seen = 0;
-	static int32_t prev_num_bases = 0;
-	static int8_t *free_bases = NULL;
+	double t, m;
+	int32_t dx, dy;
+	const double T = RECOVERY_DELAY_TICKS;
 
-	if (prev_num_bases != World.NumBases) {
-		prev_num_bases = World.NumBases;
-		if (free_bases != NULL) {
-			free(free_bases);
-		}
-		free_bases = (int8_t *) malloc(World.NumBases
-				* sizeof(*free_bases));
-		if (free_bases == NULL) {
-			error("Can't allocate memory for free_bases");
-			End_game();
-		}
-	}
-
-	num_free = 0;
-	for (i = 0; i < World.NumBases; i++) {
-		if (World.base[i].team == pl->team) {
-			num_free++;
-			free_bases[i] = 1;
-		}
-		else {
-			free_bases[i] = 0; /* other team */
-		}
-	}
-
-	for (i = 0; i < NumPlayers; i++) {
-		if (Players[i] != pl && free_bases[Players[i]->home_base->id]) {
-			free_bases[Players[i]->home_base->id] = 0; /* occupado */
-			num_free--;
-		}
-	}
-
-	{
-		pick = (int32_t) (rfrac() * num_free);
-		seen = 0;
-		for (i = 0; i < World.NumBases; i++) {
-			if (free_bases[i] != 0) {
-				if (seen < pick) {
-					seen++;
-				}
-				else {
-					break;
-				}
-			}
-		}
-	}
-
-	if (i == World.NumBases) {
-		//	error("Can't pick startpos (ind=%d,num=%d,free=%d,pick=%d,seen=%d)",
-		//	      ind, World.NumBases, num_free, pick, seen);
-		error(
-				"Can't pick startpos (pl=%d,num=%d,free=%d,pick=%d,seen=%d)",
-				pl, World.NumBases, num_free, pick, seen);
-		End_game();
+	t = pl->recovery_count;
+	if (2.0 * t <= T) {
+		m = 2.0 / t;
 	}
 	else {
-		pl->home_base = &World.base[i];
+		t = T - t;
+		m = (4.0 * t) / (T * T - 2.0 * t * t);
+	}
 
-		for (i = 0; i < NumPlayers; i++) {
-			if (Player_is_connected(Players[i])) {
-				Send_base(Players[i]->connp, pl);
-			}
-		}
-		if (BIT(pl->status, PLAYING) == 0) {
-			pl->count = RECOVERY_DELAY;
-		}
-		else if (BIT(pl->status, PAUSE | GAME_OVER)) {
-			Go_home(pl);
-		}
+	if (Frame_is_real()) {
+		dx = WRAP_DX(pl->home_base->pos.x - pl->pos.x);
+		dy = WRAP_DY(pl->home_base->pos.y - pl->pos.y);
+		pl->vel.x = dx * m;
+		pl->vel.y = dy * m;
+	}
+	else {
+		dx = WRAP_DX(pl->home_base->pos.x - pl->pos_interp.x);
+		dy = WRAP_DY(pl->home_base->pos.y - pl->pos_interp.y);
+		pl->vel_interp.x = dx * m;
+		pl->vel_interp.y = dy * m;
 	}
 }
 
-void Go_home(player_t *pl)
+/*
+ * Fixes the player's position to his home base, stops the ship, brings up the shield if necessary.
+ */
+void Player_go_home(player_t *pl)
 {
-	int32_t x, y, dir;
-	DFLOAT vx, vy, velo;
+	pl->dir = pl->home_base->dir;
+	pl->float_dir = pl->dir;
 
-	x = pl->home_base->pos.x;
-	y = pl->home_base->pos.y;
-	dir = pl->home_base->dir;
-	vx = vy = velo = 0;
-
-	pl->dir = dir;
-	pl->float_dir = dir;
-	Player_position_init_clicks(pl, (x + 0.5) * BLOCK_CLICKS, (y + 0.5)
-			* BLOCK_CLICKS);
-	pl->vel.x = vx;
-	pl->vel.y = vy;
-	pl->velocity = velo;
+	Position_copy(&pl->pos, &pl->home_base->pos);
+	Position_copy(&pl->pos_interp, &pl->home_base->pos);
+//	Player_position_remember(pl);
+	pl->vel.x = 0;
+	pl->vel.y = 0;
+	pl->velocity = 0.0;
 	pl->acc.x = pl->acc.y = 0.0;
 	pl->turnacc = pl->turnvel = 0.0;
-	memset(pl->last_keyv, 0, sizeof(pl->last_keyv));
-	memset(pl->prev_keyv, 0, sizeof(pl->prev_keyv));
-	pl->used &= ~USED_KILL;
 
-	if (playerStartsShielded != 0) {
-		SET_BIT(pl->used, OBJ_SHIELD);
-		if (playerShielding == 0) {
-			pl->shield_time = 2 * intGameSpeed;
-			SET_BIT(pl->have, OBJ_SHIELD);
+	/* set initial properties */
+	pl->have = HAS_NOTHING;
+	Player_get_property(pl, HAS_DEFAULT);
+	pl->used &= pl->have;
+
+	/* bring up the shield if necessary */
+	if (playerStartsShielded) {
+		Player_get_property(pl, HAS_SHIELD);
+		Player_enable_property(pl, USES_SHIELD);
+
+		if (!playerShielding) {
+			pl->shield_count = SHIELD_DELAY_TICKS;
 		}
 	}
-	CLR_BIT(pl->status, THRUSTING);
+
+	Player_enable_property(pl, USES_COMPASS);
 
 	if (Player_is_robot(pl)) {
 		Robot_go_home(pl);
 	}
 }
 
-/*
- * Give ship one more tank, if possible.
- */
-void Player_add_tank(player_t *pl, int32_t tank_fuel)
+bool Player_is_home(player_t *pl)
 {
-	int32_t tank_cap, add_fuel;
-
-	if (pl->fuel.num_tanks < MAX_TANKS) {
-		pl->fuel.num_tanks++;
-		tank_cap = TANK_CAP(pl->fuel.num_tanks);
-		add_fuel = tank_fuel;
-		LIMIT(add_fuel, 0, tank_cap);
-		pl->fuel.sum += add_fuel;
-		pl->fuel.max += tank_cap;
-		pl->fuel.tank[pl->fuel.num_tanks] = add_fuel;
-		pl->emptymass += TANK_MASS;
-		pl->item[ITEM_TANK] = pl->fuel.num_tanks;
+	if (Frame_is_real()) {
+		return ((pl->pos.cx == pl->home_base->pos.cx) && (pl->pos.cy == pl->home_base->pos.cy)) ? true : false;
+	}
+	else {
+		return ((pl->pos_interp.cx == pl->home_base->pos.cx) && (pl->pos_interp.cy == pl->home_base->pos.cy)) ? true : false;
 	}
 }
 
-/*
- * Remove a tank from a ship, if possible.
- */
-void Player_remove_tank(player_t *pl, int32_t which_tank)
-{
-	int32_t i, tank_ind;
-	int32_t tank_fuel, tank_cap;
-
-	if (pl->fuel.num_tanks > 0) {
-		tank_ind = which_tank;
-		LIMIT(tank_ind, 1, pl->fuel.num_tanks);
-		pl->emptymass -= TANK_MASS;
-		tank_fuel = pl->fuel.tank[tank_ind];
-		tank_cap = TANK_CAP(tank_ind);
-		pl->fuel.max -= tank_cap;
-		pl->fuel.sum -= tank_fuel;
-		pl->fuel.num_tanks--;
-		if (pl->fuel.current > pl->fuel.num_tanks) {
-			pl->fuel.current = 0;
-		}
-		else {
-			for (i = tank_ind; i <= pl->fuel.num_tanks; i++) {
-				pl->fuel.tank[i] = pl->fuel.tank[i + 1];
-			}
-		}
-		pl->item[ITEM_TANK] = pl->fuel.num_tanks;
-	}
-}
-
-/*
- * Give player the initial number of tanks and amount of fuel.
- * Upto the maximum allowed.
- */
-static void Player_init_fuel(player_t *pl, int32_t total_fuel)
-{
-	int32_t fuel = total_fuel;
-	int32_t i;
-
-	pl->fuel.num_tanks = 0;
-	pl->fuel.current = 0;
-	pl->fuel.max = TANK_CAP(0);
-	pl->fuel.sum = MIN(fuel, pl->fuel.max);
-	pl->fuel.tank[0] = pl->fuel.sum;
-	pl->emptymass = ShipMass;
-	pl->item[ITEM_TANK] = pl->fuel.num_tanks;
-
-	fuel -= pl->fuel.sum;
-
-	for (i = 1; i <= World.items[ITEM_TANK].initial; i++) {
-		Player_add_tank(pl, fuel);
-		fuel -= pl->fuel.tank[i];
-	}
-}
-
-/** @brief Initialize a freshly-entered player's structure
+/** \brief Initialize a freshly-entered player's structure
  *
  * Modified global variables: NumPlayers
  */
-player_t* Init_player()
+player_t* Player_add(void)
 {
 	player_t *pl = Players[NumPlayers];
 	int32_t i;
 
-	pl->vel.x = pl->vel.y = 0.0;
-	pl->acc.x = pl->acc.y = 0.0;
+	memset(pl, 0, sizeof(player_t));
+
+	Player_set_state(pl, PL_STATE_UNDEFINED);
+
+	Player_reset(pl);
+
 	pl->float_dir = pl->dir = DIR_UP;
-	pl->turnvel = 0.0;
-	pl->turnacc = 0.0;
-	pl->mass = ShipMass;
 	pl->emptymass = ShipMass;
-
-	for (i = 0; i < NUM_ITEMS; i++) {
-		if (!BIT(1U << i, ITEM_BIT_FUEL | ITEM_BIT_TANK)) {
-			pl->item[i] = World.items[i].initial;
-		}
-	}
-
-	pl->fuel.sum = World.items[ITEM_FUEL].initial << FUEL_SCALE_BITS;
-	Player_init_fuel(pl, pl->fuel.sum);
 
 	pl->power = 45.0;
 	pl->turnspeed = 30.0;
@@ -274,75 +187,29 @@ player_t* Init_player()
 	pl->turnspeed_s = 25.0;
 	pl->turnresistance_s = 0.12;
 
-	pl->count = -1;
-	pl->shield_time = 0;
-
 	pl->type = OBJ_PLAYER;
-	pl->type_ext = 0; /* assume human player */
-	pl->shots = 0;
 	pl->shot_speed = ShotsSpeed;
 	pl->max_speed = SPEED_LIMIT - pl->shot_speed;
+
 	pl->shot_max = ShotsMax;
-	pl->shot_life = ShotsLife;
-	pl->shot_time = 0;
+
 	pl->color = WHITE;
-	pl->score = 0;
-	pl->prev_score = 0;
-	pl->fs = NULL;
-	pl->name[0] = '\0';
 
-	pl->status = PLAYING | DEF_BITS;
-	pl->have = DEF_HAVE;
-	pl->used = DEF_USED;
-
-	for (i = 0; i < LOCKBANK_MAX; i++)
+	for (i = 0; i < LOCKBANK_MAX; i++) {
 		pl->lockbank[i] = NULL;
-
-	pl->mychar = ' ';
-	pl->prev_mychar = pl->mychar;
-	pl->life = World.rules->lives;
-	pl->prev_life = pl->life;
-	pl->ball_tmp = NULL;
-	pl->player_fps = intGameSpeed; /* kps - this affects how often robots appear to turn */
-
-	pl->kills = 0;
-	pl->deaths = 0;
-
-	/*
-	 * If limited lives you will have to wait 'til everyone gets GAME OVER.
-	 */
-	// TODO: modify this so that if the world state did not change
-	// since the start of round (no players killed, no balls stolen, etc),
-	// new players are still accepted without waiting
-	if (BIT(World.rules->mode, LIMITED_LIVES) && NumPlayers > 0) {
-		pl->mychar = 'W';
-		pl->prev_life = pl->life = 0;
-		SET_BIT(pl->status, GAME_OVER);
 	}
 
-	pl->team = NULL;
+	pl->pl_type_mychar = ' ';
+	Player_set_life(pl, World.rules->lives);
 
-	pl->lock.flags = LOCK_NONE;
-	pl->lock.object = NULL;
+	pl->player_fps = fps;
 
-	pl->robot_data_ptr = NULL;
-
-	//pl->id = peek_ID();
 	pl->id = request_ID();
 	GetInd[pl->id] = NumPlayers;
 	NumPlayers++;
-	//request_ID();
-
-	pl->connp = NULL;
-
-	pl->shove_next = 0;
-	for (i = 0; i < MAX_RECORDED_SHOVES; i++) {
-		pl->shove_record[i].pusher_pl = NULL;
-	}
 
 	pl->frame_last_busy = frame_loops; /*timing ok, used only to determine pausing -pgm*/
 
-	pl->isowner = false;
 	pl->isoperator = false;
 	pl->oldturn = false;
 
@@ -351,7 +218,7 @@ player_t* Init_player()
 
 static player_t *playerArray;
 
-void Alloc_players(int32_t number)
+void Players_allocate(int32_t number)
 {
 	player_t *p;
 	int32_t i;
@@ -375,7 +242,7 @@ void Alloc_players(int32_t number)
 	}
 }
 
-void Free_players(void)
+void Players_free(void)
 {
 	if (Players) {
 		--Players;
@@ -386,306 +253,123 @@ void Free_players(void)
 	}
 }
 
-void Update_score_table(void)
+void Players_send_score(void)
 {
 	int32_t i, j;
-	player_t *pl;
+	player_t *pl, *pl2;
 
 	for (j = 0; j < NumPlayers; j++) {
 		pl = Players[j];
-		if (pl->score != pl->prev_score || pl->life != pl->prev_life
-				|| pl->mychar != pl->prev_mychar) {
-			pl->prev_score = pl->score;
-			pl->prev_life = pl->life;
-			pl->prev_mychar = pl->mychar;
+
+		/* send only to humans */
+		if (pl->update_scoreboard && Player_is_human(pl)) {
 			for (i = 0; i < NumPlayers; i++) {
-				if (Player_is_connected(Players[i])) {
-					Send_score(Players[i]->connp, pl);
+				pl2 = Players[i];
+
+				if (pl2->update_scoreboard) {
+					Send_score(pl->connp, pl2);
 				}
 			}
 		}
 	}
+
 	updateScores = false;
 }
 
-void Reset_all_players(void)
+/** @brief Reset all active players at the end of round
+ *
+ */
+void Players_reset(void)
 {
 	player_t *pl;
-	int32_t i, j;
-
-	updateScores = true;
-
-	for (i = 0; i < NumPlayers; i++) {
-		pl = Players[i];
-		if (endOfRoundReset) {
-			if (!BIT(pl->status, PAUSE)) {
-				Kill_player(pl, false);
-				if (pl != Players[i]) {
-					/* player was deleted. */
-					i--;
-					continue;
-				}
-			}
-		}
-
-		if ((!BIT(pl->status, PAUSE)) && (!(pl->mychar == 'W')))
-			Rank_add_round(pl);
-
-		CLR_BIT(pl->status, GAME_OVER);
-		CLR_BIT(pl->have, OBJ_BALL);
-		pl->kills = 0;
-		pl->deaths = 0;
-		/* do not reset frame_last_busy after round end -pgm */
-		//pl->frame_last_busy = frame_loops; /*timing ok, used only to determine pausing -pgm */
-		if (!BIT(pl->status, PAUSE)) {
-			pl->mychar = ' ';
-			pl->life = World.rules->lives;
-		}
-		if (Player_is_robot(pl))
-			pl->mychar = 'R';
-	}
-
-	if (BIT(World.rules->mode, TEAM_PLAY)) {
-		/* Detach any balls and kill ball */
-		/* We are starting all over again */
-		for (j = NumObjs - 1; j >= 0; j--) {
-			if (BIT(Obj[j]->type, OBJ_BALL)) {
-				Delete_object(Obj[j]);
-			}
-		}
-
-		/* Reset the treasures */
-		for (i = 0; i < World.NumTreasures; i++) {
-			World.treasures[i].destroyed = 0;
-			Make_treasure_ball(&World.treasures[i]);
-		}
-
-		/* Reset the teams */
-		for (i = 0; i < MAX_TEAMS; i++) {
-			World.teams[i].TreasuresDestroyed = 0;
-			World.teams[i].TreasuresLeft
-					= World.teams[i].NumTreasures;
-		}
-	}
-
-	if (endOfRoundReset) {
-		for (i = 0; i < NumObjs; i++) {
-			object_t *obj = Obj[i];
-			if (BIT(obj->type, OBJ_SHOT | OBJ_DEBRIS | OBJ_SPARK))
-				obj->life = 0;
-		}
-	}
-
-	Update_score_table();
-}
-
-void Check_team_members(team_t *team)
-{
-	player_t *pl;
-	int32_t members, i;
-
-	if (!BIT(World.rules->mode, TEAM_PLAY))
-		return;
-
-	for (members = i = 0; i < NumPlayers; i++) {
-		pl = Players[i];
-		if (pl->team != NULL && pl->team == team)
-			members++;
-	}
-	if (team->NumMembers != members) {
-		error("Server has reset team %d members from %d to %d", team->Num,
-				team->NumMembers, members);
-		for (i = 0; i < NumPlayers; i++) {
-			pl = Players[i];
-			if (pl->team != NULL && pl->team == team)
-				error(
-						"Team %d currently has player %d: \"%s\"",
-						team, i + 1, pl->name);
-		}
-		team->NumMembers = members;
-	}
-}
-
-static void Compute_end_of_round_values(int32_t *average_score,
-		int32_t *num_best_players, DFLOAT *best_ratio, int32_t best_players[])
-{
 	int32_t i;
-	DFLOAT ratio;
 
-	/* Initialize everything */
-	*average_score = 0;
-	*num_best_players = 0;
-	*best_ratio = -1.0;
-
-	/* Figure out what the average score is and who has the best kill/death */
-	/* ratio for this round */
 	for (i = 0; i < NumPlayers; i++) {
-		if ((BIT(Players[i]->status, PAUSE) && Players[i]->count <= 0)) {
+		pl = Players[i];
+
+		if (!(Player_is_alive(pl) || Player_is_appearing(pl) || Player_is_dead(pl) || Player_is_waiting(pl))) {
 			continue;
 		}
-		*average_score += Players[i]->score;
-		ratio = (DFLOAT) Players[i]->kills / (Players[i]->deaths + 1);
-		if (ratio > *best_ratio) {
-			*best_ratio = ratio;
-			best_players[0] = i;
-			*num_best_players = 1;
+
+		if (BIT(World.rules->mode, TEAM_PLAY) && ! Player_is_waiting(pl)) {
+			Rank_add_round(pl);
 		}
-		else if (ratio == *best_ratio) {
-			best_players[(*num_best_players)++] = i;
+
+		Player_explode(pl);
+		Player_reset(pl);
+
+		if (Player_is_human(pl)
+				&& (Player_is_alive(pl) || Player_is_appearing(pl))
+				&& Player_idle_timed_out(pl)) {
+			Player_pause_forced(pl);
+			Message_game_print("%s was paused for idling.", pl->name);
+		}
+		else {
+			/*
+			 * The real position has to be updated, otherwise the ship's movement back to the home base
+			 * will show irregularities.
+			 */
+			Position_copy(&pl->pos, &pl->pos_interp);
+
+			pl->kills = 0;
+			pl->deaths = 0;
+			pl->self_deaths = 0;
+
+			Player_set_state(pl, PL_STATE_APPEARING);
+			Player_set_life(pl, World.rules->lives);
+
+			updateScores = true;
 		}
 	}
-	*average_score /= NumPlayers;
 }
 
-static void Give_best_player_bonus(int32_t average_score, int32_t num_best_players,
-		DFLOAT best_ratio, int32_t best_players[])
+/** \brief Counts players who were killed by someone else at least once during the round
+ *
+ * Suicides do not count.
+ *
+ * \param team	team on which players should be counted, unspecified if NULL
+ * \return	number of killed players in round
+ */
+int32_t Round_count_killed_players(team_t *team)
 {
 	int32_t i;
-	int32_t points;
-	int8_t msg[MSG_LEN];
+	player_t *pl;
+	int32_t count = 0;
 
-	if (num_best_players < 1 || best_ratio <= 0.0f) {
-		sprintf(msg, "There is no Deadly Player.");
-	}
-	else if (num_best_players == 1) {
-		player_t *bp = Players[best_players[0]];
+	for (i = 0; i < NumPlayers; i++) {
+		pl = Players[i];
 
-		sprintf(
-				msg,
-				"%s is the Deadliest Player with a kill ratio of %d/%d.",
-				bp->name, bp->kills, bp->deaths);
-		points = (int32_t) (best_ratio * Rate(bp->score, average_score));
-		SCORE(bp, points, OBJ_X_IN_BLOCKS(bp), OBJ_Y_IN_BLOCKS(bp), "[Deadliest]");
-	}
-	else {
-		msg[0] = '\0';
-		for (i = 0; i < num_best_players; i++) {
-			player_t *bp = Players[best_players[i]];
-			int32_t ratio = Rate(bp->score, average_score);
-			DFLOAT score = (DFLOAT) (ratio + num_best_players)
-					/ num_best_players;
-
-			if (msg[0]) {
-				if (i == num_best_players - 1)
-					strcat(msg, " and ");
-				else
-					strcat(msg, ", ");
-			}
-			if (strlen(msg) + 8 + strlen(bp->name) >= sizeof(msg)) {
-				Set_message(msg);
-				msg[0] = '\0';
-			}
-			strcat(msg, bp->name);
-			points = (int32_t) (best_ratio * score);
-			SCORE(bp, points, OBJ_X_IN_BLOCKS(bp), OBJ_Y_IN_BLOCKS(bp), "[Deadly]");
+		if (! (Player_is_alive(pl) || Player_is_appearing(pl)
+				|| Player_is_waiting(pl) || Player_is_killed(pl)|| Player_is_dead(pl))) {
+			continue;
 		}
-		if (strlen(msg) + 64 >= sizeof(msg)) {
-			Set_message(msg);
-			msg[0] = '\0';
-		}
-		sprintf(
-				msg + strlen(msg),
-				" are the Deadly Players with kill ratios of %d/%d.",
-				Players[best_players[0]]->kills,
-				Players[best_players[0]]->deaths);
-	}
-	Set_message(msg);
-}
 
-static void Give_individual_bonus(player_t *pl, int32_t average_score)
-{
-	DFLOAT ratio;
-	int32_t points;
-
-	ratio = (DFLOAT) pl->kills / (pl->deaths + 1);
-	points = (int32_t) (ratio * Rate(pl->score, average_score));
-	SCORE(pl, points, OBJ_X_IN_BLOCKS(pl), OBJ_Y_IN_BLOCKS(pl), "[Winner]");
-}
-
-static void Count_rounds(void)
-{
-	int8_t msg[MSG_LEN];
-
-	if (!roundsToPlay) {
-		return;
-	}
-
-	++roundsPlayed;
-
-	sprintf(msg, " < Round %d out of %d completed. >", roundsPlayed,
-			roundsToPlay);
-	Set_message(msg);
-	if (roundsPlayed >= roundsToPlay) {
-		Game_Over();
-	}
-}
-
-void Team_game_over(team_t *winning_team, const int8_t *reason)
-{
-	int32_t i, j;
-	int32_t average_score;
-	int32_t num_best_players;
-	int32_t *best_players;
-	DFLOAT best_ratio;
-	int8_t msg[MSG_LEN];
-
-	if (!(best_players = (int32_t *) malloc(NumPlayers * sizeof(int32_t)))) {
-		error("no mem");
-		End_game();
-	}
-
-	/* Figure out the average score and who has the best kill/death ratio */
-	/* ratio for this round */
-	Compute_end_of_round_values(&average_score, &num_best_players,
-			&best_ratio, best_players);
-
-	/* Print out the results of the round */
-	if (winning_team) {
-		sprintf(msg, " < Team %d has won the game%s! >", winning_team->Num,
-				reason);
-	}
-	else {
-		sprintf(msg, " < We have a draw%s! >", reason);
-	}
-	Set_message(msg);
-
-	/* Give bonus to the best player */
-	Give_best_player_bonus(average_score, num_best_players, best_ratio,
-			best_players);
-
-	/* Give bonuses to the winning team */
-	if (winning_team) {
-		for (i = 0; i < NumPlayers; i++) {
-			if (Players[i]->team != winning_team) {
-				continue;
-			}
-			if ((BIT(Players[i]->status, PAUSE)
-					&& Players[i]->count <= 0) || (BIT(
-					Players[i]->status, GAME_OVER)
-					&& Players[i]->mychar == 'W')) {
-				continue;
-			}
-			for (j = 0; j < num_best_players; j++) {
-				if (i == best_players[j]) {
-					break;
-				}
-			}
-			if (j == num_best_players) {
-				Give_individual_bonus(Players[i], average_score);
-			}
+		if ((pl->team == team || team == NULL) && (pl->deaths > pl->self_deaths)) {
+			count++;
 		}
 	}
 
-	Reset_all_players();
+	return count;
+}
 
-	Count_rounds();
+void Player_add_to_team(player_t *pl, team_t *team)
+{
+	pl->team = team;
+	team->NumMembers++;
 
-	free(best_players);
+	if (Player_is_robot(pl)) {
+		pl->team->NumRobots++;
+	}
+}
 
-	/* printf("Rank write; end of round\n");*/
-	Rank_write_webpage();
-	Rank_write_rankfile();
+void Player_remove_from_team(player_t *pl)
+{
+	if (Player_is_robot(pl)) {
+		pl->team->NumRobots--;
+	}
 
+	pl->team->NumMembers--;
+	pl->team = NULL;
 }
 
 void Individual_game_over(int32_t winner)
@@ -693,345 +377,78 @@ void Individual_game_over(int32_t winner)
 	int32_t i, j;
 	int32_t average_score;
 	int32_t num_best_players;
-	int32_t *best_players;
+	player_t **best_players;
 	DFLOAT best_ratio;
-	int8_t msg[MSG_LEN];
+	player_t *pl;
 
-	if (!(best_players = (int32_t *) malloc(NumPlayers * sizeof(int32_t)))) {
+	if (!(best_players = (player_t **) malloc(NumPlayers * sizeof(player_t **)))) {
 		error("no mem");
 		End_game();
 	}
 
 	/* Figure out what the average score is and who has the best kill/death */
 	/* ratio for this round */
-	Compute_end_of_round_values(&average_score, &num_best_players,
+	Score_compute_end_of_round(&average_score, &num_best_players,
 			&best_ratio, best_players);
 
 	/* Print out the results of the round */
 	if (winner == -1) {
-		Set_message(" < We have a draw! >");
+		Message_game_important_print("We have a draw!");
 	}
 	else if (winner == -2) {
-		Set_message(" < The robots have won the game! >");
+		Message_game_important_print("The robots have won the game!");
 		/* Perhaps this should be a different sound? */
 	}
 	else {
-		sprintf(msg, " < %s has won the game! >", Players[winner]->name);
-		Set_message(msg);
+		Message_game_important_print("%s has won the game!", Players[winner]->name);
 	}
 
 	/* Give bonus to the best player */
-	Give_best_player_bonus(average_score, num_best_players, best_ratio,
+	Score_give_bonus(average_score, num_best_players, best_ratio,
 			best_players);
 
 	/* Give bonus to the winning player */
 	if (winner >= 0) {
 		for (i = 0; i < num_best_players; i++) {
-			if (winner == best_players[i]) {
+			if (Players[winner] == best_players[i]) {
 				break;
 			}
 		}
 		if (i == num_best_players) {
-			Give_individual_bonus(Players[winner], average_score);
+			Score_give_individual_bonus(Players[winner], average_score);
 		}
 	}
 	else if (winner == -2) {
 		for (j = 0; j < NumPlayers; j++) {
-			if (Player_is_robot(Players[j])) {
+			pl = Players[j];
+
+			if (Player_is_robot(pl)) {
 				for (i = 0; i < num_best_players; i++) {
-					if (j == best_players[i]) {
+					if (pl == best_players[i]) {
 						break;
 					}
 				}
 				if (i == num_best_players) {
-					Give_individual_bonus(Players[j],
-							average_score);
+					Score_give_individual_bonus(pl, average_score);
 				}
 			}
 		}
 	}
 
-	Reset_all_players();
+	Players_reset();
 
 	free(best_players);
-}
-
-void Compute_game_status(void)
-{
-	int32_t i;
-	int8_t msg[MSG_LEN];
-
-	/* less ugly hack -pgm */
-	if (limitedRoundsGameOver == true)
-		return;
-
-	if (BIT(World.rules->mode, TEAM_PLAY)) {
-		/* Do we have a winning team ? */
-
-		enum TeamState {
-			TeamEmpty, TeamDead, TeamAlive
-		} team_state[MAX_TEAMS];
-		int32_t num_dead_teams = 0;
-		int32_t num_alive_teams = 0;
-		//int32_t winning_team = -1;
-		team_t *winning_team = NULL;
-
-		for (i = 0; i < MAX_TEAMS; i++) {
-			team_state[i] = TeamEmpty;
-		}
-
-		for (i = 0; i < NumPlayers; i++) {
-			if (BIT(Players[i]->status, PAUSE)) {
-				/* Ignore paused players. */
-				continue;
-			}
-#if 0
-			/* not all teammode maps have treasures. */
-			else if (World.teams[Players[i]->team].NumTreasures == 0) {
-				/* Ignore players with no treasure troves */
-				continue;
-			}
-#endif
-			else if (BIT(Players[i]->status, GAME_OVER)) {
-				if (team_state[Players[i]->team->Num] == TeamEmpty) {
-					/* Assume all teammembers are dead. */
-					num_dead_teams++;
-					team_state[Players[i]->team->Num] = TeamDead;
-				}
-			}
-			/*
-			 * If the player is not paused and he is not in the
-			 * game over mode and his team owns treasures then he is
-			 * considered alive.
-			 * But he may not be playing though if the rest of the team
-			 * was genocided very quickly after game reset, while this
-			 * player was still being transported back to his homebase.
-			 */
-			else if (team_state[Players[i]->team->Num] != TeamAlive) {
-				if (team_state[Players[i]->team->Num] == TeamDead) {
-					/* Oops!  Not all teammembers are dead yet. */
-					num_dead_teams--;
-				}
-				team_state[Players[i]->team->Num] = TeamAlive;
-				++num_alive_teams;
-				/* Remember a team which was alive. */
-				winning_team = Players[i]->team;
-			}
-		}
-
-		if (num_alive_teams > 1) {
-			int8_t *bp;
-			int32_t teams_with_treasure = 0;
-			int32_t team_win[MAX_TEAMS];
-			int32_t team_score[MAX_TEAMS];
-			int32_t winners;
-			int32_t max_destroyed = 0;
-			int32_t max_left = 0;
-			int32_t max_score = 0;
-			/*
-			 * Game is not over if more than one team which have treasures
-			 * still have one remaining in play.  Note that it is possible
-			 * for max_destroyed to be zero, in the case where a team
-			 * destroys some treasures and then all quit, and the remaining
-			 * teams did not destroy any.
-			 */
-
-			for (i = 0; i < MAX_TEAMS; i++) {
-				team_score[i] = 0;
-				if (team_state[i] != TeamAlive) {
-					team_win[i] = 0;
-					continue;
-				}
-				team_win[i] = 1;
-
-				if (World.teams[i].TreasuresDestroyed
-						> max_destroyed)
-					max_destroyed
-							= World.teams[i].TreasuresDestroyed;
-				if (World.teams[i].TreasuresLeft)
-					teams_with_treasure++;
-			}
-
-			/*
-			 * Game is not over if more than one team has treasure.
-			 */
-
-			if (teams_with_treasure > 1 || !max_destroyed) {
-				return;
-			}
-
-			/*
-			 * Find the winning team;
-			 *	Team destroying most number of treasures;
-			 *	If drawn; the one with most saved treasures,
-			 *	If drawn; the team with the most points,
-			 *	If drawn; an overall draw.
-			 */
-			for (winners = i = 0; i < MAX_TEAMS; i++) {
-				if (!team_win[i])
-					continue;
-				if (World.teams[i].TreasuresDestroyed
-						== max_destroyed) {
-					if (World.teams[i].TreasuresLeft
-							> max_left)
-						max_left
-								= World.teams[i].TreasuresLeft;
-					winning_team = &World.teams[i];
-					winners++;
-				}
-				else {
-					team_win[i] = 0;
-				}
-			}
-			if (winners == 1) {
-				sprintf(msg, " by destroying %d treasures",
-						max_destroyed);
-				Team_game_over(winning_team, msg);
-				return;
-			}
-
-			for (i = 0; i < NumPlayers; i++) {
-				if (BIT(Players[i]->status, PAUSE))
-					continue;
-				team_score[Players[i]->team->Num]
-						+= Players[i]->score;
-			}
-
-			for (winners = i = 0; i < MAX_TEAMS; i++) {
-				if (!team_win[i])
-					continue;
-				if (World.teams[i].TreasuresLeft == max_left) {
-					if (team_score[i] > max_score)
-						max_score = team_score[i];
-					winning_team = &World.teams[i];
-					winners++;
-				}
-				else {
-					team_win[i] = 0;
-				}
-			}
-			if (winners == 1) {
-				sprintf(
-						msg,
-						" by destroying %d treasures and successfully defending %d",
-						max_destroyed, max_left);
-				Team_game_over(winning_team, msg);
-				return;
-			}
-
-			for (winners = i = 0; i < MAX_TEAMS; i++) {
-				if (!team_win[i])
-					continue;
-				if (team_score[i] == max_score) {
-					winning_team = &World.teams[i];
-					winners++;
-				}
-				else {
-					team_win[i] = 0;
-				}
-			}
-			if (winners == 1) {
-				sprintf(msg,
-						" by destroying %d treasures, saving %d, and "
-							"scoring %d points",
-						max_destroyed, max_left,
-						max_score);
-				Team_game_over(winning_team, msg);
-				return;
-			}
-
-			/* Highly unlikely */
-
-			sprintf(msg, " between teams ");
-			bp = msg + strlen(msg);
-			for (i = 0; i < MAX_TEAMS; i++) {
-				if (!team_win[i])
-					continue;
-				*bp++ = "0123456789"[i];
-				*bp++ = ',';
-				*bp++ = ' ';
-			}
-			bp -= 2;
-			*bp = '\0';
-			Team_game_over(NULL, msg);
-
-		}
-		else if (num_dead_teams > 0) {
-			if (num_alive_teams == 1)
-				Team_game_over(winning_team,
-						" by staying alive");
-			else
-				Team_game_over(NULL, " as everyone died");
-		}
-		else {
-			/*
-			 * num_alive_teams <= 1 && num_dead_teams == 0
-			 *
-			 * There is a possibility that the game has ended because players
-			 * quit, the game over state is needed to reset treasures.  We
-			 * must count how many treasures are missing, if there are any
-			 * the playing team (if any) wins.
-			 */
-			int32_t i, treasures_destroyed;
-
-			for (treasures_destroyed = i = 0; i < MAX_TEAMS; i++) {
-				treasures_destroyed
-						+= (World.teams[i].NumTreasures
-								- World.teams[i].TreasuresLeft);
-			}
-			if (treasures_destroyed && (num_alive_teams == 0))
-				Team_game_over(winning_team,
-						" by staying in the game");
-
-		}
-
-	}
-	else {
-
-		/* Do we have a winner ? (No team play) */
-		int32_t num_alive_players = 0;
-		int32_t num_active_players = 0;
-		int32_t num_alive_robots = 0;
-		int32_t num_active_humans = 0;
-		int32_t winner = -1;
-
-		for (i = 0; i < NumPlayers; i++) {
-			if (BIT(Players[i]->status, PAUSE))
-				continue;
-
-			if (!BIT(Players[i]->status, GAME_OVER)) {
-				num_alive_players++;
-				if (Player_is_robot(Players[i])) {
-					num_alive_robots++;
-				}
-				winner = i; /* Tag player that's alive */
-			}
-			else if (Player_is_human(Players[i])) {
-				num_active_humans++;
-			}
-			num_active_players++;
-		}
-
-		if (num_alive_players == 1 && num_active_players > 1) {
-			Individual_game_over(winner);
-		}
-		else if (num_alive_players == 0 && num_active_players >= 1) {
-			Individual_game_over(-1);
-		}
-		else if (num_alive_robots > 1 && num_alive_players
-				== num_alive_robots && num_active_humans > 0) {
-			Individual_game_over(-2);
-		}
-	}
 }
 
 /** @brief Removes a player from game
  *
  * Modified global variables: NumPlayers, NumOperators, NumRobots
+ * NOTE: this function must not be used directly to kick human players from game,
+ * instead the connection should be shut down (with \ref Destroy_connection)
  *
  * @param pl	pointer to the player's structure
  */
-void Delete_player(player_t *pl)
+void Player_remove(player_t *pl)
 {
 	player_t *pl2;
 	object_t *obj;
@@ -1044,21 +461,16 @@ void Delete_player(player_t *pl)
 	if (pl->isoperator) {
 		if (!--NumOperators && game_lock) {
 			game_lock = false;
-			Set_message(" < The game has been unlocked as "
-				"the last operator left! >");
+			Message_game_important_print("The game has been unlocked as the last operator left!");
 		}
 	}
 
 	/* Won't be swapping anywhere */
-	for (i = MAX_TEAMS - 1; i >= 0; i--)
-		if (World.teams[i].Swapper == pl)
+	for (i = MAX_TEAMS - 1; i >= 0; i--) {
+		if (World.teams[i].Swapper == pl) {
 			World.teams[i].Swapper = NULL;
-#if 0
-	if (pl->team != NULL) {
-		/* Swapping a queued player might be better */
-		pl->team->Swapper = NULL;
+		}
 	}
-#endif
 
 	/* Delete remaining shots */
 	for (i = NumObjs - 1; i >= 0; i--) {
@@ -1067,55 +479,42 @@ void Delete_player(player_t *pl)
 		if (obj->owner == pl) {
                         /* Attached balls should be destroyed,
                          * ownership of floating balls should be cleared */
-			if (obj->type == OBJ_BALL) {
-                            if (BIT(obj->status, IS_ATTACHED)) {
-				treasure_t *t = obj->treasure;
-
-				Delete_object(obj);
-				Make_treasure_ball(t);
-                            }
-                            else {
-                                obj->owner = NULL;
+			if (Object_is_type(obj, OBJ_BALL)) {
+                            if (Object_is_attached(obj)) {
+            			Ball_detach(obj->owner, obj);
+				Object_expire(obj);
                             }
 			}
-			else if (BIT(obj->type, OBJ_DEBRIS | OBJ_SPARK)) {
-				/* Okay, so you want robot explosions to exist,
-				 * even if the robot left the game. */
-				obj->owner = NULL;
-			}
-			else {
+			else if (Object_is_type(obj, OBJ_SHOT)) {
 				if (!keepShots) {
-					obj->life = 0;
+					Object_expire(obj);
 				}
-
-				obj->owner = NULL;
 			}
+
+			obj->owner = NULL;
 		}
 	}
 
 	Free_ship_shape(pl->ship);
 
+	if (Player_is_paused(pl)) {
+		NumPaused--;
+	}
+
+	Player_set_state(pl, PL_STATE_UNDEFINED);
+
 	NumPlayers--;
-
-	/* player left, save the rank now */
-	if (pl->rank) {
-		Rank_save_score(pl);
-		if (NumPlayers == NumRobots) {
-			/*printf("Rank_save\n");*/
-			Rank_write_webpage();
-			Rank_write_rankfile();
-		}
-	}
-
-	if (pl->team != NULL) {
-		pl->team->NumMembers--;
-		if (Player_is_robot(pl))
-			pl->team->NumRobots--;
-	}
 
 	if (Player_is_robot(pl)) {
 		NumRobots--;
 	}
+
+	/* player left, save the rank now */
+	if (pl->rank) {
+		Rank_save_score(pl);
+	}
+
+	Player_remove_from_team(pl);
 
 	/*
 	 * Swap entry no 'ind' with the last one.
@@ -1131,25 +530,23 @@ void Delete_player(player_t *pl)
 	GetInd[pl2->id] = ind2;
 	GetInd[pl->id] = NumPlayers;
 
-	Check_team_members(pl->team);
-
 	for (i = NumPlayers - 1; i >= 0; i--) {
-		if (BIT(Players[i]->lock.flags, LOCK_PLAYER | LOCK_VISIBLE)
-				&& (Players[i]->lock.object == pl || NumPlayers
-						<= 1)) {
-			CLR_BIT(Players[i]->lock.flags, LOCK_PLAYER
-					| LOCK_VISIBLE);
+		pl2 = Players[i];
+
+		if (BIT(pl2->lock.flags, LOCK_PLAYER | LOCK_VISIBLE) && (pl2->lock.object == pl || NumPlayers <= 1)) {
+			CLR_BIT(pl2->lock.flags, LOCK_PLAYER | LOCK_VISIBLE);
 		}
-		if (Player_is_robot(Players[i]) && Robot_war_on_player(Players[i]) == pl) {
-			Robot_reset_war(Players[i]);
+		if (Player_is_robot(pl2) && Robot_war_on_player(pl2) == pl) {
+			Robot_reset_war(pl2);
 		}
 		for (j = 0; j < LOCKBANK_MAX; j++) {
-			if (Players[i]->lockbank[j] == pl)
-				Players[i]->lockbank[j] = NULL;
+			if (pl2->lockbank[j] == pl) {
+				pl2->lockbank[j] = NULL;
+			}
 		}
 		for (j = 0; j < MAX_RECORDED_SHOVES; j++) {
-			if (Players[i]->shove_record[j].pusher_pl == pl) {
-				Players[i]->shove_record[j].pusher_pl = NULL;
+			if (pl2->shove_record[j].pusher_pl == pl) {
+				pl2->shove_record[j].pusher_pl = NULL;
 			}
 		}
 	}
@@ -1161,54 +558,55 @@ void Delete_player(player_t *pl)
 	}
 
 	release_ID(pl->id);
+
+	memset(pl, 0, sizeof(player_t));
+
+	updateScores = true;
 }
 
-void Detach_ball(player_t *pl, object_t *ball)
+/** \brief Kills a player
+ *
+ * After execution of this function a player will either be
+ * PL_STATE_DEAD or PL_STATE_APPEARING.
+ *
+ * \param pl	player
+ */
+void Player_destroy(player_t *pl)
 {
-	int32_t i, cnt;
+	Player_explode(pl);
+	Player_reset(pl);
+	Rank_add_death(pl);
 
-	/* Interrupt the non-solid connector, if present */
-	if (ball == NULL || ball == pl->ball_tmp) {
-		pl->ball_tmp = NULL;
-		CLR_BIT(pl->used, OBJ_CONNECTOR);
-	}
-
-	if (BIT(pl->have, OBJ_BALL)) {
-		for (cnt = i = 0; i < NumObjs; i++) {
-			if (BIT(Obj[i]->type, OBJ_BALL) &&
-					BIT(Obj[i]->status, IS_ATTACHED) &&
-					Obj[i]->owner == pl) {
-				if (ball == NULL || ball == Obj[i]) {
-					/* Don't reset owner so you can throw balls */
-					CLR_BIT(Obj[i]->status, IS_ATTACHED);
-				}
-				else {
-					cnt++;
-				}
-			}
+	if (BIT(World.rules->mode, LIMITED_LIVES)) {
+		if (pl->pl_life == 0) {
+			Player_set_state(pl, PL_STATE_DEAD);
+//			Player_lock_clear(pl);
 		}
-		if (cnt == 0)
-			CLR_BIT(pl->have, OBJ_BALL);
+		else {
+			Player_set_life(pl, pl->pl_life - 1);
+			Player_set_state(pl, PL_STATE_APPEARING);
+		}
 	}
+	else {
+		Player_set_life(pl, pl->pl_life + 1);
+		Player_set_state(pl, PL_STATE_APPEARING);
+	}
+
+	updateScores = true;
 }
 
-void Kill_player(player_t *pl, bool rank_death)
-{
-	Explode_fighter(pl);
-	Player_death_reset(pl, rank_death);
-}
-
-void Player_death_reset(player_t *pl, bool rank_death)
+/*
+ * Reinitialize parameters of a player after a kill
+ */
+void Player_reset(player_t *pl)
 {
 	int32_t i;
 
-	Detach_ball(pl, NULL);
+	Ball_detach(pl, NULL);
 
 	pl->vel.x = pl->vel.y = 0.0;
 	pl->acc.x = pl->acc.y = 0.0;
-	pl->emptymass = pl->mass = ShipMass;
-	pl->status |= DEF_BITS;
-	pl->status &= ~(KILL_BITS);
+	Player_interpolation_reset(pl);
 
 	for (i = 0; i < NUM_ITEMS; i++) {
 		if (!BIT(1U << i, ITEM_BIT_FUEL | ITEM_BIT_TANK)) {
@@ -1216,59 +614,230 @@ void Player_death_reset(player_t *pl, bool rank_death)
 		}
 	}
 
-	pl->shot_speed = ShotsSpeed;
-	pl->shot_max = ShotsMax;
-	pl->shot_life = ShotsLife;
-	pl->count = RECOVERY_DELAY;
-	pl->lock.distance = 0;
+	Player_fuel_init(pl, World.items[ITEM_FUEL].initial << FUEL_SCALE_BITS);
+}
 
-	Player_init_fuel(pl, World.items[ITEM_FUEL].initial * FUEL_SCALE_FACT);
-	if (rank_death)
-		Rank_add_death(pl);
+player_t *Player_owns_base(base_t *base)
+{
+	int i;
 
-	/*-BA Handle the combination of limited life games and
-	 *-BA robotLeaveLife by making a robot leave iff it gets
-	 *-BA eliminated in any round.  Means that robotLeaveLife
-	 *-BA is ignored, but that robotsLeave is still respected.
-	 *-BD Added check on race mode. Since in race mode everyone
-	 *-BD gets killed at the end of the round, all robots would
-	 *-BD be replaced in the next round. I don't think that's
-	 *-BD the Right Thing to do.
-	 *-BD Also, only check a robot's score at the end of the round.
-	 *-BD 27-2-98 Check on team mode too. It's very confusing to
-	 *-BD have different robots in your team every round.
+	for (i = 0; i < NumPlayers; i++) {
+		if (Players[i]->home_base == base) {
+			return Players[i];
+		}
+	}
+
+	return NULL;
+}
+
+/*
+ * Kick paused players?
+ * Return the number of kicked players.
+ */
+int32_t Players_kick_paused(void)
+{
+	player_t *pl;
+	int32_t i;
+	int32_t num_unpaused = 0;
+
+        char tmp_pl_name[MAX_CHARS];
+
+	for (i = NumPlayers - 1; i >= 0; i--) {
+		pl = Players[i];
+
+		if (Player_is_connected(pl) && Player_is_paused(pl)) {
+                        strncpy(tmp_pl_name, pl->name, MAX_CHARS);
+			Destroy_connection(pl->connp, "no pause with full game");
+			Message_game_print("The paused \"%s\" was kicked because the game is full.", tmp_pl_name);
+			num_unpaused++;
+		}
+	}
+
+	return num_unpaused;
+}
+
+/*
+ * Pause a player without checking whether he's allowed to pause.
+ * If the player is already paused, just refresh the unpause delay.
+ */
+void Player_pause_forced(player_t *pl)
+{
+	pl->pause_count = UNPAUSE_DELAY_TICKS;
+
+	if (Player_is_paused(pl)) {
+		return;
+	}
+
+	if (NumPaused >= MAX_PAUSED_PLAYERS) {
+		/* KABOOM!! */
+		Players_kick_paused();
+	}
+
+	Player_swap_team(pl, Team_get_by_id(PAUSE_TEAM_NUM));
+
+	if (Player_has_property(pl, HAS_BALL)) {
+		Ball_detach(pl, NULL);
+	}
+
+	pl->kills = 0;
+	pl->deaths = 0;
+	pl->self_deaths = 0;
+	Player_set_life(pl, World.rules->lives);
+
+	NumPaused++;
+	num_pause++;
+}
+
+/*
+ * Pauses a player on his request
+ */
+void Player_pause_self(player_t *pl)
+{
+	/*
+	 * Do not allow to pause when a player is too far from his home base. The exceptions are when
+	 * the player is waiting or dead.
 	 */
+	if (Player_is_close_to_base(pl) || Player_is_waiting(pl) || Player_is_dead(pl)) {
+		/*
+		 * Allow to pause if:
+		 * - the player is waiting to join the game, or
+		 * - all treasures in the player's current team are safe, or
+		 * - the team the player is on is currently the only populated team.
+		 */
+		if (Player_is_waiting(pl)
+				|| (Object_count_treasures_missing(pl->team) == 0)
+				|| (Team_count_active_players(pl->team) == Team_count_active_players(NULL))) {
+			Player_pause_forced(pl);
+		}
+		else {
+			Message_player_print(pl, PL_MSG_NOTICE, "Your team's treasure(s) have to be safe before you can pause.");
+		}
+	}
+	else {
+		Message_player_print(pl, PL_MSG_NOTICE, "You have to be close to your home base in order to pause.");
+	}
+}
 
-	if (BIT(World.rules->mode, LIMITED_LIVES)) {
-		pl->life--;
-		if (pl->life == -1) {
-			if (Player_is_robot(pl)) {
-				if (!BIT(World.rules->mode, TEAM_PLAY)
-						|| (robotsLeave
-								&& pl->score
-										< robotLeaveScore)) {
-					Robot_delete(pl, false);
-					return;
-				}
-			}
-			pl->life = 0;
-			SET_BIT(pl->status, GAME_OVER);
-			pl->mychar = 'D';
+/*
+ * Unpauses a player
+ */
+void Player_unpause(player_t *pl, team_t *team)
+{
+	team_t *tmp_team;
+
+	if (!Player_is_paused(pl)) {
+		return;
+	}
+
+	if (pl->pause_count <= 0.0) {
+		if (team) {
+			tmp_team = team;
+		}
+		else {
+			tmp_team = Team_find_available(PL_TYPE_HUMAN);
+		}
+
+		if (tmp_team) {
+			Player_swap_team(pl, tmp_team);
+			NumPaused--;
+			num_unpause++;
+		}
+		else {
+			Message_player_print(pl, PL_MSG_NOTICE, "Couldn't find a suitable team.");
+		}
+	}
+	else {
+		Message_player_print(pl, PL_MSG_NOTICE, "You still have to wait %.1f seconds before unpausing.",
+				pl->pause_count / gameSpeed);
+	}
+}
+
+/*
+ * Swaps a player to a team (including to/from the pausers' team)
+ *
+ * The function takes care of the following:
+ * - detaching all balls which the player is carrying,
+ * - choosing and setting the player's entry state on the destination team,
+ * - picking a free base,
+ * - transporting the ship home,
+ * - sending updates of the player information.
+ */
+void Player_swap_team(player_t *pl, team_t *team)
+{
+        int32_t i;
+        player_state_t entry_state;
+
+	ASSERT(pl && team)
+
+	Ball_detach(pl, NULL);
+
+	if (team == Team_get_by_id(PAUSE_TEAM_NUM)) {
+                for (i = 0; i < NumPlayers; i++) {
+                        if (Player_is_connected(Players[i])) {
+		                Send_release_base(Players[i]->connp, pl);
+                        }
+                }
+
+		pl->home_base = NULL;
+
+		if (! Player_lock_is_initialized(pl)) {
 			Player_lock_closest(pl, false);
 		}
 	}
 	else {
-		pl->life++;
+		base_t *tmp_base;
+
+		tmp_base = Team_pick_free_base(team);
+
+		if (!tmp_base) {
+			Message_game_print("Couldn't find a suitable base for player %s on team %d. Removing from game.",
+					pl->name, pl->team->Num);
+
+			if (Player_is_human(pl)) {
+				Destroy_connection(pl->connp, "couldn't find a suitable base");
+			}
+			else if (Player_is_robot(pl)) {
+				Robot_kick(pl);
+			} else {
+				/* unknown player type */
+				ASSERT(1)
+			}
+
+			return;
+		}
+
+		pl->home_base = tmp_base;
+
+		/* Go home only if unpausing */
+		if (pl->team == Team_get_by_id(PAUSE_TEAM_NUM)) {
+			Player_go_home(pl);
+		}
 	}
 
-	pl->have = DEF_HAVE;
-	pl->used |= DEF_USED;
-	pl->used &= ~(USED_KILL);
-	pl->used &= pl->have;
+	/* Can swap the player now */
+	Player_remove_from_team(pl);
+	Player_add_to_team(pl, team);
+
+	entry_state = Player_compute_entry_state(pl, team);
+	Player_set_state(pl, entry_state);
+
+	Send_info_about_myself(pl, PL_SEND_GENERAL | PL_SEND_BASE);
+	Send_info_about_player(pl, PL_SEND_GENERAL | PL_SEND_BASE);
+
+	updateScores = true;
 }
 
-void Players_swap_each_other(player_t *pl1, player_t *pl2)
+/*
+ * Swaps two players who wanted to change places with each other
+ *
+ * The function involves:
+ * - detaching of balls carried by the players,
+ * - computation of the entry state on the destination teams of both players,
+ * - sending updates of players' information.
+ */
+void Players_swap_teams(player_t *pl1, player_t *pl2)
 {
+	player_state_t entry_state;
 	base_t *tmp_base = pl2->home_base;
 	team_t *tmp_team = pl2->team;
 
@@ -1278,46 +847,597 @@ void Players_swap_each_other(player_t *pl1, player_t *pl2)
 	pl2->home_base = pl1->home_base;
 	pl1->home_base = tmp_base;
 
-	Set_swapper_state(pl1);
-	Set_swapper_state(pl2);
-	Send_info_about_player(pl1);
-	Send_info_about_player(pl2);
+	Ball_detach(pl1, NULL);
+	Ball_detach(pl2, NULL);
+
+	entry_state = Player_compute_entry_state(pl1, pl1->team);
+	Player_set_state(pl1, entry_state);
+
+	entry_state = Player_compute_entry_state(pl2, pl2->team);
+	Player_set_state(pl2, entry_state);
+
+	Send_info_about_player(pl1, PL_SEND_GENERAL | PL_SEND_BASE);
+	Send_info_about_player(pl2, PL_SEND_GENERAL | PL_SEND_BASE);
 }
 
-void Set_swapper_state(player_t *pl)
+/*
+ * Sets the player's state
+ */
+void Player_set_state(player_t *pl, int state)
 {
-	if (BIT(pl->have, OBJ_BALL)) {
-		Detach_ball(pl, NULL);
-	}
-	if (BIT(World.rules->mode, LIMITED_LIVES)) {
-		int32_t i;
+	pl->pl_state = state;
 
-		for (i = 0; i < NumPlayers; i++) {
-			if (!TEAM(pl, Players[i]) && !BIT(Players[i]->status,
-					PAUSE)) {
-				/* put team swapping player waiting mode. */
-				if (pl->mychar == ' ') {
-					pl->mychar = 'W';
-				}
-				pl->prev_life = pl->life = 0;
-				SET_BIT(pl->status, GAME_OVER | PLAYING);
-				CLR_BIT(pl->status, SELF_DESTRUCT);
-				pl->count = -1;
-				break;
-			}
+	/*
+	 * For all statuses except PL_STATE_UNDEFINED we want the scoreboard to be updated
+	 * whenever updateScores is set to true.
+	 */
+	pl->update_scoreboard = true;
+
+	switch (state) {
+	case PL_STATE_WAITING:
+		Player_set_mychar(pl, 'W');
+		pl->pl_old_status = OLD_GAME_OVER;
+		break;
+	case PL_STATE_APPEARING:
+		Player_set_mychar(pl, pl->pl_type_mychar);
+		pl->recovery_count = RECOVERY_DELAY_TICKS;
+		break;
+	case PL_STATE_ALIVE:
+		Player_set_mychar(pl, pl->pl_type_mychar);
+		pl->pl_old_status = OLD_PLAYING;
+		break;
+	case PL_STATE_KILLED:
+		pl->pl_old_status = OLD_KILLED;
+		break;
+	case PL_STATE_DEAD:
+		Player_set_mychar(pl, 'D');
+		pl->pl_old_status = OLD_GAME_OVER;
+		pl->recovery_count = RECOVERY_DELAY_TICKS;
+		break;
+	case PL_STATE_PAUSED:
+		Player_set_mychar(pl, 'P');
+		pl->recovery_count = 0;
+		pl->pl_old_status = OLD_PAUSE;
+		break;
+	case PL_STATE_UNDEFINED:
+		pl->update_scoreboard = false;
+		break;
+	default:
+		/* illegal state */
+		ASSERT(1)
+		break;
+	}
+}
+
+/** \brief Sets the initial state of player joining the specified team
+ *
+ * Joining a team is a general term that includes starting a new game in the team,
+ * as well as swapping to that team.
+ *
+ * \param pl	player
+ * \param team	team the player is joining
+ */
+player_state_t Player_compute_entry_state(player_t *pl, team_t *team)
+{
+	player_state_t new_state;
+	int32_t num_active;
+	int32_t num_active_on_team;	/* number of active players on the destination team (including the player pl) */
+
+	ASSERT(pl && team)
+
+	/* Player can only be in the pausing state while in the pausers' team */
+	if (team->Num == PAUSE_TEAM_NUM) {
+		return PL_STATE_PAUSED;
+	}
+
+	/* Dead players should be marked as waiting, never be allowed to play anew without a round reset */
+	if (Player_is_dead(pl)) {
+		return PL_STATE_WAITING;
+	}
+
+	/* Do not change status of a dead player, he has to wait till the end of round */
+	if (Player_is_waiting(pl)) {
+		return PL_STATE_WAITING;
+	}
+
+	/*
+	 * Let the player in immediately in practise mode (by default: maps with robots vs humans)
+	 * or in a roundless game
+	 */
+	if (! BIT(World.rules->mode, LIMITED_LIVES) || BIT(World.rules->mode, PRACTISE_PLAY)) {
+		if (Player_is_appearing(pl)) {
+			/*
+			 * Maintain the 'appearing' state in order to avoid a nasty crash if
+			 * the player happens to be traveling back to base.
+			 */
+			return PL_STATE_APPEARING;
+		}
+		else {
+			return PL_STATE_ALIVE;
 		}
 	}
+
+
+	/*
+	 * Here the player state can be one of the following:
+	 * - when entering the game: PL_STATE_UNDEFINED
+	 * - when unpausing: PL_STATE_PAUSED
+	 * - when swapping: PL_STATE_APPEARING, PL_STATE_ALIVE
+	 */
+	num_active = Team_count_active_players(NULL);
+	num_active_on_team = Team_count_active_players(team);
+
+	/* determine if the player pl is included among active players; if not, he is soon going to be */
+	if (! Player_is_active(pl)) {
+		// player is in state PL_STATE_UNDEFINES (just joined the server) or PL_STATE_PAUSED (just unpausing)
+		num_active++;
+	}
+
+	if (num_active > 1) {
+		// there are no active players left in other teams, no reason to keep the player waiting
+		if (num_active_on_team + 1 == num_active) {
+			new_state = PL_STATE_ALIVE;
+		}
+
+		/*
+		 * Determine the player's state based on how far the game proceeded from its "clean" state.
+		 * Count missing treasures, as well as lives lost during the round.
+		 */
+		else if ((Object_count_treasures_missing(NULL) > 0) || (Round_count_killed_players(NULL) > 0)) {
+			new_state = PL_STATE_WAITING;
+		}
+		else {
+			new_state = PL_STATE_ALIVE;
+		}
+	}
+	else {	// <= 1
+		new_state = PL_STATE_ALIVE;
+	}
+
+	if (Player_is_appearing(pl) && new_state == PL_STATE_ALIVE) {
+		/*
+		 * Maintain the 'appearing' state in order to avoid a nasty crash if
+		 * the player happens to be traveling fast back to base.
+		 */
+		new_state = PL_STATE_APPEARING;
+	}
+
+	return new_state;
 }
 
-void Send_info_about_player(player_t *pl)
+/*
+ * Give player the initial number of tanks and amount of fuel.
+ * Upto the maximum allowed.
+ */
+void Player_fuel_init(player_t *pl, int32_t fuel)
+{
+	pl->fuel.max = TANK_CAP(0);
+	pl->fuel.sum = MIN(fuel, pl->fuel.max);
+	pl->mass = pl->emptymass + FUEL_MASS(pl->fuel.sum);
+}
+
+/* rewrote this (was a real ugly hack) -pgm */
+void Player_refuel_start(player_t *pl)
 {
 	int32_t i;
+	objposition_t *pos;
+	int32_t l;
+	int32_t l_min = INT_MAX;
+	fuel_t *fuel_min = NULL;
 
-	for (i = 0; i < NumPlayers; i++) {
-		if (Player_is_connected(Players[i])) {
-			Send_player(Players[i]->connp, pl);
-			Send_score(Players[i]->connp, pl);
-			Send_base(Players[i]->connp, pl);
+	if (Frame_is_real()) {
+		pos = &pl->pos;
+	}
+	else {
+		pos = &pl->pos_interp;
+	}
+
+	for (i = 0; i < World.NumFuels; i++) {
+		l = Map_get_distance(&World.fuel[i].pos, pos);
+		if (l < MAX_FUEL_DISTANCE && l < l_min) {
+			l_min = l;
+			fuel_min = &World.fuel[i];
 		}
 	}
+
+	/* connect to the closest fuel station */
+	if (l_min < INT_MAX) {
+		pl->fs = fuel_min;
+		Player_enable_property(pl, USES_REFUEL);
+	}
+}
+
+/*
+ * Add fuel to fighter's tanks.
+ * Maybe use more than one of tank to store the fuel.
+ */
+void Player_fuel_add(player_t *pl, int32_t fuel)
+{
+	pl_fuel_t *ft = &pl->fuel;
+
+	ASSERT(ft)
+
+	if (ft->sum + fuel > ft->max) {
+		fuel = ft->max - ft->sum;
+	}
+	else if (ft->sum + fuel < 0) {
+		fuel = -ft->sum;
+	}
+	ft->sum += fuel;
+//	ft->tank[ft->current] += fuel;
+}
+
+bool Player_refuel_advance(player_t *pl)
+{
+	if (!pl->fs) {
+		return false;
+	}
+
+	if (pl->fs->fuel > REFUEL_RATE) {
+		Fuelstation_add_fuel(pl->fs, -REFUEL_RATE);
+		Player_fuel_add(pl, REFUEL_RATE);
+		return true;
+	}
+	else {
+		Fuelstation_add_fuel(pl->fs, -pl->fs->fuel);
+		Player_fuel_add(pl, pl->fs->fuel);
+		return false;
+	}
+}
+
+void Player_refuel_stop(player_t *pl)
+{
+	Player_disable_property(pl, USES_REFUEL);
+	pl->fs = NULL;
+}
+
+/*
+ * Return true if a lock is allowed.
+ */
+bool Player_lock_is_allowed(player_t *pl, player_t *pl_lock)
+{
+	/* we can never lock on ourselves, nor on an unspecified player. */
+	if (pl == pl_lock || pl_lock == NULL) {
+		return false;
+	}
+
+	/* if we are actively playing then we can lock since we are not viewing. */
+	if (Player_is_alive(pl)) {
+		return true;
+	}
+
+	/* if there is no team play then we can always lock on anyone. */
+	if (!BIT(World.rules->mode, TEAM_PLAY)) {
+		return true;
+	}
+
+	/* we can always lock on players from our own team. */
+	if (TEAM(pl, pl_lock)) {
+		return true;
+	}
+
+	/* if lockOtherTeam is true then we can always lock on other teams. */
+	if (lockOtherTeam) {
+		return true;
+	}
+
+	/* if our own team is dead then we can lock on anyone. */
+	if (Team_is_dead(pl->team)) {
+		return true;
+	}
+
+	/* can't find any reason why this lock should be allowed. */
+	return false;
+}
+
+/*
+ * Sven Mascheck:
+ * If all _opponents are paused, then even LOCK_NEXT (ot LOCK_PREV)
+ * might not lock_next (or lock_prev), as Player_lock_closest() might
+ * be called  [ "event.c" line 466 ] :
+ * This happens when the player is not locked on any one anymore -
+ * and this happens if he tried to lock_closest before (if all
+ * opponents are paused).
+ * Player_lock_closest() is called with (ind, 0) and that means that
+ * the lock is cleared in _any case_ with the current code - that could
+ * be done without calling Player_lock_closest().
+ * (btw, code in Player_lock_closest() looks like 'evolutionary code :)
+ * I am not sure where to fix that locking problem
+ * ( in "case KEY_LOCK_NEXT" or in Player_lock_closest() ).
+ * I tried to find a solution but now i am bit screwed up..  :)
+ *
+ * \param next	false - choose the active player closest to us
+ * 		true - choose the NEXT closest player
+ */
+bool Player_lock_closest(player_t *pl, bool next)
+{
+	player_t *pl_lock;
+	player_t *pl_i, *pl_new;
+	int32_t i;
+	DFLOAT dist, best, l;
+
+	if (!next) {
+		CLR_BIT(pl->lock.flags, LOCK_PLAYER);
+	}
+
+	if (BIT(pl->lock.flags, LOCK_PLAYER)) {
+		pl_lock = pl->lock.object;
+		dist = Map_get_distance(&pl->pos, &pl_lock->pos);
+	}
+	else {
+		pl_lock = NULL;
+		dist = 0.0;
+	}
+
+	pl_new = NULL;
+	best = FLT_MAX;
+
+	for (i = 0; i < NumPlayers; i++) {
+		pl_i = Players[i];
+
+		if (pl_i == pl_lock || !Player_is_alive(pl_i) || !Player_lock_is_allowed(pl, pl_i)) {
+			continue;
+		}
+		l = Map_get_distance(&pl->pos, &pl_i->pos);
+		if (l >= dist && l < best) {
+			best = l;
+			pl_new = pl_i;
+		}
+	}
+	if (pl_new == NULL) {
+		return false;
+	}
+
+	SET_BIT(pl->lock.flags, LOCK_PLAYER);
+	pl->lock.object = pl_new;
+
+	return true;
+}
+
+void Player_lock_next(player_t *pl, bool forwards)
+{
+	player_t *pl_tmp1, *pl_tmp2;
+
+	pl_tmp1 = pl_tmp2 = pl->lock.object;
+	if (!BIT(pl->lock.flags, LOCK_PLAYER) || !pl_tmp2) {
+		/* better jump to KEY_LOCK_CLOSE... */
+		Player_lock_closest(pl, false);
+		return;
+	}
+	do {
+		int tmp_ind = GetInd[pl_tmp1->id];
+
+		if (!forwards) {
+			if (tmp_ind == 0) {
+				pl_tmp1 = Players[NumPlayers - 1];
+			}
+			else {
+				pl_tmp1 = Players[tmp_ind - 1];
+			}
+		}
+		else {
+			if (tmp_ind == NumPlayers - 1) {
+				pl_tmp1 = Players[0];
+			}
+			else {
+				pl_tmp1 = Players[tmp_ind + 1];
+			}
+		}
+		if (pl_tmp1 == pl_tmp2) {
+			break;
+		}
+	} while (pl_tmp1 == pl || Player_is_waiting(pl_tmp1)
+			|| Player_is_dead(pl_tmp1) || Player_is_paused(pl_tmp1)
+			|| !Player_lock_is_allowed(pl, pl_tmp1));
+	if (pl_tmp1 == pl) {
+		CLR_BIT(pl->lock.flags, LOCK_PLAYER);
+	}
+	else {
+		pl->lock.object = pl_tmp1;
+		SET_BIT(pl->lock.flags, LOCK_PLAYER);
+	}
+}
+
+/*
+ * Verify if the lock has ever been initialized at all
+ * and if the lock is still valid.
+ */
+bool Player_lock_is_initialized(player_t *pl)
+{
+	player_t *pl2;
+
+	if (BIT(pl->lock.flags, LOCK_PLAYER) && NumPlayers > 1 && (pl2 = pl->lock.object) && pl2 != pl) {
+		return true;
+	}
+
+	return false;
+}
+
+void Player_lock_set(player_t *pl, player_t *pl_target)
+{
+	SET_BIT(pl->lock.flags, LOCK_PLAYER);
+	pl->lock.object = pl_target;
+}
+
+void Player_lock_clear(player_t *pl)
+{
+	CLR_BIT(pl->lock.flags, LOCK_PLAYER);
+	pl->lock.object = NULL;
+}
+
+void Player_change_home(player_t *pl, base_t *base)
+{
+	player_t *base_owner;
+
+	ASSERT(pl && base)
+
+	if (base == pl->home_base) {
+		return;
+	}
+	if (base->team != NULL && base->team != pl->team) {
+		return;
+	}
+
+	base_owner = Player_owns_base(base);
+
+	if (base_owner && base_owner != pl) {
+		base_owner->home_base = pl->home_base;
+
+		Send_info_about_player(base_owner, PL_SEND_BASE);
+		Send_info_about_myself(base_owner, PL_SEND_BASE);
+
+		Message_game_print("%s has taken over %s's home base.", pl->name, base_owner->name);
+	}
+	else {
+		Message_game_print("%s has changed home base.", pl->name);
+	}
+
+	pl->home_base = base;
+
+	Send_info_about_player(pl, PL_SEND_BASE);
+	Send_info_about_myself(pl, PL_SEND_BASE);
+}
+
+bool Player_is_close_to_base(player_t *pl)
+{
+	int32_t j, k, xi, yi;
+	DFLOAT minv;
+
+	xi = OBJ_X_IN_BLOCKS(pl);
+	yi = OBJ_Y_IN_BLOCKS(pl);
+	j = pl->home_base->pos.bx;
+	k = pl->home_base->pos.by;
+
+	if (j == xi && k == yi) {
+		minv = 3.0f;
+	}
+	else {
+		/*
+		 * Hover pause doesn't work within two squares of the
+		 * players home base, they would want the better pause.
+		 */
+		if (ABS(j - xi) <= 2 && ABS(k - yi) <= 2) {
+			minv = 5.0f;
+		}
+		else {
+			return false;
+		}
+	}
+
+	if (pl->velocity > minv) {
+		return false;
+	}
+
+	return true;
+}
+
+/*
+ * Autorepeat fire, must unfortunately be done here, not in
+ * the player loop below, because of collisions between the shots
+ * and the auto-firing player that would otherwise occur.
+ */
+void Players_shoot(void)
+{
+	int32_t i;
+	player_t *pl;
+
+	for (i = 0; i < NumPlayers; i++) {
+		pl = Players[i];
+
+		if (Player_is_alive(pl) && Player_uses_property(pl, USES_SHOT)) {
+                        Player_disable_property(pl, USES_SHIELD);
+			Shot_add(pl);
+		}
+	}
+}
+
+/*
+ * Update tanks, kill players that ought to be killed.
+ */
+void Players_handle_after_kill(void)
+{
+	int32_t i;
+	player_t *pl;
+
+	for (i = NumPlayers - 1; i >= 0; i--) {
+		pl = Players[i];
+
+		if (Player_is_killed(pl)) {
+			Player_destroy(pl);
+
+			if (Player_is_human(pl) && Player_idle_timed_out(pl)) {
+				Player_pause_forced(pl);
+				Message_game_print("%s was paused for idling.", pl->name);
+			}
+
+			updateScores = true;
+		}
+	}
+}
+
+void Players_remove(void)
+{
+	player_t *pl;
+
+	while (NumPlayers > 0) { /* Kick out all remaining players */
+		pl = Players[NumPlayers - 1];
+		if (!Player_is_connected(pl)) {
+			Player_remove(pl);
+		}
+		else {
+			Destroy_connection(pl->connp, "server exiting");
+		}
+	}
+}
+
+/** \brief Returns the structure of a ball the player is carrying (order or picking is not respected)
+ *
+ * \param pl	player
+ * \return pointer to the ball structure, NULL if the player has no ball
+ */
+object_t *Player_get_ball_object(player_t *pl)
+{
+	int32_t i;
+	object_t *obj;
+
+	for (i = 0; i < NumObjs; i++) {
+		obj = Obj[i];
+
+		if (Object_is_type(obj, OBJ_BALL) && Object_is_attached(obj) && obj->owner == pl) {
+			return obj;
+		}
+	}
+
+	return NULL;
+}
+
+inline bool Player_idle_timed_out(player_t *pl)
+{
+	return (frame_loops - pl->frame_last_busy > MAX_PLAYER_IDLE_TICKS && (NumPlayers > 1)) ? true : false;
+}
+
+inline bool Player_is_recovered(player_t *pl)
+{
+	return (pl->recovery_count <= 0.0) ? true : false;
+}
+
+void Players_interpolation_init(void)
+{
+	int32_t i;
+	player_t *pl;
+
+	for (i = 0; i < NumPlayers; i++) {
+		pl = Players[i];
+		Position_copy(&pl->pos_interp, &pl->pos);
+		pl->vel_interp.x = pl->vel.x;
+		pl->vel_interp.y = pl->vel.y;
+	}
+}
+
+void Player_interpolation_reset(player_t *pl)
+{
+	pl->acc_interp.x = 0.0;
+	pl->acc_interp.y = 0.0;
+	pl->vel_interp.x = 0.0;
+	pl->vel_interp.y = 0.0;
 }

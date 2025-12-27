@@ -1,4 +1,4 @@
-/* $Id: id.c,v 1.5 2008/08/15 15:09:53 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -26,14 +26,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define SERVER
 #include "version.h"
 #include "const.h"
 #include "global.h"
 #include "proto.h"
 #include "error.h"
 
-int8_t id_version[] = VERSION;
+char id_version[] = VERSION;
 
 static int32_t ID_queue[NUM_IDS];
 static int32_t ID_inuse[NUM_IDS + 1];

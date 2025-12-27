@@ -1,4 +1,4 @@
-/* $Id: rules.c,v 1.6 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -25,7 +25,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define SERVER
 #include "version.h"
 #include "config.h"
 #include "const.h"
@@ -34,8 +33,10 @@
 #include "map.h"
 #include "rules.h"
 #include "bit.h"
+#include "player.h"
+#include "player_inline.h"
 
-int8_t rules_version[] = VERSION;
+char rules_version[] = VERSION;
 
 #define MAX_FUEL                10000
 #define MAX_AUTOPILOT           99
@@ -43,14 +44,10 @@ int8_t rules_version[] = VERSION;
 /*
  * Bitmask of object types the robot puts up shield for.
  */
-int32_t KILLING_SHOTS = OBJ_SHOT;
+int32_t KILLING_SHOTS = USES_SHOT;
 
-int32_t DEF_BITS = 0;
-int32_t KILL_BITS = (THRUSTING | PLAYING | KILLED | SELF_DESTRUCT | PAUSE);
-int32_t DEF_HAVE = (OBJ_SHIELD | OBJ_COMPASS | OBJ_REFUEL | OBJ_CONNECTOR
-		| OBJ_SHOT);
-int32_t DEF_USED = (OBJ_SHIELD | OBJ_COMPASS);
-int32_t USED_KILL = (OBJ_REFUEL | OBJ_CONNECTOR | OBJ_SHOT);
+int32_t HAS_DEFAULT = (HAS_SHIELD | HAS_COMPASS | HAS_REFUEL | HAS_CONNECTOR | HAS_SHOT);
+int32_t USES_DEFAULT = (USES_SHIELD | USES_COMPASS);
 
 /*
  * Initializes special items.
@@ -70,10 +67,10 @@ static void Init_item(int32_t item)
  */
 void Set_initial_resources(void)
 {
-	CLR_BIT(DEF_HAVE, OBJ_AUTOPILOT);
+	CLR_BIT(HAS_DEFAULT, USES_AUTOPILOT);
 
 	if (World.items[ITEM_AUTOPILOT].initial > 0)
-		SET_BIT(DEF_HAVE, OBJ_AUTOPILOT);
+		SET_BIT(HAS_DEFAULT, USES_AUTOPILOT);
 }
 
 /*
@@ -98,16 +95,16 @@ void Set_world_rules(void)
 			| (playerKillings ? PLAYER_KILLINGS : 0)
 			| (playerShielding ? PLAYER_SHIELDING : 0)
 			| (limitedLives ? LIMITED_LIVES : 0)
-			| (teamPlay ? TEAM_PLAY : 0) | (edgeWrap ? WRAP_PLAY
-			: 0));
+			| (teamPlay ? TEAM_PLAY : 0) | (WRAP_PLAY)
+			| (Team_num_is_valid(robotTeam) ? PRACTISE_PLAY : 0));
 	rules.lives = worldLives;
 	World.rules = &rules;
 
 	if (!BIT(World.rules->mode, PLAYER_KILLINGS))
-		CLR_BIT(KILLING_SHOTS, OBJ_SHOT);
+		CLR_BIT(KILLING_SHOTS, USES_SHOT);
 	if (!BIT(World.rules->mode, PLAYER_SHIELDING))
-		CLR_BIT(DEF_HAVE, OBJ_SHIELD);
+		CLR_BIT(HAS_DEFAULT, USES_SHIELD);
 
-	DEF_USED &= DEF_HAVE;
+	USES_DEFAULT &= HAS_DEFAULT;
 }
 

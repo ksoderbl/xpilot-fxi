@@ -1,4 +1,4 @@
-/* $Id: global.h,v 1.12 2008/08/26 20:51:06 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -25,74 +25,83 @@
 #ifndef	GLOBAL_H
 #define	GLOBAL_H
 
-#include "object.h"
-#include "map.h"
+#include "serverconst.h"
 #include "list.h"
-
+#include "structs.h"
+//#include "map.h"
 
 #ifndef MAX
 #define MAX(a,b)  ((a) > (b) ? (a) : (b))
 #define MIN(a,b)  ((a) < (b) ? (a) : (b))
 #endif
 
-// TODO: Temporary solution for checking whether player's structure
-// is within the allowed range
-//#define PL_STRUCT_OUT_OF_BOUNDS(pl)		(pl < Players[0] || pl >= Players[NumPlayers]) ? true : false
-
 #define	STR80	(80)
 
 typedef struct {
-	int8_t owner[STR80];
-	int8_t host[STR80];
+	char owner[STR80];
+	char host[STR80];
 } server_t;
 
 /*
  * Global data.
  */
 
-/*#define NumObjs		(ObjCount + 0)*/
+/* from map.c */
+extern World_map World;
 
+/* from player.c */
 extern player_t **Players;
-extern object_t *Obj[];
-extern int32_t frame_loops;
 extern int32_t NumPlayers;
-extern int32_t NumPseudoPlayers;
-extern int32_t NumQueuedPlayers;
+extern int32_t NumPaused;
+extern int32_t GetInd[NUM_IDS + 1];
+
+/* from object.c */
+extern object_t *Obj[];
 extern int32_t NumObjs;
-extern int32_t ObjCount;
-extern int32_t NumRobots, maxRobots, minRobots;
+
+/* from player.c */
+extern bool updateScores;
+
+
+extern int32_t NumQueuedPlayers;
+extern int32_t frame_loops;
+extern int32_t NumRobots;
+extern int32_t maxRobots;
+extern int32_t minRobots;
 extern int32_t login_in_progress;
 
-extern int8_t *robotFile;
-extern int32_t robotsTalk, robotsLeave, robotLeaveLife;
-extern int32_t robotLeaveScore, robotLeaveRatio;
+extern char *robotFile;
+extern int32_t robotsTalk;
+extern int32_t robotsLeave;
+extern int32_t robotLeaveLife;
+extern int32_t robotLeaveScore;
+extern int32_t robotLeaveRatio;
 extern int32_t robotTeam;
-extern bool restrictRobots, reserveRobotTeam;
-extern World_map World;
+extern bool restrictRobots;
+extern bool reserveRobotTeam;
 extern server_t Server;
-extern list_t expandList;
+extern TList expandList;
 extern DFLOAT ShotsMass, ShipMass, ShotsSpeed;
 extern DFLOAT ballMass;
 extern int32_t ShotsMax, ShotsLife;
 extern int32_t fireRepeatRate;
-extern int32_t DEF_BITS, KILL_BITS, DEF_HAVE, DEF_USED, USED_KILL;
-extern int32_t GetInd[];
+extern int32_t HAS_DEFAULT, USES_DEFAULT, USED_KILL;
 extern bool RawMode;
 extern bool logRobots;
 extern int32_t main_loops;
 extern int32_t main_loops_slow;
 extern int32_t NumOperators;
-extern int8_t *mapFileName;
+extern char *mapFileName;
 extern int32_t mapRule;
-extern int8_t *mapData;
+extern char *mapData;
 extern int32_t mapWidth;
 extern int32_t mapHeight;
-extern int8_t *mapName;
-extern int8_t *mapAuthor;
+extern char *mapName;
+extern char *mapAuthor;
 extern int32_t contactPort;
-extern int8_t *serverHost;
-extern int8_t *greeting;
-extern int8_t *serverAddr;
+extern char *serverHost;
+extern char *greeting;
+extern char *serverAddr;
 extern bool crashWithPlayer;
 extern bool bounceWithPlayer;
 extern bool playerKillings;
@@ -121,16 +130,14 @@ extern bool keepShots;
 extern bool teamAssign;
 extern bool teamImmunity;
 extern bool teamShareScore;
-extern bool edgeWrap;
-extern bool edgeBounce;
 extern bool extraBorder;
 
-extern bool updateScores;
+//extern bool updateScores;
 extern bool allowShipShapes;
 
 extern bool reportToMetaServer;
 extern bool searchDomainForXPilot;
-extern int8_t *denyHosts;
+extern char *denyHosts;
 extern int32_t maxClientsPerIP;
 
 extern bool playersOnRadar;
@@ -147,9 +154,9 @@ extern bool connectorIsString;
 
 extern int32_t game_lock;
 
-extern int8_t *motdFileName;
-extern int8_t *scoreTableFileName;
-extern int8_t *adminMessageFileName;
+extern char *motdFileName;
+extern char *scoreTableFileName;
+extern char *adminMessageFileName;
 extern int32_t adminMessageFileSizeLimit;
 
 extern bool lockOtherTeam;
@@ -165,33 +172,35 @@ extern int32_t roundsToPlay;
 extern int32_t roundsPlayed;
 
 extern bool useWreckage;
-extern int8_t *password;
+extern char *password;
 
-extern int8_t *robotRealName;
-extern int8_t *robotHostName;
+extern char *robotRealName;
+extern char *robotHostName;
 
 extern bool selfImmunity;
 
-extern int8_t *defaultShipShape;
-extern int8_t *tankShipShape;
+extern char *defaultShipShape;
 
 extern int32_t clientPortStart;
 extern int32_t clientPortEnd;
 
 extern int32_t maxPauseTime;
-extern DFLOAT mainLoopTime;
+extern float mainLoopTime;
 
 extern int32_t KILLING_SHOTS;
 extern uint32_t SPACE_BLOCKS;
 
-/* new as of xph */
+extern char *rankFileName;
+extern char *rankWebpageFileName;
+extern char *rankWebpageCSS;
 
+/* from server.c */
 extern int32_t frameDivisor;
 extern int32_t fps;
 extern int32_t intGameSpeed;
 extern float ticksPerFrame;
-extern DFLOAT gameSpeed;
-extern int8_t *rankFileName;
-extern int8_t *rankWebpageFileName;
+extern double realTimeStep;
+extern double gameSpeed;
+extern int32_t frame_cycle;
 
 #endif /* GLOBAL_H */

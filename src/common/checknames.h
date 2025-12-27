@@ -1,4 +1,4 @@
-/* $Id: checknames.h,v 1.3 2008/08/15 15:09:52 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -28,13 +28,13 @@
 #define NAME_OK		1
 #define NAME_ERROR	0
 
-int32_t Check_real_name(int8_t *name);
-void Fix_real_name(int8_t *name);
-int32_t Check_nick_name(int8_t *name);
-void Fix_nick_name(int8_t *name);
-int32_t Check_host_name(int8_t *name);
-void Fix_host_name(int8_t *name);
-int32_t Check_disp_name(int8_t *name);
-void Fix_disp_name(int8_t *name);
+int32_t Check_real_name(char *name);
+void Fix_real_name(char *name);
+int32_t Check_nick_name(char *name);
+void Fix_nick_name(char *name);
+int32_t Check_host_name(char *name);
+void Fix_host_name(char *name);
+int32_t Check_disp_name(char *name);
+void Fix_disp_name(char *name);
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: shot.c,v 1.16 2008/10/12 15:45:14 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -27,22 +27,29 @@
 #include <stdio.h>
 #include <math.h>
 
-#define SERVER
 #include "version.h"
 #include "commonproto.h"
 #include "xpconfig.h"
+#include "debug.h"
 #include "const.h"
 #include "global.h"
 #include "proto.h"
+
 #include "score.h"
 #include "objpos.h"
 #include "netserver.h"
 #include "error.h"
 
-int8_t shot_version[] = VERSION;
-extern int32_t frame_cycle;
+#include "player.h"
+#include "map.h"
+#include "player_inline.h"
+#include "frame.h"
+#include "object.h"
+#include "rank.h"
 
-/***********************
+char shot_version[] = VERSION;
+
+/*
  * Functions for shots.
  */
 
@@ -54,7 +61,7 @@ static object_t *objArray;
  *
  * @param number	requested number of objects
  */
-void Alloc_shots(int32_t number)
+void Shots_allocate(int32_t number)
 {
 	object_t *x;
 	int32_t i;
@@ -73,7 +80,7 @@ void Alloc_shots(int32_t number)
 	}
 }
 
-void Free_shots(void)
+void Shots_free(void)
 {
 	if (objArray != NULL) {
 		free(objArray);
@@ -81,82 +88,70 @@ void Free_shots(void)
 	}
 }
 
-void Make_treasure_ball(treasure_t *t)
+void Ball_treasure_add(treasure_t *t)
 {
 	object_t *ball;
-	int32_t cx = (t->pos.x + 0.5) * BLOCK_CLICKS;
-	int32_t cy = (t->pos.y * BLOCK_CLICKS) + 10 * CLICK;
 
-	if (t->have) {
-		xpprintf("%s Failed Make_treasure_ball(treasure=%d):\n",
-				showtime(), t->id);
-		xpprintf("\ttreasure: destroyed = %d, team = %d, have = %d\n",
-				t->destroyed, t->team->Num, t->have);
+	/* we want to place the ball exactly at the bottom of the treasure box, not in the middle
+	 * TODO: the offset shouldn't be hardcoded here */
+	clpos_t pos;
+
+	ball = Object_add();
+
+	if (!ball) {
 		return;
 	}
+
 	t->have = true;
 
-	ball = Obj[NumObjs];
-
 	ball->length = ballConnectorLength;
-	ball->life = LONG_MAX;
+	ball->obj_life = MAX_OBJECT_LIFE;
+
 	ball->mass = 50;
 	ball->vel.x = 0; /* make the ball stuck a little */
 	ball->vel.y = 0; /* longer to the ground */
 	ball->acc.x = 0;
 	ball->acc.y = 0;
 	ball->dir = 0;
-	Object_position_init_clicks(ball, cx, cy);
+	Position_simple_set(&pos, t->pos.cx, t->pos.cy - PIXEL_TO_CLICK(7));
+	Position_set(&ball->pos, &pos);
+	Position_copy(&ball->pos_interp, &ball->pos);
+//	Object_position_remember(ball);
 	ball->owner = NULL;
 	ball->team = t->team;
 	ball->type = OBJ_BALL;
 	ball->color = WHITE;
-	ball->count = 0;
 	ball->pl_range = BALL_RADIUS;
 	ball->pl_radius = BALL_RADIUS;
-//	ball->status = RECREATE;
-	ball->status = 0;
+	ball->obj_status = 0;
 	ball->treasure = t;
-	NumObjs++;
 }
 
-void Fire_normal_shots(player_t *pl)
+void Shot_add(player_t *pl)
 {
-	int32_t life, fuse = 0, lock = 0, status = 0, pl_range = 0, pl_radius = 0;
-	DFLOAT turnspeed = 0, max_speed = SPEED_LIMIT;
-	vector_t mv;
+	int32_t fuse;
 	clpos_t shotpos;
-	object_t *shot = Obj[NumObjs];
-	int32_t cx, cy;
-	//team_t *team = pl->team;
+	object_t *shot;
 	DFLOAT speed = pl->shot_speed;
-	int32_t type = OBJ_SHOT;
 	int32_t dir = pl->dir;
 
 	if (main_loops_slow < (pl->shot_time + fireRepeatRate)) {
 		return;
 	}
 
-	pl->shot_time = main_loops_slow;
-
-	if (pl->shots >= pl->shot_max || BIT(pl->used, OBJ_SHIELD))
+	if (pl->shots >= pl->shot_max || Player_uses_property(pl, USES_SHIELD)) {
 		return;
-
-	cx = pl->pos.cx + FLOAT_TO_CLICK(pl->ship->m_gun[pl->dir].x);
-	cy = pl->pos.cy + FLOAT_TO_CLICK(pl->ship->m_gun[pl->dir].y);
-
-	if (NumObjs >= MAX_TOTAL_SHOTS)
-		return;
-
-	if (pl) {
-		life = pl->shot_life;
 	}
-	else {
-		life = ShotsLife;
+
+
+	shot = Object_add();
+
+	if (!shot) {
+		return;
 	}
 
 	/* add fired shots*/
-	pl->shots++;
+	pl->shot_time = main_loops_slow;
 
 	/*
 	 * Calculate the maximum time it would take to cross one ships width,
@@ -167,152 +162,83 @@ void Fire_normal_shots(player_t *pl)
 
 	fuse = (int32_t) ((2.0 * (DFLOAT) SHIP_SZ) / speed + 1.0);
 
-	shot->life = life;
-	shot->fuselife = shot->life - fuse;
-	shot->max_speed = max_speed;
-	shot->turnspeed = turnspeed;
-	shot->count = 0;
-	shot->info = lock;
-	shot->type = type;
+	shot->obj_life = SHOT_LIFE_TICKS;
+	shot->fuselife = shot->obj_life - fuse;
+	shot->max_speed = SPEED_LIMIT;
+	shot->info = 0;
+	shot->type = OBJ_SHOT;
 	shot->owner = pl;
 	shot->team = pl->team;
 	shot->color = (pl ? pl->color : WHITE);
 
-	shotpos.cx = cx;
-	shotpos.cy = cy;
+	shotpos.cx = pl->pos.cx + FLOAT_TO_CLICK(pl->ship->m_gun[pl->dir].x);
+	shotpos.cy = pl->pos.cy + FLOAT_TO_CLICK(pl->ship->m_gun[pl->dir].y);
 
-	NumObjs++;
+	Position_set(&shot->pos, &shotpos);
+//	Object_position_remember(shot);
 
-	shotpos.cx = WRAP_XCLICK(shotpos.cx);
-	shotpos.cy = WRAP_YCLICK(shotpos.cy);
-	if (shotpos.cx < 0 || shotpos.cx >= World.cwidth || shotpos.cy < 0
-			|| shotpos.cy >= World.cheight) {
-		NumObjs--;
-		return; /* this is necessary or the game will crash sometimes -pgm */
-	}
+	shot->acc.x = shot->acc.y = 0;
 
-	Object_position_init_clicks(shot, shotpos.cx, shotpos.cy);
+	shot->vel.x = pl->vel.x + tcos(dir) * speed;
+	shot->vel.y = pl->vel.y + tsin(dir) * speed;
 
-	mv.x = mv.y = shot->acc.x = shot->acc.y = 0;
-
-	shot->vel.x = mv.x + (pl ? pl->vel.x : 0.0) + tcos(dir) * speed;
-	shot->vel.y = mv.y + (pl ? pl->vel.y : 0.0) + tsin(dir) * speed;
-
-	shot->status = status;
+	shot->obj_status = 0;
 	shot->dir = dir;
-	shot->pl_range = pl_range;
-	shot->pl_radius = pl_radius;
+	shot->pl_range = 0;
+	shot->pl_radius = 0;
+
+	Rank_fire_shot(pl);
 }
 
-/* Removes shot from array */
-void Delete_object(object_t *obj)
+/** \brief Moves a ball
+ *
+ * The new ball movement code since XPilot version 3.4.0 as made
+ * by Bretton Wade.  The code was submitted in context diff format
+ * by Mark Boyns.  Here is a an excerpt from a post in
+ * rec.games.computer.xpilot by Bretton Wade dated 27 Jun 1995:
+ *
+ *     If I'm not mistaken (not having looked very closely at the code
+ *     because I wasn't sure what it was trying to do), the original move_ball
+ *     routine was trying to model a Hook's law spring, but squared the
+ *     deformation term, which would lead to exagerated behavior as the spring
+ *     stretched too far. Not really a divide by zero, but effectively producing
+ *     large numbers.
+ *
+ *     When I coded up the spring myself, I found that I could recreate the
+ *     effect by using a VERY strong spring. This can be defeated, however, by
+ *     damping. Specifically, If you compute the critical damping factor, then
+ *     you could have the cable always be the correct length. This makes me
+ *     wonder how to decide when the cable snaps.
+ *
+ *     I chose a relatively strong spring, and a small damping factor, to make
+ *     for a nice realistic bounce when you grab at the treasure. It also gives a
+ *     fairley close approximation to the "normal" feel of the treasure.
+ *
+ *     I modeled the cable as having zero mass, or at least insignificant mass as
+ *     compared to the ship and ball. This greatly simplifies the math, and leads
+ *     to the conclusion that there will be no change in velocity when the cable
+ *     breaks. You can check this by integrating the momentum along the cable,
+ *     and the ship or ball.
+ *
+ *     If you assume that the cable snaps in the middle, then half of the
+ *     potential energy goes to each object attached. However, as you said, the
+ *     total momentum of the system cannot change. Because the weight of the
+ *     cable is small, the vast majority of the potential energy will become
+ *     heat. I've had two physicists verify this for me, and they both worked
+ *     really hard on the problem because they found it interesting.
+ *
+ * End of post.
+ *
+ * Changes since then:
+ *
+ * Comment from people was that the string snaps too soon.
+ * Changed the value (max_spring_ratio) at which the string snaps
+ * from 0.25 to 0.30.  Not sure if that helps enough, or too much.
+ *
+ * \param ball	ball structure
+ */
+void Ball_move(object_t *ball)
 {
-	player_t *pl;
-	int32_t i;
-
-	switch (obj->type) {
-
-	case OBJ_SPARK:
-	case OBJ_DEBRIS:
-	case OBJ_WRECKAGE:
-		break;
-
-	case OBJ_BALL:
-		/* Detach the ball or non-solid connector */
-		if (BIT(obj->status, IS_ATTACHED)) {
-			Detach_ball(obj->owner, obj);
-		}
-		else {
-			/*
-			 * Maybe some player is still busy trying to connect to this ball.
-			 */
-			for (i = 0; i < NumPlayers; i++) {
-				if (Players[i]->ball_tmp == obj) {
-					Players[i]->ball_tmp = NULL;
-				}
-			}
-		}
-
-		obj->treasure->have = false;
-		break;
-
-	/* Shots related to a player. */
-	case OBJ_SHOT:
-		if (!obj->owner)
-			break;
-		pl = obj->owner;
-		if (obj->type == OBJ_SHOT) {
-			if (--pl->shots <= 0) {
-				pl->shots = 0;
-			}
-		}
-		break;
-
-	default:
-		xpprintf("%s Delete_shot(): Unkown shot type %d.\n",
-				showtime(), obj->type);
-		break;
-	}
-
-
-	NumObjs--;
-
-	/* Fix pointers */
-	Obj[obj->id] = Obj[NumObjs];
-	Obj[NumObjs] = obj;
-
-	/* Fix indices */
-	Obj[obj->id]->id = obj->id;
-	Obj[NumObjs]->id = NumObjs; /* theoretically unnecessary */
-}
-
-void Move_ball(object_t *ball)
-{
-	/*
-	 * The new ball movement code since XPilot version 3.4.0 as made
-	 * by Bretton Wade.  The code was submitted in context diff format
-	 * by Mark Boyns.  Here is a an excerpt from a post in
-	 * rec.games.computer.xpilot by Bretton Wade dated 27 Jun 1995:
-	 *
-	 *     If I'm not mistaken (not having looked very closely at the code
-	 *     because I wasn't sure what it was trying to do), the original move_ball
-	 *     routine was trying to model a Hook's law spring, but squared the
-	 *     deformation term, which would lead to exagerated behavior as the spring
-	 *     stretched too far. Not really a divide by zero, but effectively producing
-	 *     large numbers.
-	 *
-	 *     When I coded up the spring myself, I found that I could recreate the
-	 *     effect by using a VERY strong spring. This can be defeated, however, by
-	 *     damping. Specifically, If you compute the critical damping factor, then
-	 *     you could have the cable always be the correct length. This makes me
-	 *     wonder how to decide when the cable snaps.
-	 *
-	 *     I chose a relatively strong spring, and a small damping factor, to make
-	 *     for a nice realistic bounce when you grab at the treasure. It also gives a
-	 *     fairley close approximation to the "normal" feel of the treasure.
-	 *
-	 *     I modeled the cable as having zero mass, or at least insignificant mass as
-	 *     compared to the ship and ball. This greatly simplifies the math, and leads
-	 *     to the conclusion that there will be no change in velocity when the cable
-	 *     breaks. You can check this by integrating the momentum along the cable,
-	 *     and the ship or ball.
-	 *
-	 *     If you assume that the cable snaps in the middle, then half of the
-	 *     potential energy goes to each object attached. However, as you said, the
-	 *     total momentum of the system cannot change. Because the weight of the
-	 *     cable is small, the vast majority of the potential energy will become
-	 *     heat. I've had two physicists verify this for me, and they both worked
-	 *     really hard on the problem because they found it interesting.
-	 *
-	 * End of post.
-	 *
-	 * Changes since then:
-	 *
-	 * Comment from people was that the string snaps too soon.
-	 * Changed the value (max_spring_ratio) at which the string snaps
-	 * from 0.25 to 0.30.  Not sure if that helps enough, or too much.
-	 */
-
 	player_t *pl = ball->owner;
 	vector_t D;
 	DFLOAT length, force, ratio, accell, cosine, pl_damping, ball_damping;
@@ -321,15 +247,23 @@ void Move_ball(object_t *ball)
 	DFLOAT max_spring_ratio = maxBallConnectorRatio;
 
 	/* compute the normalized vector between the ball and the player */
-	D.x = WRAP_DX(pl->pos.x - ball->pos.x);
-	D.y = WRAP_DY(pl->pos.y - ball->pos.y);
+	if (Frame_is_real()) {
+		D.x = WRAP_DX(pl->pos.x - ball->pos.x);
+		D.y = WRAP_DY(pl->pos.y - ball->pos.y);
+	}
+	else {
+		D.x = WRAP_DX(pl->pos_interp.x - ball->pos_interp.x);
+		D.y = WRAP_DY(pl->pos_interp.y - ball->pos_interp.y);
+	}
+
 	length = VECTOR_LENGTH(D);
 	if (length > 0.0) {
 		D.x /= length;
 		D.y /= length;
 	}
-	else
+	else {
 		D.x = D.y = 0.0;
+	}
 
 	/* compute the ratio for the spring action */
 	ratio = (ballConnectorLength - length) / (DFLOAT) ballConnectorLength;
@@ -337,90 +271,92 @@ void Move_ball(object_t *ball)
 	/* compute force by spring for this length */
 	force = k * ratio;
 
-	/* if the tether is too long or too short, release it */
-	if (ABS(ratio) > max_spring_ratio) {
-		Detach_ball(pl, ball);
-		return;
+	if (Frame_is_real()) {
+		/* if the tether is too long or too short, release it */
+		if (ABS(ratio) > max_spring_ratio) {
+			Ball_detach(pl, ball);
+			return;
+		}
 	}
-	ball->length = length;
+
+	if (Frame_is_real()) {
+		ball->length = length;
+	}
+	else {
+		ball->length_interp = length;
+	}
 
 	/* compute damping for player */
-	cosine = (pl->vel.x * D.x) + (pl->vel.y * D.y);
+	if (Frame_is_real()) {
+		cosine = (pl->vel.x * D.x) + (pl->vel.y * D.y);
+	}
+	else {
+		cosine = (pl->vel_interp.x * D.x) + (pl->vel_interp.y * D.y);
+	}
+
 	pl_damping = -b * cosine;
 
 	/* compute damping for ball */
-	cosine = (ball->vel.x * -D.x) + (ball->vel.y * -D.y);
+	if (Frame_is_real()) {
+		cosine = (ball->vel.x * -D.x) + (ball->vel.y * -D.y);
+	}
+	else {
+		cosine = (ball->vel_interp.x * -D.x) + (ball->vel_interp.y * -D.y);
+	}
+
 	ball_damping = -b * cosine;
 
 	/* compute accelleration for player, assume t = 1 */
 	accell = (force + pl_damping + ball_damping) / pl->mass;
-	pl->vel.x += D.x * accell;
-	pl->vel.y += D.y * accell;
+
+	if (Frame_is_real()) {
+		pl->vel.x += D.x * accell;
+		pl->vel.y += D.y * accell;
+	}
+	else {
+		pl->vel_interp.x += D.x * accell * ticksPerFrame;
+		pl->vel_interp.y += D.y * accell * ticksPerFrame;
+	}
 
 	/* compute accelleration for ball, assume t = 1 */
 	accell = (force + ball_damping + pl_damping) / ball->mass;
-	ball->vel.x += -D.x * accell;
-	ball->vel.y += -D.y * accell;
+
+	if (Frame_is_real()) {
+		ball->vel.x += -D.x * accell;
+		ball->vel.y += -D.y * accell;
+	}
+	else {
+		ball->vel_interp.x += -D.x * accell * ticksPerFrame;
+		ball->vel_interp.y += -D.y * accell * ticksPerFrame;
+	}
 }
 
-void Move_ball_interpolation(object_t *ball)
+void Ball_detach(player_t *pl, object_t *ball)
 {
-	/*
-	 similar to Move_ball, but without detaching -pgm
-	 */
+	int32_t i, cnt;
 
-	player_t *pl = ball->owner;
-	vector_t D;
-	DFLOAT length, force, ratio, accell, cosine, pl_damping, ball_damping;
-	DFLOAT k = ballConnectorSpringConstant;
-	DFLOAT b = ballConnectorDamping;
-	/*DFLOAT max_spring_ratio = maxBallConnectorRatio;*/
-	float speedfactor = ticksPerFrame;
-
-	/* compute the normalized vector between the ball and the player */
-	D.x = WRAP_DX(pl->pos_interp.x - ball->pos_interp.x);
-	D.y = WRAP_DY(pl->pos_interp.y - ball->pos_interp.y);
-	length = VECTOR_LENGTH(D);
-	if (length > 0.0) {
-		D.x /= length;
-		D.y /= length;
+	/* Interrupt the non-solid connector, if present */
+	if (ball == NULL || ball == pl->ball_tmp) {
+		pl->ball_tmp = NULL;
+		Player_disable_property(pl, USES_CONNECTOR);
 	}
-	else
-		D.x = D.y = 0.0;
 
-	/* compute the ratio for the spring action */
-	ratio = (ballConnectorLength - length) / (DFLOAT) ballConnectorLength;
-
-	/* compute force by spring for this length */
-	force = k * ratio;
-
-	/* if the tether is too long or too short, release it,
-	 cannot do it here though, since interpolated frames should not
-	 interfere with game events -pgm
-
-	 if (ABS(ratio) > max_spring_ratio) {
-	 Detach_ball(GetInd[ball->id], ind);
-	 return;
-	 }
-	 */
-
-	ball->length_interp = length;
-
-	/* compute damping for player */
-	cosine = (pl->vel_interp.x * D.x) + (pl->vel_interp.y * D.y);
-	pl_damping = -b * cosine;
-
-	/* compute damping for ball */
-	cosine = (ball->vel_interp.x * -D.x) + (ball->vel_interp.y * -D.y);
-	ball_damping = -b * cosine;
-
-	/* compute acceleration for player, assume t = 1 */
-	accell = (force + pl_damping + ball_damping) / pl->mass;
-	pl->vel_interp.x += D.x * accell * speedfactor;
-	pl->vel_interp.y += D.y * accell * speedfactor;
-
-	/* compute acceleration for ball, assume t = 1 */
-	accell = (force + ball_damping + pl_damping) / ball->mass;
-	ball->vel_interp.x += -D.x * accell * speedfactor;
-	ball->vel_interp.y += -D.y * accell * speedfactor;
+	if (Player_has_property(pl, HAS_BALL)) {
+		for (cnt = i = 0; i < NumObjs; i++) {
+			if (Object_is_type(Obj[i], OBJ_BALL) &&
+					Object_is_attached(Obj[i]) &&
+					Obj[i]->owner == pl) {
+				if (ball == NULL || ball == Obj[i]) {
+					/* Don't reset owner so you can throw balls */
+					Object_set_attached(Obj[i], false);
+				}
+				else {
+					cnt++;
+				}
+			}
+		}
+		if (cnt == 0) {
+			Player_lose_property(pl, HAS_BALL);
+		}
+	}
 }

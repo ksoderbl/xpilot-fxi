@@ -1,4 +1,4 @@
-/* $Id: walls.h,v 1.8 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -25,10 +25,9 @@
 #ifndef WALLS_H
 #define WALLS_H
 
-#include "click.h"
+extern char walls_version[];
 
-extern int8_t walls_version[];
-int32_t Rate(int32_t winner, int32_t looser);
+#include "objpos.h"
 
 /*
  * Wall collision detection and bouncing.
@@ -42,7 +41,7 @@ int32_t Rate(int32_t winner, int32_t looser);
  * Therefore a fixed point sub-pixel resolution is used called clicks.
  */
 
-#define FLOAT_TO_INT32(F)		((F) < 0 ? -(int32_t)(0.5f-(F)) : (int32_t)((F)+0.5f))
+#define FLOAT_TO_INT32(F)	((F) < 0 ? -(int32_t)(0.5f-(F)) : (int32_t)((F)+0.5f))
 #define DOUBLE_TO_INT32(D)	((D) < 0 ? -(int32_t)(0.5-(D)) : (int32_t)((D)+0.5))
 
 typedef enum {
@@ -69,8 +68,6 @@ typedef enum {
 } move_bounce_t;
 
 typedef struct {
-	int32_t edge_wrap;
-	int32_t edge_bounce;
 	int32_t wall_bounce;
 	int32_t treasure_crashes;
 	object_t *obj;
@@ -93,5 +90,17 @@ struct move_parameters {
 	uint32_t obj_bounce_mask; /* which objects bounce? */
 	uint32_t obj_treasure_mask; /* objects treasure crash? */
 };
+
+void Walls_init(void);
+
+void Move_init(void);
+
+void Move_object(object_t *obj);
+void Move_player(player_t *pl);
+
+void Turn_player(player_t *pl);
+void Turn_player_old(player_t *pl);
+
+void Collision_object_wall_check(move_state_t *ms);
 
 #endif

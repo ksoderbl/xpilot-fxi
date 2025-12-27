@@ -1,4 +1,4 @@
-/* $Id: draw.h,v 1.8 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -95,8 +95,8 @@
 typedef struct { /* Defines wire-obj, i.e. ship */
 	position_t *pts[MAX_SHIP_PTS]; /* the shape rotated many ways */
 	int32_t num_points; /* total points in object */
-	position_t engine[RES]; /* Engine position */
-	position_t m_gun[RES]; /* Main gun position */
+	position_t engine[ANGLE_RESOLUTION]; /* Engine position */
+	position_t m_gun[ANGLE_RESOLUTION]; /* Main gun position */
 	int32_t num_l_gun, num_r_gun, num_l_rgun, num_r_rgun; /* number of additional cannons */
 	position_t *l_gun[MAX_GUN_PTS], /* Additional cannon positions, left*/
 	*r_gun[MAX_GUN_PTS], /* Additional cannon positions, right*/
@@ -110,8 +110,8 @@ typedef struct { /* Defines wire-obj, i.e. ship */
 	position_t *m_rack[MAX_RACK_PTS];
 	int32_t shield_radius; /* Radius of shield used by client. */
 #ifdef	_NAMEDSHIPS
-	int8_t* name;
-	int8_t* author;
+	char* name;
+	char* author;
 #endif
 	int32_t default_ship; /* A default ship using statically allocated memory. */
 } shipshape_t;
@@ -119,11 +119,11 @@ typedef struct { /* Defines wire-obj, i.e. ship */
 extern shipshape_t *Triangle_ship(void);
 extern shipshape_t *Circle_ship(void);
 extern void Free_ship_shape(shipshape_t *w);
-extern shipshape_t *Parse_shape_str(int8_t *str);
-extern shipshape_t *Convert_shape_str(int8_t *str);
+extern shipshape_t *Parse_shape_str(char *str);
+extern shipshape_t *Convert_shape_str(char *str);
 extern void Calculate_shield_radius(shipshape_t *w);
-extern int32_t Validate_shape_str(int8_t *str);
-extern void Convert_ship_2_string(shipshape_t *w, int8_t *buf, int8_t *ext,
+extern int32_t Validate_shape_str(char *str);
+extern void Convert_ship_2_string(shipshape_t *w, char *buf, char *ext,
 		uint32_t shape_version);
 
 #endif

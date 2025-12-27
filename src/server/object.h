@@ -1,4 +1,4 @@
-/* $Id: object.h,v 1.16 2008/10/12 15:45:14 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -31,38 +31,65 @@
 #include "bit.h"
 #include "draw.h"
 #include "item.h"
-#include "click.h"
+#include "objpos.h"
 
 /*
  * Different types of objects, including player.
- * Robots and tanks are players but have an additional bit.
- * Smart missile, heatseeker and torpedoe can be merged into missile.
- * ECM doesn't really need an object type.
- * Lasers and pulses can be merged.
+ * Robots and tanks are players but have an additional type_ext field.
+ * Smart missile, heatseeker and torpedo can be merged into missile.
  */
-#define OBJ_PLAYER		(1U<<0)
-#define OBJ_DEBRIS		(1U<<1)
-#define OBJ_SPARK		(1U<<2)
-#define OBJ_AUTOPILOT		(1U<<4)
-#define OBJ_BALL		(1U<<7)
-#define OBJ_SHOT		(1U<<8)
-#define OBJ_SHIELD		(1U<<11)
-#define OBJ_REFUEL		(1U<<12)
-#define OBJ_COMPASS		(1U<<14)
-#define OBJ_AFTERBURNER		(1U<<19)
-#define OBJ_CONNECTOR		(1U<<20)
-#define OBJ_WRECKAGE		(1U<<26)
+#define OBJ_TYPEBIT(type)       (1U<<(type))
+
+#define OBJ_PLAYER              0
+#define OBJ_DEBRIS              1
+#define OBJ_SPARK               2
+#define OBJ_BALL                3
+#define OBJ_SHOT                4
+#define OBJ_SMART_SHOT          5
+#define OBJ_MINE                6
+#define OBJ_TORPEDO             7
+#define OBJ_HEAT_SHOT           8
+#define OBJ_PULSE               9
+#define OBJ_ITEM                10
+#define OBJ_WRECKAGE            11
+#define OBJ_ASTEROID            12
+#define OBJ_CANNON_SHOT         13
+
+#define OBJ_PLAYER_BIT          OBJ_TYPEBIT(OBJ_PLAYER)
+#define OBJ_DEBRIS_BIT          OBJ_TYPEBIT(OBJ_DEBRIS)
+#define OBJ_SPARK_BIT           OBJ_TYPEBIT(OBJ_SPARK)
+#define OBJ_BALL_BIT            OBJ_TYPEBIT(OBJ_BALL)
+#define OBJ_SHOT_BIT            OBJ_TYPEBIT(OBJ_SHOT)
+#define OBJ_SMART_SHOT_BIT      OBJ_TYPEBIT(OBJ_SMART_SHOT)
+#define OBJ_MINE_BIT            OBJ_TYPEBIT(OBJ_MINE)
+#define OBJ_TORPEDO_BIT         OBJ_TYPEBIT(OBJ_TORPEDO)
+#define OBJ_HEAT_SHOT_BIT       OBJ_TYPEBIT(OBJ_HEAT_SHOT)
+#define OBJ_PULSE_BIT           OBJ_TYPEBIT(OBJ_PULSE)
+#define OBJ_ITEM_BIT            OBJ_TYPEBIT(OBJ_ITEM)
+#define OBJ_WRECKAGE_BIT        OBJ_TYPEBIT(OBJ_WRECKAGE)
+#define OBJ_ASTEROID_BIT        OBJ_TYPEBIT(OBJ_ASTEROID)
+#define OBJ_CANNON_SHOT_BIT     OBJ_TYPEBIT(OBJ_CANNON_SHOT)
+
+/*
+ * Possible object status bits.
+ */
+#define GRAVITY                 (1U<<0)
+#define WARPING                 (1U<<1)
+#define WARPED                  (1U<<2)
+#define CONFUSED                (1U<<3)
+#define FROMCANNON              (1U<<4)         /* Object from cannon */
+#define ATTACHED		(1L<<5)		/* Ball is being carried by a player */
+#define THRUSTING               (1U<<6)         /* Engine is thrusting */
+#define OWNERIMMUNE             (1U<<7)         /* Owner is immune to object */
+#define NOEXPLOSION             (1U<<8)         /* No recreate explosion */
+#define COLLISIONSHOVE          (1U<<9)         /* Collision counts as shove */
+#define RANDOM_ITEM             (1U<<10)        /* Item shows up as random */
+#define FROMBOUNCE		(1L<<11)	/* Spark from wall bounce */
 
 /*
  * Some object types are overloaded.
  */
 #define OBJ_EXT_ROBOT		(1U<<2)
-
-#define Player_is_robot(pl)	(BIT((pl)->type_ext,OBJ_EXT_ROBOT)==OBJ_EXT_ROBOT)
-#define Player_is_human(pl)	(!BIT((pl)->type_ext,OBJ_EXT_ROBOT))
-
-#define Player_by_id(id)	(Players[GetInd[id]])
-#define Player_by_index(ind)	(Players[ind])
 
 #define LOCK_NONE		0x00	/* No lock */
 #define LOCK_PLAYER		0x01	/* Locked on player */
@@ -73,84 +100,65 @@
 
 #define NOT_CONNECTED		(-1)
 
-// TODO: temporary macro
-// Returns pointer to the player's connection structure, or NULL if
-// the supplied pointer is invalid or if the player is disconnected.
-#define Player_is_connected(pl)		((pl) ? ((pl)->connp) : NULL)
+#define Object_update_speed(o_)						\
+    {									\
+	(o_)->vel.x += (o_)->acc.x;					\
+	(o_)->vel.y += (o_)->acc.y;					\
+    }
 
-/*
- * Object position is non-modifiable, except at one place.
- *
- * NB: position in pixels used to be a float.
- */
-typedef const struct _objposition objposition_t;
-struct _objposition {
-	int32_t cx, cy; /* object position in clicks. */
-	int32_t x, y; /* object position in pixels. */
-	int32_t bx, by; /* object position in blocks. */
-};
-#define OBJ_X_IN_CLICKS(obj)	((obj)->pos.cx)
-#define OBJ_Y_IN_CLICKS(obj)	((obj)->pos.cy)
-#define OBJ_X_IN_PIXELS(obj)	((obj)->pos.x)
-#define OBJ_Y_IN_PIXELS(obj)	((obj)->pos.y)
-#define OBJ_X_IN_BLOCKS(obj)	((obj)->pos.bx)
-#define OBJ_Y_IN_BLOCKS(obj)	((obj)->pos.by)
+#define OBJECT_BASE						\
+	int8_t color; /* Color of object */			\
+	uint8_t dir; /* Direction of acceleration */		\
+	int32_t id; /* ID of the object */			\
+	team_t *team; /* Team of player or cannon */		\
+								\
+	objposition_t pos; /* World coordinates */		\
+	ipos_t prevpos; /* Object's previous position... */	\
+	vector_t vel;						\
+	vector_t acc;						\
+	objposition_t pos_interp;				\
+	vector_t vel_interp;					\
+	vector_t acc_interp;					\
+								\
+	DFLOAT max_speed;					\
+	DFLOAT mass;						\
+	uint8_t type;						\
+	int32_t info; /* Miscellaneous info (e.g. wreckage) */	\
+	int32_t obj_status; /* gravity, thrusting, etc. */
 
-typedef struct _object object_t;
 struct _object {
-	int8_t color; /* Color of object */
-	uint8_t dir; /* Direction of acceleration */
-	int32_t id; /* ID of the object */
-	team_t *team; /* Team of player or cannon */
-	objposition_t pos; /* World coordinates */
-	ipos_t prevpos; /* Object's previous position... */
-	vector_t vel;
-	vector_t acc;
-	objposition_t pos_interp;
-	vector_t vel_interp;
-	vector_t acc_interp;
-	DFLOAT max_speed;
-	DFLOAT mass;
-	int32_t type;
-	int32_t info; /* Miscellaneous info */
-	int32_t life; /* No of ticks left to live */
-	int32_t count; /* Misc timings */
-	int32_t status;
+	OBJECT_BASE
 
 	/* up to here all object types (including players!) should be the same. */
 
-	DFLOAT turnspeed; /* for missiles only */
-	int32_t fuselife; /* Ticks left when considered fused */
+	/*
+	 * Number of frames left to live
+	 * NOTE: the life of sparks and debris is counted in ticks rather than frames.
+	 */
+	int32_t obj_life;
 
-	object_t *cell_list; /* linked list for cell lookup */
+	object_t *cell_prev;	/* previous object in cell, NULL if this object was added first */
+	object_t *cell_next;	/* next object in cell, NULL if this object was added to the cell last */
 
 	player_t *owner; /* Whose object is this ? */
-
-	treasure_t *treasure; /* Which treasure does ball belong */
-
-	DFLOAT length; /* Distance between ball and player */
-	DFLOAT length_interp;
-	int32_t spread_left; /* how much spread time left */
 	int32_t pl_range; /* distance to player for collision. */
 	int32_t pl_radius; /* distance to player for hit. */
 
+	/* ball-related */
+	DFLOAT length; /* Distance between ball and player */
+	DFLOAT length_interp;
+	treasure_t *treasure; /* Which treasure does ball belong */
+	int32_t loose_count;	/* Number of frames since the ball was taken out of its box */
+	int32_t loose_count_ticks;	/* Number of ticks since the ball was taken out of its box */
+
+	/* shot-, debris- and wreckage-related */
+	int32_t fuselife; /* Ticks left when considered fused */
+
+	/* wreckage-related */
 	uint8_t size; /* Size of object (wreckage) */
+	DFLOAT turnspeed; /* for missiles only */
 	uint8_t rotation; /* Rotation direction */
 };
-
-/*
- * Fuel structure, used by player
- */
-typedef struct {
-	int32_t sum; /* Sum of fuel in all tanks */
-	int32_t max; /* How much fuel can you take? */
-	int32_t current; /* Number of currently used tank */
-	int32_t num_tanks; /* Number of tanks */
-	int32_t tank[1 + MAX_TANKS]; /* main fixed tank + extra tanks. */
-	int32_t l1; /* Fuel critical level */
-	int32_t l2; /* Fuel warning level */
-	int32_t l3; /* Fuel notify level */
-} pl_fuel_t;
 
 /*
  * Shove-information.
@@ -168,114 +176,54 @@ typedef struct {
 
 struct robot_data;
 
-/* IMPORTANT
- *
- * This is the player structure, the first part MUST be similar to object_t,
- * this makes it possible to use the same basic operations on both of them
- * (mainly used in update.c).
+static inline bool Object_is_type(object_t *obj, uint8_t type)
+{
+	return (obj->type == type) ? true : false;
+}
+
+/** \brief Checks if object is attached. Concerns only balls for now.
+ * \param obj	object
+ * \return true - object is attached, false - object is not attached
  */
-struct _player {
-	int8_t color; /* Color of object */
-	uint8_t dir; /* Direction of acceleration */
-	int32_t id; /* ID of the player */
-	team_t *team; /* What team is the player on? */
-	objposition_t pos; /* World coordinates */
-	ipos_t prevpos; /* Previous position... */
-	vector_t vel; /* Velocity of object */
-	vector_t acc; /* Acceleration constant */
-	objposition_t pos_interp;
-	vector_t vel_interp;
-	vector_t acc_interp;
-	DFLOAT max_speed; /* Maximum speed of object */
-	DFLOAT mass; /* Mass of object (incl. cargo) */
-	int32_t type; /* Type of object */
-	int32_t info; /* Miscellaneous info */
-	int32_t life; /* Zero is dead. One is alive */
-	int32_t count; /* Miscellaneous timings */
-	int32_t status; /** Status, currently **/
+static inline bool Object_is_attached(object_t *obj)
+{
+	return BIT(obj->obj_status, ATTACHED) ? true : false;
+}
 
-	/* up to here the player type should be the same as an object. */
+static inline void Object_set_attached(object_t *obj, bool mode)
+{
+	if (mode) {
+		SET_BIT(obj->obj_status, ATTACHED);
+	}
+	else {
+		CLR_BIT(obj->obj_status, ATTACHED);
+	}
+}
 
-	int32_t type_ext; /* extended type info (tank, robot) */
+static inline void Object_expire(object_t *obj)
+{
+	obj->obj_life = 0;
+}
 
-	DFLOAT turnspeed; /* How fast player acc-turns */
-	DFLOAT velocity; /* Absolute speed */
-	DFLOAT velocity_interp;
-	int32_t kills; /* Number of kills this round */
-	int32_t deaths; /* Number of deaths this round */
+static inline bool Object_is_expired(object_t *obj)
+{
+	return (obj->obj_life <= 0) ? true : false;
+}
 
-	int32_t used; /** Items you use **/
-	int32_t have; /** Items you have **/
+int32_t Object_count_treasures_missing(team_t *team);
+void Objects_remove_timed_out(void);
+void Object_remove(object_t *obj);
+object_t *Object_add(void);
+void Objects_time_out(void);
 
-	int32_t shield_time; /* Shields if no playerShielding */
-	pl_fuel_t fuel; /* ship tanks and the stored fuel */
-	DFLOAT emptymass; /* Mass of empty ship */
-	DFLOAT float_dir; /* Direction, in float var */
-	DFLOAT turnresistance; /* How much is lost in % */
-	DFLOAT turnvel; /* Current velocity of turn (right) */
-	DFLOAT turnacc; /* Current acceleration of turn */
-	int32_t score; /* Current score of player */
-	int32_t prev_score; /* Last score that has been updated */
-	int32_t prev_life; /* Last life that has been updated */
-	shipshape_t *ship; /* wire model of ship shape */
-	DFLOAT power; /* Force of thrust */
-	DFLOAT power_s; /* Saved power fiks */
-	DFLOAT turnspeed_s; /* Saved turnspeed */
-	DFLOAT turnresistance_s; /* Saved (see above) */
-	int32_t shots; /* Number of active shots by player */
+void Ball_treasure_add(treasure_t *t);
+void Ball_detach(player_t *pl, object_t *ball);
+void Shot_add(player_t *pl);
 
-	int32_t item[NUM_ITEMS]; /* for each item type how many */
+void Shots_allocate(int32_t number);
+void Shots_free(void);
+void Ball_move(object_t *ball);
 
-	int32_t shot_max; /* Maximum number of shots active */
-	int32_t shot_life; /* Number of ticks shot will live */
-	DFLOAT shot_speed; /* Speed of shots fired by player */
-	int32_t shot_time; /* Time of last shot fired by player */
-	fuel_t *fs; /* Connected to fuel station fs */
-
-	base_t *home_base; /* Pointer to the home base */
-	struct {
-		int32_t flags; /* Flag, what is tagged? */
-		void *object; /* Tagged object pointer */
-		DFLOAT distance; /* Distance to object */
-	} lock;
-	void *lockbank[LOCKBANK_MAX]; /* Saved player locks */
-
-	int8_t mychar; /* Special int8_t for player */
-	int8_t prev_mychar; /* Special int8_t for player */
-	int8_t name[MAX_CHARS]; /* Nick-name of player */
-	int8_t realname[MAX_CHARS]; /* Real name of player */
-	int8_t hostname[MAX_CHARS]; /* Hostname of client player uses */
-
-	object_t *ball_tmp; /* Ball that is BEING attached (string not solid yet) */
-
-	/*
-	 * Pointer to robot private data (dynamically allocated).
-	 * Only used in robot code.
-	 */
-	struct robot_data *robot_data_ptr;
-
-	/*
-	 * A record of who's been pushing me (a circular buffer).
-	 */
-	shove_t shove_record[MAX_RECORDED_SHOVES];
-	int32_t shove_next;
-
-	connection_t *connp; /* pointer to the connection structure */
-
-	uint32_t version; /* XPilot version number of client */
-
-	BITV_DECL(last_keyv, NUM_KEYS); /* Keyboard state */
-	BITV_DECL(prev_keyv, NUM_KEYS); /* Keyboard state */
-
-	int32_t frame_last_busy; /* When player touched keyboard. */
-
-	int32_t player_fps; /* FPS that this player can do */
-
-	bool isowner; /* If player started this server. */
-	bool isoperator; /* If player has operator privileges. */
-	bool update_score; /* score table info needs to be sent */
-	struct ranknode *rank;
-	bool oldturn; /* Use old turn player code */
-};
+void Objects_interpolation_init(void);
 
 #endif

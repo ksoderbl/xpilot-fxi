@@ -1,4 +1,4 @@
-/* $Id: commonproto.h,v 1.4 2008/08/16 21:07:33 rotunda_pk Exp $
+/*
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -28,6 +28,7 @@
 #include "types.h"
 #include "config.h"
 
+#define SWAP(_a, _b)	    {DFLOAT _tmp = _a; _a = _b; _b = _tmp;}
 
 /* randommt.c */
 void seedMT(uint32_t seed);
@@ -37,24 +38,24 @@ uint32_t randomMT(void);
 /* math.c */
 double rfrac(void);
 int32_t mod(int32_t x, int32_t y);
-void Make_table(void);
+void make_trig_table(void);
 
 /* strdup.c */
-int8_t *xp_strdup(const int8_t *);
-int8_t *xp_safe_strdup(const int8_t *old_string);
+char *xp_strdup(const char *);
+char *xp_safe_strdup(const char *old_string);
 
 /* default.c */
-uint32_t String_hash(const int8_t *s);
+uint32_t String_hash(const char *s);
 
 /* strlcpy.c, unnecessary on FreeBSD */
 #if (!__BSD_VISIBLE)
-size_t strlcpy(int8_t *dest, const int8_t *src, size_t size);
-size_t strlcat(int8_t *dest, const int8_t *src, size_t size);
+size_t strlcpy(char *dest, const char *src, size_t size);
+size_t strlcat(char *dest, const char *src, size_t size);
 #endif
 
 #if (!HAVE_STRINGS_H)
-int32_t strcasecmp(const int8_t *str1, const int8_t *str2);
-int32_t strncasecmp(const int8_t *str1, const int8_t *str2, size_t n);
+int32_t strcasecmp(const char *str1, const char *str2);
+int32_t strncasecmp(const char *str1, const char *str2, size_t n);
 #endif
 
 /* xpmemory.c */
