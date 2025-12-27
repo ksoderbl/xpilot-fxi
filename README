@@ -1,0 +1,122 @@
+Interpolated eXperimental xpilot
+
+This is the xpilot-ix distribution -the hunt for lost playability
+
+The aim of this project is to bring a more decent server 
+for the players. The client is also optimized, but we leave
+the choice of client to the player. The client in this
+release works best on outdated hardware.
+
+This distribution is based on the old xpilot-fix series, but here we
+have a new autoconfig package, and a cleaned up distribution.
+
+
+*** NOTE: Support for anything other than Blood's style
+    maps & dodgers has been totally removed (useless). In 
+    particular, targets, cannons, items, wormholes and weapons 
+    anything other than a single machine gun is not 
+    supported any longer. Also windows support is completely
+    removed, as is all other suspicious and outdated platforms. 
+    This release is meant to be used with Linux 2.4, 2.6 or
+    FreeBSD, digital alpha, and nothing else.
+***
+
+
+CLIENT CHANGES 
+
+- scalefactor on compile time
+- away with textures
+- TODO integrate the changes from fix6 to this release
+
+SERVER CHANGES
+1.0.0:
+- xpilot-fix6 changes(see xpilot-4.3.0fix-rc6 package)
+- inlining of crucial code(collision + packetscanf)
+- configure script(ugly xmkmf is history)
+- LOTS of code cleanups(removed cannons, sound, wormholes, items,
+  extra weapons, autopilot, hoverpause, stupid options, recoil,
+  gravity, turnthrust fuel)
+- internally server runs faster when processing packets
+- no high fps support(will be done later with an interpolation method,
+  which differs fundamentally from the way xpilot-ng does it)
+
+1.0.1:
+- server runs internally at different fps;
+  you have the following choices:
+ internalfps = 100; framedivisor = 8 ; probably too high 
+ internalfps = 50 ; framedivisor = 4 ; high rate with correct scheduling
+ internalfps = 25 ; framedivisor = 2 ; medium rate with correct scheduling
+ internalfps = 12 ; framedivisor = 1 ; plain 12 fps with incorrect scheduling
+				       on systems with 100 ticks.
+ defaults to 25/2
+ internalfps takes partly the role of the fps of the old server, but it
+ determines only frame rate and nothing else(doesn't affect timings, with
+ proper framedivisors).
+
+1.0.2:
+- timerresolution option removed; whoever implemented that must have had
+  a weak understanding of how it affects gameplay(you get what you ask for,
+  but the side effects are so serious that you wouldn't want it), and it's 
+  harmful to use for Linux 2.6 anyway.
+
+- the option fps has lost its original meaning; now its used as an internal
+  timeunit for various timings in the game, but it has nothing to do with
+  the frame rate. This allows for different timings in the game independent of
+  internalfps, which is in contrast to xpilot-ng server, where gamespeed had
+  to equal at fps or be lower.
+- use option gameSpeed now instead of fps to change internal speed of timings,
+  there is no option fps any longer, you should use internalfps instead.
+
+1.1.0ix:
+- the redundant hp for high performance is removed, and ix is used instead
+  interpolating eXperimental server.
+- server now uses interpolated frames put in-between real frames. Currently
+  no game events except for wallcollisions take effect in the interpolated
+  frames. This means that both ship steering and ballhandling is identical
+  to old server (connector doesn't snap now, because both the ship and ball
+  doesn't glide around).
+- removed the sending of shots as radar objects; going through the object
+  list takes a lot of cpu time, because of the sparks, so it should be 
+  avoided.
+
+1.1.1ix:
+- fixed ball counter (objects now do not get broken in interpolated frames, if
+  they hit a wall)
+- fixed refuel connector from connecting to all visible fuel boxes(used own
+  code, the default implementation was horrible).
+- fixed shooting timing
+- fixed the wallcollisions; in the collision code, collisions are done
+  componentwise on ship velocity and with the absolute value of 
+  velocity sqrt(vx^2 + vy^2). The absolute values wasn't corrected with the 
+  speedfactor for interpolated frames, so the resulting bounces had too much 
+  velocity in them. This was also never done correctly in xpilot-ng when it
+  used the block walls code.
+- fixed internalfps and framedivisor - can be set on runtime and has error
+  checking.
+- added mainlooptime 
+- some minor code deletions (removed sensor computations)
+
+TODO
+----------
+1.1.2ix
+- fix bullet gfx bug(when you shoot, the bullet may appear
+  randomly on screen, but is not lethal to anyone)
+- implement selectable client side turning updates per second 
+  (note that the /set maxmouseturnsps in xpilot-ng is broken!)
+
+...
+
+2.x.xfinal
+- rewrite packet protocol, delete unused stuff in packets
+- time stamp server response of turning (this may or may not improve
+  steering dramatically, depending on the packet window size). I
+  would want to see this before I can say if it works or not. This
+  was also the case with interpolation (nobody, including myself 
+  believed it would work so well, so I will not speculate on the 
+  issue further. All I can say is that time stamping has a potential).
+- add all necessary features like more paused players
+- add ranking code
+ 
+The end result should be a server, which one can use in teamcups,
+and more serious games. The old walls code will be used throughout
+all the releases unless someone can come up with something better.
