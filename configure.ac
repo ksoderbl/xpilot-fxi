@@ -1,9 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([XPilot], 1.3.7fxi, foo@bar.com, xpilot)
+AC_INIT([XPilot], 1.3.8fxi, foo@bar.com, xpilot)
 AC_CONFIG_AUX_DIR(config)
-AC_CONFIG_SRCDIR(src/client/xpilot.c)
+AC_CONFIG_SRCDIR(src/server/walls.c)
 
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
@@ -23,7 +23,7 @@ AC_SUBST([XP_COPYRIGHTDATE])
 XP_COPYRIGHT="Copyright © $XP_COPYRIGHTDATE by $XP_AUTHORS"
 AC_SUBST([XP_COPYRIGHT])
 
-AC_SUBST([XP_RELEASEDATE],["Jun 14, 2007"])
+AC_SUBST([XP_RELEASEDATE],["Aug 20, 2007"])
 AC_SUBST([XP_DATADIR],"$prefix/share/xpilot")
 
 
@@ -105,22 +105,6 @@ AC_CHECK_LIB(expat, XML_ParserCreate)
 if test x$ac_cv_lib_expat_XML_ParserCreate != xyes; then
         AC_MSG_ERROR([*** Required library Expat not found!])
 fi  
-
-AC_PATH_X
-AC_PATH_XTRA
-if test x$no_x == xyes; then
-	AC_MSG_ERROR([*** Couldn't find X headers or libraries!])
-fi
-
-dnl kps - Hack to link with libXext if DBE or MBX is configured
-if test x$enable_dbe = xyes || test x$enable_mbx = xyes; then
-	X_EXTENSIONS_LIB="-lXext"
-else
-	X_EXTENSIONS_LIB=
-fi
-AC_SUBST(X_EXTENSIONS_LIB)
-
-
 
 dnl  Checks for header files.
 dnl AC_HEADER_STDC
@@ -258,8 +242,6 @@ AC_CONFIG_FILES([ \
 	src/Makefile \
 	src/common/Makefile \
 	src/common/version.h \
-	src/client/Makefile \
-	src/client/items/Makefile \
 	src/server/Makefile \
 	])
 AC_OUTPUT

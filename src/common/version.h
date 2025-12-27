@@ -26,9 +26,9 @@
 #ifndef	VERSION_H
 #define	VERSION_H
 
-#define TITLE			"XPilot 1.3.7fxi"
+#define TITLE			"XPilot 1.3.8fxi"
 #ifndef VERSION
-#  define VERSION		"1.3.7fxi"
+#  define VERSION		"1.3.8fxi"
 #endif
 #define AUTHORS			"Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Coppa"
 #define COPYRIGHT		"Copyright © 1991-2007 by Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Coppa"
