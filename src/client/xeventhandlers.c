@@ -1,4 +1,4 @@
-/* $Id: xeventhandlers.c,v 1.1.1.1 2007/01/21 16:41:08 kps Exp $
+/* $Id: xeventhandlers.c,v 1.2 2007/06/03 21:12:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -74,7 +74,7 @@ extern void Pointer_control_set_state(int onoff); /* xevent.c */
 extern int	initialPointerControl;
 extern bool	pointerControl;
 extern keys_t	buttonDefs[MAX_POINTER_BUTTONS];
-extern ipos	mouse;		/* position of mouse pointer. */
+extern ipos_t	mouse;		/* position of mouse pointer. */
 extern int	movement;	/* horizontal mouse movement. */
 
 #ifndef _WINDOWS

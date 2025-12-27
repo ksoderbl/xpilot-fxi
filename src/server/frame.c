@@ -1,4 +1,4 @@
-/* $Id: frame.c,v 1.7 2007/03/08 20:32:00 kps Exp $
+/* $Id: frame.c,v 1.3 2007/06/03 21:12:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -49,9 +49,9 @@ extern int frame_cycle;
  *	(world.x >= realWorld.x && world.y >= realWorld.y)
  */
 typedef struct {
-    position	world;			/* Lower left hand corner is this */
+    position_t	world;			/* Lower left hand corner is this */
 					/* world coordinate */
-    position	realWorld;		/* If the player is on the edge of
+    position_t	realWorld;		/* If the player is on the edge of
 					   the screen, these are the world
 					   coordinates before adjustment... */
 } pixel_visibility_t;
@@ -61,8 +61,8 @@ typedef struct {
  * Used for map state info updating.
  */
 typedef struct {
-    ipos		world;
-    ipos		realWorld;
+    ipos_t		world;
+    ipos_t		realWorld;
 } block_visibility_t;
 
 typedef struct {
@@ -97,8 +97,6 @@ static unsigned		debris_num[DEBRIS_TYPES],
 static debris_t		*fastshot_ptr[DEBRIS_TYPES * 2];
 static unsigned		fastshot_num[DEBRIS_TYPES * 2],
 			fastshot_max[DEBRIS_TYPES * 2];
-int intGameSpeed;
-DFLOAT gameSpeed;
 
 /*
  * Macro to make room in a given dynamic array for new elements.
@@ -292,7 +290,7 @@ static void Frame_radar_buffer_free(void)
 static int Frame_status(int conn, int ind)
 {
     static char		mods[MAX_CHARS];
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     int			n,
 			lock_ind,
 			lock_id = -1,
@@ -354,7 +352,7 @@ static int Frame_status(int conn, int ind)
 
 static void Frame_map(int conn, int ind)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     int			i,
 			x,
 			y,
@@ -433,9 +431,9 @@ static void Frame_shuffle(void)
 
 static void Frame_shots(int conn, int ind)
 {
-    player			*pl = Players[ind];
+    player_t			*pl = Players[ind];
     int				i, color, x, y, fuzz = 0, teamshot;
-    object			*shot;
+    object_t			*shot;
 
     for (i = 0; i < NumObjs; i++) {
 	shot = Obj[object_shuffle[i]];
@@ -537,7 +535,7 @@ static void Frame_shots(int conn, int ind)
 
 static void Frame_ships(int conn, int ind)
 {
-    player			*pl = Players[ind],
+    player_t			*pl = Players[ind],
 				*pl_i;
     int				i, k;
     int                         pl_posx, pl_posy, ball_posx, ball_posy;
@@ -625,8 +623,8 @@ static void Frame_ships(int conn, int ind)
 static void Frame_radar(int conn, int ind)
 {
     int			i, mask, s;
-    player		*pl = Players[ind];
-    object		*shot;
+    player_t		*pl = Players[ind];
+    object_t		*shot;
     DFLOAT		x, y;
 
     if (playersOnRadar || BIT(World.rules->mode, TEAM_PLAY)) {
@@ -663,7 +661,7 @@ static void Frame_radar(int conn, int ind)
 
 static void Frame_parameters(int conn, int ind)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
 
     Get_display_parameters(conn, &view_width, &view_height,
 			   &debris_colors, &spark_rand);
@@ -709,7 +707,7 @@ static inline double timeval_to_seconds(struct timeval tv)
 void Frame_update(void)
 {
     int			i, conn, ind, player_fps;
-    player		*pl;
+    player_t		*pl;
     struct timeval tv1;
     if (++frame_loops >= LONG_MAX)	/* Used for misc. timing purposes */
 	frame_loops = 0;
@@ -817,7 +815,7 @@ void Frame_update(void)
 
 void Set_message(const char *message)
 {
-    player		*pl;
+    player_t		*pl;
     int			i;
     const char		*msg;
     char		tmp[MSG_LEN];
@@ -841,7 +839,7 @@ void Set_message(const char *message)
     }
 }
 
-void Set_player_message(player *pl, const char *message)
+void Set_player_message(player_t *pl, const char *message)
 {
     int			i;
     const char		*msg;

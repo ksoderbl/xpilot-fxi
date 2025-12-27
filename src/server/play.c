@@ -1,4 +1,4 @@
-/* $Id: play.c,v 1.2 2007/03/06 18:30:29 kps Exp $
+/* $Id: play.c,v 1.4 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -34,6 +34,7 @@
 #include "proto.h"
 #include "score.h"
 #include "objpos.h"
+#include "rank.h"
 
 char play_version[] = VERSION;
 
@@ -44,7 +45,7 @@ int Punish_team(int ind, int t_destroyed, int t_target)
     static char		msg[MSG_LEN];
     treasure_t		*td = &World.treasures[t_destroyed];
     treasure_t		*tt = &World.treasures[t_target];
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     int			i;
     int			win_score = 0,lose_score = 0;
     int			win_team_members = 0, lose_team_members = 0;
@@ -60,8 +61,7 @@ int Punish_team(int ind, int t_destroyed, int t_target)
 	    if ((BIT(Players[i]->status, PAUSE)
 		 && Players[i]->count <= 0)
 		|| (BIT(Players[i]->status, GAME_OVER)
-		    && Players[i]->mychar == 'W'
-		    && Players[i]->score == 0)) {
+		    && Players[i]->mychar == 'W')) {
 		continue;
 	    }
 	    if (Players[i]->team == td->team) {
@@ -94,26 +94,19 @@ int Punish_team(int ind, int t_destroyed, int t_target)
 	if ((BIT(Players[i]->status, PAUSE)
 	     && Players[i]->count <= 0)
 	    || (BIT(Players[i]->status, GAME_OVER)
-		&& Players[i]->mychar == 'W'
-		&& Players[i]->score == 0)) {
+		&& Players[i]->mychar == 'W')) {
 	    continue;
 	}
 	if (Players[i]->team == td->team) {
 	    SCORE(i, -sc, tt->pos.x, tt->pos.y,
 		  "Treasure: ");
 	    Rank_lost_ball(Players[i]);
-	    if (treasureKillTeam)
-		SET_BIT(Players[i]->status, KILLED);
 	}
 	else if (Players[i]->team == tt->team &&
 		 (Players[i]->team != TEAM_NOT_SET || i == ind)) {
 	    SCORE(i, (i == ind ? 3*por : 2*por), tt->pos.x, tt->pos.y,
 		  "Treasure: ");
 	}
-    }
-
-    if (treasureKillTeam) {
-	Rank_add_kill(Players[ind]);
     }
 
     updateScores = true;
@@ -143,7 +136,7 @@ void Make_debris(
     /* min,max life   */ int    min_life,   int    max_life
 )
 {
-    object		*debris;
+    object_t		*debris;
     int			i, num_debris, life;
 
     cx = WRAP_XCLICK(cx);
@@ -153,7 +146,7 @@ void Make_debris(
     }
     if (max_life < min_life)
 	max_life = min_life;
-    if (ShotsLife >= FPS) {
+    if (ShotsLife >= intGameSpeed) {
 	if (min_life > ShotsLife) {
 	    min_life = ShotsLife;
 	    max_life = ShotsLife;

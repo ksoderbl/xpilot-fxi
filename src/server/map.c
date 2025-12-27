@@ -1,4 +1,4 @@
-/* $Id: map.c,v 1.1.1.1 2007/01/21 16:41:19 kps Exp $
+/* $Id: map.c,v 1.2 2007/06/03 21:12:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -131,8 +131,8 @@ static void Alloc_map(void)
     if (World.block == NULL || World.itemID == NULL) {
 	Free_map();
 	error("Couldn't allocate memory for map (%d bytes)",
-	      World.x * (World.y * (sizeof(unsigned char) + sizeof(vector))
-			 + sizeof(vector*)
+	      World.x * (World.y * (sizeof(unsigned char) + sizeof(vector_t))
+			 + sizeof(vector_t*)
 			 + sizeof(unsigned char*)));
 	exit(-1);
     } else {

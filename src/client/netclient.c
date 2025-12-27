@@ -1,5 +1,5 @@
 #include <time.h>
-/* $Id: netclient.c,v 1.1.1.1 2007/01/21 16:40:57 kps Exp $
+/* $Id: netclient.c,v 1.2 2007/06/03 21:12:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -22,16 +22,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
-
-#ifdef	_WINDOWS
-#include "NT/winclient.h"
-#include "NT/winNet.h"
-#include "NT/winAudio.h"
-#include "NT/winX.h"
-#include "NT/winXThread.h"
-#include "NT/winXXPilot.h"
-#endif
 
 #include "types.h"
 
@@ -2378,7 +2368,7 @@ int Send_keyboard(u_byte *keyboard_vector)
 
 int Send_shape(char *str)
 {
-    wireobj		*w;
+    shipshape_t		*w;
     char		buf[MSG_LEN], ext[MSG_LEN];
 
     w = Convert_shape_str(str);

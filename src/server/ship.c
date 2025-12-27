@@ -1,4 +1,4 @@
-/* $Id: ship.c,v 1.2 2007/03/06 18:30:29 kps Exp $
+/* $Id: ship.c,v 1.3 2007/06/03 21:12:47 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -45,7 +45,7 @@ char ship_version[] = VERSION;
 
 void Thrust(int ind)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     const int		min_dir = (int)(pl->dir + RES/2 - RES*0.2 - 1);
     const int		max_dir = (int)(pl->dir + RES/2 + RES*0.2 + 1);
     const DFLOAT	max_speed = 1 + (pl->power * 0.14);
@@ -97,7 +97,7 @@ void Thrust(int ind)
 	);
 }
 
-void Record_shove(player *pl, player *pusher, long time)
+void Record_shove(player_t *pl, player_t *pusher, long time)
 {
     shove_t		*shove = &pl->shove_record[pl->shove_next];
 
@@ -109,7 +109,7 @@ void Record_shove(player *pl, player *pusher, long time)
 }
 
 /* Calculates the effect of a collision between two objects */
-void Delta_mv(object *ship, object *obj)
+void Delta_mv(object_t *ship, object_t *obj)
 {
     DFLOAT	vx, vy, m;
 
@@ -119,8 +119,8 @@ void Delta_mv(object *ship, object *obj)
     if (ship->type == OBJ_PLAYER
 	&& obj->id != -1
 	&& BIT(obj->status, COLLISIONSHOVE)) {
-	player *pl = (player *)ship;
-	player *pusher = Players[GetInd[obj->id]];
+	player_t *pl = (player_t *)ship;
+	player_t *pusher = Players[GetInd[obj->id]];
 	if (pusher != pl) {
 	    Record_shove(pl, pusher, frame_loops);
 	}
@@ -134,7 +134,7 @@ void Delta_mv(object *ship, object *obj)
 
 /* took the inelastic ballpopper from ng-465 -pgm */
 
-void Obj_repel(object *ship, object *obj2, int repel_dist)
+void Obj_repel(object_t *ship, object_t *obj2, int repel_dist)
 {
   DFLOAT              xd, yd,
                       dvx1, dvy1,
@@ -151,16 +151,16 @@ void Obj_repel(object *ship, object *obj2, int repel_dist)
     dvy2 = dvy1;
 
     if (ship->type == OBJ_PLAYER && obj2->id != -1) {
-        player *pl = (player *)ship;
-        player *pusher = Players[GetInd[obj2->id]];
+        player_t *pl = (player_t *)ship;
+        player_t *pusher = Players[GetInd[obj2->id]];
         if (pusher != pl) {
             Record_shove(pl, pusher, frame_loops);
         }
     }
 
     if (obj2->type == OBJ_PLAYER && ship->id != -1) {
-        player *pl = (player *)obj2;
-        player *pusher = Players[GetInd[ship->id]];
+        player_t *pl = (player_t *)obj2;
+        player_t *pusher = Players[GetInd[ship->id]];
         if (pusher != pl) {
             Record_shove(pl, pusher, frame_loops);
         }
@@ -292,7 +292,7 @@ void Make_wreckage(
     /* min,max life     */ int    min_life,     int    max_life
 )
 {
-    object		*wreckage;
+    object_t		*wreckage;
     int			i, life, size;
     DFLOAT		mass, sum_mass = 0.0;
 
@@ -306,7 +306,7 @@ void Make_wreckage(
     }
     if (max_life < min_life)
 	max_life = min_life;
-    if (ShotsLife >= FPS) {
+    if (ShotsLife >= intGameSpeed) {
 	if (min_life > ShotsLife) {
 	    min_life = ShotsLife;
 	    max_life = ShotsLife;
@@ -389,7 +389,7 @@ void Make_wreckage(
 /* Explode a fighter */
 void Explode_fighter(int ind)
 {
-    player *pl = Players[ind];
+    player_t *pl = Players[ind];
     int min_debris, max_debris;
 
     min_debris = (int)(1 + (pl->fuel.sum / (8.0 * FUEL_SCALE_FACT)));

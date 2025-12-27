@@ -1,4 +1,4 @@
-/* $Id: tuner.c,v 1.3 2007/03/03 11:28:46 kps Exp $
+/* $Id: tuner.c,v 1.2 2007/06/02 14:48:54 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -90,42 +90,6 @@ void tuner_minrobots(void)
 
     if (maxRobots < minRobots) {
 	maxRobots = minRobots;
-    }
-}
-
-void tuner_playershielding(void)
-{
-    int i;
-
-    Set_world_rules();
-
-    if (playerShielding) {
-	SET_BIT(DEF_HAVE, OBJ_SHIELD);
-
-	for (i = 0; i < NumPlayers; i++) {
-	    if (!BIT(Players[i]->used, OBJ_SHOT))
-		SET_BIT(Players[i]->used, OBJ_SHIELD);
-
-	    SET_BIT(Players[i]->have, OBJ_SHIELD);
-	    Players[i]->shield_time = 0;
-	}
-    }
-    else {
-	CLR_BIT(DEF_HAVE, OBJ_SHIELD);
-
-	for (i = 0; i < NumPlayers; i++) {
-	    Players[i]->shield_time = 2 * FPS;
-	    /* 2 seconds to get to safety */
-	}
-    }
-}
-
-void tuner_playerstartsshielded(void)
-{
-    if (playerShielding) {
-	playerStartsShielded = true;	/* Doesn't make sense
-					   to turn off when
-					   shields are on. */
     }
 }
 

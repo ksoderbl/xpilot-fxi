@@ -1,4 +1,4 @@
-/* $Id: objpos.c,v 1.5 2007/03/18 22:08:32 pgma Exp $
+/* $Id: objpos.c,v 1.2 2007/06/03 21:12:47 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -37,7 +37,7 @@ char objpos_version[] = VERSION;
 
 #define TESTING 1
 
-void Object_position_set_clicks(object *obj, int cx, int cy)
+void Object_position_set_clicks(object_t *obj, int cx, int cy)
 {
     struct _objposition		*pos = (struct _objposition *)&obj->pos;
 
@@ -58,7 +58,7 @@ void Object_position_set_clicks(object *obj, int cx, int cy)
 }
 
 
-void Object_position_set_clicks_interpolation(object *obj, int cx, int cy)
+void Object_position_set_clicks_interpolation(object_t *obj, int cx, int cy)
 {
     struct _objposition         *pos = (struct _objposition *)&obj->pos_interp;
 
@@ -79,27 +79,27 @@ void Object_position_set_clicks_interpolation(object *obj, int cx, int cy)
     pos->by = pos->y / BLOCK_SZ;
 }
 
-void Object_position_init_clicks(object *obj, int cx, int cy)
+void Object_position_init_clicks(object_t *obj, int cx, int cy)
 {
     Object_position_set_clicks(obj, cx, cy);
     Object_position_remember(obj);
 }
 
-void Object_position_init_clicks_interpolation(object *obj, int cx, int cy)
+void Object_position_init_clicks_interpolation(object_t *obj, int cx, int cy)
 {
     Object_position_set_clicks_interpolation(obj, cx, cy);
     Object_position_set_clicks(obj, cx, cy);
     Object_position_remember(obj);
 }
 
-void Player_position_restore(player *pl)
+void Player_position_restore(player_t *pl)
 {
     Player_position_set_clicks(pl,
 			       PIXEL_TO_CLICK(pl->prevpos.x),
 			       PIXEL_TO_CLICK(pl->prevpos.y));
 }
 
-void Player_position_set_clicks(player *pl, int cx, int cy)
+void Player_position_set_clicks(player_t *pl, int cx, int cy)
 {
     struct _objposition		*pos = (struct _objposition *)&pl->pos;
 
@@ -120,7 +120,7 @@ void Player_position_set_clicks(player *pl, int cx, int cy)
 }
 
 
-void Player_position_set_clicks_interpolation(player *pl, int cx, int cy)
+void Player_position_set_clicks_interpolation(player_t *pl, int cx, int cy)
 {
     struct _objposition		*pos = (struct _objposition *)&pl->pos_interp;
 
@@ -140,13 +140,13 @@ void Player_position_set_clicks_interpolation(player *pl, int cx, int cy)
     pos->by = pos->y / BLOCK_SZ;
 }
 
-void Player_position_init_clicks(player *pl, int cx, int cy)
+void Player_position_init_clicks(player_t *pl, int cx, int cy)
 {
     Player_position_set_clicks(pl, cx, cy);
     Player_position_remember(pl);
 }
 
-void Player_position_limit(player *pl)
+void Player_position_limit(player_t *pl)
 {
     int			cx = pl->pos.cx, ox = cx;
     int			cy = pl->pos.cy, oy = cy;
@@ -158,7 +158,7 @@ void Player_position_limit(player *pl)
     }
 }
 
-void Player_position_debug(player *pl, const char *msg)
+void Player_position_debug(player_t *pl, const char *msg)
 {
 #if DEVELOPMENT
     int			i;

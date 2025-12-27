@@ -1,7 +1,12 @@
 
+#include <math.h>
+#include <stdio.h>
 #include <time.h> 
 #include <sys/time.h>
+
+#define SERVER
 #include "xpconfig.h"
+#include "proto.h"
 
 #define MEASURE_LOOPS 500
 

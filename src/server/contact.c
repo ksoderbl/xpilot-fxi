@@ -1,4 +1,4 @@
-/* $Id: contact.c,v 1.1.1.1 2007/01/21 16:41:18 kps Exp $
+/* $Id: contact.c,v 1.2 2007/06/02 14:48:54 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -857,7 +857,7 @@ void Queue_loop(void)
     for (qp = qp_list; qp && qp->login_port > 0; ) {
 	next = qp->next;
 
-	if (qp->last_ack_recv + 30 * FPS < main_loops) {
+	if (qp->last_ack_recv + 30 * fps < main_loops) {
 	    Queue_remove(qp, prev);
 	    qp = next;
 	    continue;
@@ -870,7 +870,7 @@ void Queue_loop(void)
 		qp = next;
 		continue;
 	    }
-	    if (qp->last_ack_sent + 2 + (FPS >> 2) < main_loops) {
+	    if (qp->last_ack_sent + 2 + (fps >> 2) < main_loops) {
 		Queue_ack(qp, 0);
 
 		/* don't do too much at once. */
@@ -886,13 +886,13 @@ void Queue_loop(void)
     /* here's a player in the queue without a login port. */
     if (qp) {
 
-	if (qp->last_ack_recv + 30 * FPS < main_loops) {
+	if (qp->last_ack_recv + 30 * fps < main_loops) {
 	    Queue_remove(qp, prev);
 	    return;
 	}
 
 	/* slow down the rate at which players enter the game. */
-	if (last_unqueued_loops + 2 + (FPS >> 2) < main_loops) {
+	if (last_unqueued_loops + 2 + (fps >> 2) < main_loops) {
 
 	    /* is there a homebase available? */
 	    if (NumPlayers - NumPseudoPlayers + login_in_progress < World.NumBases
@@ -952,12 +952,12 @@ void Queue_loop(void)
 
 	qpos++;
 
-	if (qp->last_ack_recv + 30 * FPS < main_loops) {
+	if (qp->last_ack_recv + 30 * fps < main_loops) {
 	    Queue_remove(qp, prev);
 	    return;
 	}
 
-	if (qp->last_ack_sent + 3 * FPS <= main_loops) {
+	if (qp->last_ack_sent + 3 * fps <= main_loops) {
 	    Queue_ack(qp, qpos);
 	    return;
 	}

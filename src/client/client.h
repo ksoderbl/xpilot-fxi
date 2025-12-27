@@ -1,4 +1,4 @@
-/* $Id: client.h,v 1.1.1.1 2007/01/21 16:40:58 kps Exp $
+/* $Id: client.h,v 1.2 2007/06/03 21:12:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -24,17 +24,6 @@
 
 #ifndef CLIENT_H
 #define CLIENT_H
-
-#ifdef	_WINDOWS
-#ifndef	_WINSOCKAPI_
-#include <winsock.h>
-#endif
-
-#ifndef	_WINX_H_
-#include "NT/winX.h"
-#endif
-#endif
-
 
 #ifndef DRAW_H
 /* need wireobj */
@@ -116,7 +105,7 @@ typedef struct {
     short	war_id;
     short	name_width;	/* In pixels */
     short	name_len;	/* In bytes */
-    wireobj	*ship;
+    shipshape_t	*ship;
     char	name[MAX_CHARS];
     char	real[MAX_CHARS];
     char	host[MAX_CHARS];
@@ -198,10 +187,10 @@ typedef struct {
 } selection_t;
 
 
-extern ipos	pos;
-extern ipos	vel;
-extern ipos	world;
-extern ipos	realWorld;
+extern ipos_t	pos;
+extern ipos_t	vel;
+extern ipos_t	world;
+extern ipos_t	realWorld;
 extern short	heading;
 extern short	nextCheckPoint;
 extern u_byte	numItems[NUM_ITEMS];
@@ -315,7 +304,7 @@ int Handle_base(int id, int ind);
 int Check_pos_by_index(int ind, int *xp, int *yp);
 int Check_index_by_pos(int x, int y);
 other_t *Other_by_id(int id);
-wireobj *Ship_by_id(int id);
+shipshape_t *Ship_by_id(int id);
 int Handle_leave(int id);
 int Handle_player(int id, int team, int mychar, char *player_name,
 		  char *real_name, char *host_name, char *shape);

@@ -1,4 +1,4 @@
-/* $Id: objpos.h,v 1.3 2007/03/08 19:47:12 kps Exp $
+/* $Id: objpos.h,v 1.3 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -24,13 +24,16 @@
 #ifndef OBJPOS_H
 #define OBJPOS_H
 
-void Object_position_set_clicks(object *obj, int cx, int cy);
-void Object_position_init_clicks(object *obj, int cx, int cy);
-void Player_position_restore(player *pl);
-void Player_position_set_clicks(player *pl, int cx, int cy);
-void Player_position_init_clicks(player *pl, int cx, int cy);
-void Player_position_limit(player *pl);
-void Player_position_debug(player *pl, const char *msg);
+void Object_position_set_clicks(object_t *obj, int cx, int cy);
+void Object_position_set_clicks_interpolation(object_t *obj, int cx, int cy);
+void Object_position_init_clicks(object_t *obj, int cx, int cy);
+void Object_position_init_clicks_interpolation(object_t *obj, int cx, int cy);
+void Player_position_restore(player_t *pl);
+void Player_position_set_clicks(player_t *pl, int cx, int cy);
+void Player_position_set_clicks_interpolation(player_t *pl, int cx, int cy);
+void Player_position_init_clicks(player_t *pl, int cx, int cy);
+void Player_position_limit(player_t *pl);
+void Player_position_debug(player_t *pl, const char *msg);
 
 #define Object_position_remember(o_) \
 	((o_)->prevpos.x = (o_)->pos.x, \

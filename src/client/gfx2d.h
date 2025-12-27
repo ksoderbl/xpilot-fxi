@@ -1,4 +1,4 @@
-/* $Id: gfx2d.h,v 1.1.1.1 2007/01/21 16:41:09 kps Exp $
+/* $Id: gfx2d.h,v 1.1.1.1 2007/05/20 21:59:14 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

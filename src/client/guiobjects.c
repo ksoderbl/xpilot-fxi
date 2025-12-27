@@ -1,4 +1,4 @@
-/* $Id: guiobjects.c,v 1.1.1.1 2007/01/21 16:40:56 kps Exp $
+/* $Id: guiobjects.c,v 1.2 2007/06/03 21:12:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -63,7 +63,7 @@ char guiobjects_version[] = VERSION;
 
 extern setup_t		*Setup;
 
-extern position *wreckageShapes[NUM_WRECKAGE_SHAPES][NUM_WRECKAGE_POINTS];
+extern position_t *wreckageShapes[NUM_WRECKAGE_SHAPES][NUM_WRECKAGE_POINTS];
 
 extern XGCValues	gcv;
 
@@ -549,7 +549,7 @@ int Gui_calculate_ship_color(int id, other_t *other)
 }
 
 
-void Gui_paint_marking_lights(int id, int x, int y, wireobj *ship, int dir)
+void Gui_paint_marking_lights(int id, int x, int y, shipshape_t *ship, int dir)
 {
     int lcnt;
 
@@ -699,7 +699,7 @@ void Set_drawstyle_dashed(int ship_color, int cloak)
 }
 
 
-int set_shipshape(int x, int y, int dir, wireobj *ship, XPoint *points)
+int set_shipshape(int x, int y, int dir, shipshape_t *ship, XPoint *points)
 {
     int cnt;
     for (cnt = 0; cnt < ship->num_points; cnt++) {
@@ -717,7 +717,7 @@ void Gui_paint_ship(int x, int y, int dir, int id, int cloak, int phased,
 {
     int			cnt, ship_color;
     other_t		*other;
-    wireobj		*ship;
+    shipshape_t		*ship;
     XPoint		points[64];
 
     ship = Ship_by_id(id);

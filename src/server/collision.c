@@ -1,4 +1,4 @@
-/* $Id: collision.c,v 1.2 2007/03/11 16:28:36 kps Exp $
+/* $Id: collision.c,v 1.3 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -39,6 +39,7 @@
 #include "pack.h"
 #include "error.h"
 #include "objpos.h"
+#include "rank.h"
 
 char collision_version[] = VERSION;
 
@@ -157,8 +158,8 @@ inline int in_range_acd(int p1x, int p1y, int p2x, int p2y,
 extern long KILLING_SHOTS;
 static char msg[MSG_LEN];
 
-static object ***Cells;
-static object **CellsUsed[MAX_TOTAL_SHOTS];
+static object_t ***Cells;
+static object_t **CellsUsed[MAX_TOTAL_SHOTS];
 static int cells_used_count;
 
 
@@ -180,18 +181,18 @@ void Free_cells(void)
 void Alloc_cells(void)
 {
     unsigned		size;
-    object		**objp;
+    object_t		**objp;
     int			x, y;
 
     Free_cells();
 
-    size = sizeof(object ***) * World.x;
-    size += sizeof(object **) * World.x * World.y;
-    if (!(Cells = (object ***) malloc(size))) {
+    size = sizeof(object_t ***) * World.x;
+    size += sizeof(object_t **) * World.x * World.y;
+    if (!(Cells = (object_t ***) malloc(size))) {
 	error("No Cell mem");
 	End_game();
     }
-    objp = (object **) &Cells[World.x];
+    objp = (object_t **) &Cells[World.x];
     for (x = 0; x < World.x; x++) {
 	Cells[x] = objp;
 	for (y = 0; y < World.y; y++) {
@@ -206,7 +207,7 @@ static void Cell_objects_init(void)
     int			i,
 			x,
 			y;
-    object		*obj,
+    object_t		*obj,
 			**cell;
 
     for (i = 0; i < cells_used_count; i++) {
@@ -229,13 +230,13 @@ static void Cell_objects_init(void)
 }
 
 
-static void Cell_objects_get(int x, int y, int r, object ***list, int *count)
+static void Cell_objects_get(int x, int y, int r, object_t ***list, int *count)
 {
-    static object	*ObjectList[MAX_TOTAL_SHOTS + 1];
+    static object_t	*ObjectList[MAX_TOTAL_SHOTS + 1];
     int			i,
 			minx, maxx, miny, maxy,
 			xr, yr, xw, yw;
-    object		*obj;
+    object_t		*obj;
 
     if (BIT(World.rules->mode, WRAP_PLAY)) {
 	if (2*r > World.x) {
@@ -304,7 +305,7 @@ static void Cell_objects_get(int x, int y, int r, object ***list, int *count)
 
 void SCORE(int ind, int points, int x, int y, const char *msg)
 {
-    player	*pl = Players[ind];
+    player_t	*pl = Players[ind];
 
     pl->score += (points);
     
@@ -366,7 +367,7 @@ void Check_collision(void)
 static void PlayerCollision(void)
 {
     int			i, j, sc, sc2;
-    player		*pl;
+    player_t		*pl;
 
     /* Player - player, checkpoint, treasure, object and wall */
     for (i=0; i<NumPlayers; i++) {
@@ -428,7 +429,7 @@ static void PlayerCollision(void)
 		if (BIT(Players[j]->used, OBJ_SHIELD) != OBJ_SHIELD)
 		  Add_fuel(&(Players[j]->fuel), (long)ED_PL_CRASH);
 		
-		Obj_repel((object *)pl, (object *)Players[j],
+		Obj_repel((object_t *)pl, (object_t *)Players[j],
 			  2*SHIP_SZ);
 	      }
 	      if (!BIT(World.rules->mode, CRASH_WITH_PLAYER)) {
@@ -502,7 +503,7 @@ static void PlayerCollision(void)
 	    pl->ball = NULL;
 	}
 	else if (pl->ball != NULL) {
-	    object *ball = pl->ball;
+	    object_t *ball = pl->ball;
 	    if (ball->life <= 0 || ball->id != -1){
 	      pl->ball = NULL;
 	    }
@@ -536,7 +537,7 @@ static void PlayerCollision(void)
 		    dist = Wrap_length(pl->pos.x - Obj[j]->pos.x,
 				       pl->pos.y - Obj[j]->pos.y);
 		    if (dist < mindist) {
-			object *ball = Obj[j];
+			object_t *ball = Obj[j];
 			int bteam = -1;
 
 			if (ball->treasure != -1)
@@ -567,8 +568,8 @@ static void PlayerCollision(void)
 static void PlayerObjectCollision(int ind)
 {
     int		j, killer, range, radius, sc, hit, obj_count;
-    player	*pl = Players[ind];
-    object	*obj, **obj_list;
+    player_t	*pl = Players[ind];
+    object_t	*obj, **obj_list;
     DFLOAT   	rel_velocity;
 
     /*
@@ -640,7 +641,7 @@ static void PlayerObjectCollision(int ind)
 	     * be destroyed. 
 	     * This was a bug; balls should be popped even with shields on -pgm
 	     */
-	    Obj_repel((object *)pl, obj, radius);
+	    Obj_repel((object_t *)pl, obj, radius);
 	    Add_fuel(&(pl->fuel), (long)ED_BALL_HIT);
 	    if (treasureCollisionDestroys) {
 	      obj->life = 0;
@@ -722,7 +723,7 @@ static void PlayerObjectCollision(int ind)
 	}
 
 	obj->life = 0;
-	if (hit) Delta_mv((object *)pl, (object *)obj);
+	if (hit) Delta_mv((object_t *)pl, (object_t *)obj);
 
 	if (!BIT(obj->type, KILLING_SHOTS))
 	    continue;
@@ -775,7 +776,7 @@ static void PlayerObjectCollision(int ind)
 			      OBJ_Y_IN_BLOCKS(pl),
 			      Players[killer]->name);
 		    } else {
-			Rank_add_kill(killer);
+			Rank_add_kill(Players[killer]);
 			sc = (int)floor(Rate(Players[killer]->score, pl->score));
 			Score_players(killer, sc, pl->name,
 				      ind, -sc, Players[killer]->name);

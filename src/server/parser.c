@@ -1,4 +1,4 @@
-/* $Id: parser.c,v 1.1.1.1 2007/01/21 16:41:27 kps Exp $
+/* $Id: parser.c,v 1.3 2007/06/03 21:12:47 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -84,9 +84,6 @@ static void Parse_help(char *progname)
 	       options[j].type == valInt ? "<integer>" :
 	       options[j].type == valReal ? "<real>" :
 	       options[j].type == valString ? "<string>" :
-	       options[j].type == valIPos ? "<position>" :
-	       options[j].type == valSec ? "<seconds>" :
-	       options[j].type == valPerSec ? "<per-second>" :
 	       options[j].type == valList ? "<list>" :
 	       "");
 	for (str = options[j].helpLine; *str; str++) {
@@ -263,26 +260,13 @@ int Parser_list_option(int *index, char *buf)
 	sprintf(buf, "%s:%d", options[i].name,
 		*(int *)options[i].variable);
 	break;
-    case valSec:
-	sprintf(buf, "%s:%d", options[i].name,
-		*(int *)options[i].variable / FPS);
-	break;
     case valReal:
 	sprintf(buf, "%s:%g", options[i].name,
 		*(DFLOAT *)options[i].variable);
 	break;
-    case valPerSec:
-	sprintf(buf, "%s:%g", options[i].name,
-		*(DFLOAT *)options[i].variable * FPS);
-	break;
     case valBool:
 	sprintf(buf, "%s:%s", options[i].name,
 		*(bool *)options[i].variable ? "yes" : "no");
-	break;
-    case valIPos:
-	sprintf(buf, "%s:%d,%d", options[i].name,
-		((ipos *)options[i].variable)->x,
-		((ipos *)options[i].variable)->y);
 	break;
     case valString:
 	sprintf(buf, "%s:%s", options[i].name,
@@ -522,20 +506,6 @@ int Tune_option(char *name, char *val)
 	*(DFLOAT *)opt->variable = fval;
 	(*opt->tuner)();
 	return 1;
-    case valSec:
-	if (Convert_string_to_int(val, &ival) != TRUE) {
-	    return 0;
-	}
-	*(int *)opt->variable = ival * FPS;
-	(*opt->tuner)();
-	return 1;
-    case valPerSec:
-	if (Convert_string_to_float(val, &fval) != TRUE) {
-	    return 0;
-	}
-	*(DFLOAT *)opt->variable = fval / FPS;
-	(*opt->tuner)();
-	return 1;
     case valString:
 	{
 	    char *s = xp_strdup(val);
@@ -585,16 +555,6 @@ int Get_option_value(const char *name, char *value, unsigned size)
 	    return -4;
 	strlcpy(value, *((char **)opt->variable), size);
 	break;
-    case valSec:
-	sprintf(value, "%d", *((int *)opt->variable) / FPS);
-	break;
-    case valPerSec:
-	sprintf(value, "%g", *((DFLOAT *)opt->variable) * FPS);
-	break;
-    case valIPos:
-	sprintf(value, "%d, %d",
-		((ipos *)opt->variable)->x,
-		((ipos *)opt->variable)->y);
     default:
 	return -1;	/* Generic error. */
     }

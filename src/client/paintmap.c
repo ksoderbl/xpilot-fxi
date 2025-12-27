@@ -1,4 +1,4 @@
-/* $Id: paintmap.c,v 1.1.1.1 2007/01/21 16:41:03 kps Exp $
+/* $Id: paintmap.c,v 1.1.1.1 2007/05/20 21:59:16 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

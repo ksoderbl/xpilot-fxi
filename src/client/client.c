@@ -1,4 +1,4 @@
-/* $Id: client.c,v 1.1.1.1 2007/01/21 16:40:57 kps Exp $
+/* $Id: client.c,v 1.2 2007/06/03 21:12:43 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -22,23 +22,13 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
-#ifdef	_WINDOWS
-#include "NT/winClient.h"
-#else
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-
-#if defined(__hpux)
-#include <time.h>
-#else
 #include <sys/time.h>
-#endif
-#endif	/* _WINDOWS */
 
 #include "version.h"
 #include "config.h"
@@ -64,10 +54,10 @@ int			scoresChanged = 0;
 int			RadarHeight = 0;
 int			RadarWidth = 256;	/* must always be 256! */
 
-ipos	pos;
-ipos	vel;
-ipos	world;
-ipos	realWorld;
+ipos_t	pos;
+ipos_t	vel;
+ipos_t	world;
+ipos_t	realWorld;
 short	heading;
 short	nextCheckPoint;
 
@@ -979,7 +969,7 @@ other_t *Other_by_id(int id)
     return NULL;
 }
 
-wireobj *Ship_by_id(int id)
+shipshape_t *Ship_by_id(int id)
 {
     other_t		*other;
 

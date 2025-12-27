@@ -49,7 +49,7 @@
 **	Indentation.
 **	No typedefs in external interface.
 **
-** $Id: randommt.c,v 1.1.1.1 2007/01/21 16:41:14 kps Exp $
+** $Id: randommt.c,v 1.1.1.1 2007/05/20 21:59:11 kps Exp $
 */
 
 /*

@@ -1,4 +1,4 @@
-/* $Id: walls.c,v 1.10 2007/03/15 21:04:04 pgma Exp $
+/* $Id: walls.c,v 1.4 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -42,6 +42,7 @@
 #include "walls.h"
 #include "click.h"
 #include "objpos.h"
+#include "rank.h"
 
 char walls_version[] = VERSION;
 extern int frame_cycle;
@@ -53,7 +54,7 @@ extern int frame_cycle;
 unsigned SPACE_BLOCKS = (SPACE_BIT | BASE_BIT);
 
 static struct move_parameters mp;
-static DFLOAT wallBounceExplosionMult;
+/*static DFLOAT wallBounceExplosionMult;*/
 static char msg[MSG_LEN];
 
 /*
@@ -205,14 +206,9 @@ void Move_init(void)
     LIMIT(maxObjectWallBounceSpeed, 0, World.hypotenuse);
     LIMIT(maxShieldedWallBounceSpeed, 0, World.hypotenuse);
     LIMIT(maxUnshieldedWallBounceSpeed, 0, World.hypotenuse);
-    LIMIT(maxShieldedWallBounceAngle, 0, 180);
-    LIMIT(maxUnshieldedWallBounceAngle, 0, 180);
     LIMIT(playerWallBrakeFactor, 0, 1);
     LIMIT(objectWallBrakeFactor, 0, 1);
     LIMIT(objectWallBounceLifeFactor, 0, 1);
-
-    mp.max_shielded_angle = (int)(maxShieldedWallBounceAngle * RES / 360);
-    mp.max_unshielded_angle = (int)(maxUnshieldedWallBounceAngle * RES / 360);
 
     mp.obj_bounce_mask = 0;
     if (sparksWallBounce) {
@@ -336,7 +332,7 @@ static void Bounce_wall(move_state_t *ms, move_bounce_t bounce)
     }
     else {
 	clvec_t t = ms->todo;
-	vector v = ms->vel;
+	vector_t v = ms->vel;
 	if (bounce == BounceLeftDown) {
 	    ms->todo.cx = -t.cy;
 	    ms->todo.cy = -t.cx;
@@ -402,9 +398,9 @@ static void Move_segment(move_state_t *ms)
     int			inside;		/* inside the block or else on edge */
     int			need_adjust;	/* other param (x or y) needs recalc */
     unsigned		wall_bounce;	/* are we bouncing? what direction? */
-    ipos		block;		/* block index */
-    ipos		blk2;		/* new block index */
-    ivec		sign;		/* sign (-1 or 1) of direction */
+    ipos_t		block;		/* block index */
+    ipos_t		blk2;		/* new block index */
+    ivec_t		sign;		/* sign (-1 or 1) of direction */
     clpos_t		delta;		/* delta position in clicks */
     clpos_t		enter;		/* enter block position in clicks */
     clpos_t		leave;		/* leave block position in clicks */
@@ -653,7 +649,7 @@ static void Move_segment(move_state_t *ms)
 		     * exploding and gets the player some points.  Otherwise
 		     * nothing interesting happens.
 		     */
-		    player	*pl = NULL;
+		    player_t	*pl = NULL;
 		    treasure_t	*tt = &World.treasures[ms->treasure];
 
 		    if (mi->obj->owner != -1)
@@ -690,7 +686,7 @@ static void Move_segment(move_state_t *ms)
 		if ((World.treasures[ms->treasure].team ==
 		    Players[GetInd[mi->obj->owner]]->team) &&
 		    (mi->obj->life != 0)){
-		  player *pl = NULL, *pl2 = NULL;
+		  player_t *pl = NULL, *pl2 = NULL;
 		  int n, enemies = 0;
 		  pl = Players[GetInd[mi->obj->owner]];
 
@@ -1191,7 +1187,7 @@ static void Move_segment(move_state_t *ms)
 
 static void Object_crash(move_state_t *ms)
 {
-    object		*obj = ms->mip->obj;
+    object_t		*obj = ms->mip->obj;
 
     switch (ms->crash) {
 
@@ -1224,7 +1220,7 @@ static void Object_crash(move_state_t *ms)
 
 void Move_object(int ind)
 {
-    object		*obj = Obj[ind];
+    object_t		*obj = Obj[ind];
     int			nothing_done = 0;
     int			dist;
     move_info_t		mi;
@@ -1336,13 +1332,13 @@ void Move_object(int ind)
 
 void Move_object_interpolation(int ind)
 {
-    object		*obj = Obj[ind];
+    object_t		*obj = Obj[ind];
     int			nothing_done = 0;
     int			dist;
     move_info_t		mi;
     move_state_t	ms;
     bool		pos_update = false;
-    float               speedfactor = 1.0/frameDivisor;
+    float               speedfactor = ticksPerFrame;
     
     dist = walldist[obj->pos_interp.bx][obj->pos_interp.by];
     if (dist > 2) {
@@ -1447,7 +1443,7 @@ void Move_object_interpolation(int ind)
 
 static void Player_crash(move_state_t *ms, int pt, bool turning)
 {
-    player		*pl = ms->mip->pl;
+    player_t		*pl = ms->mip->pl;
     int			ind = GetInd[pl->id];
     const char		*howfmt = NULL;
     const char          *hudmsg = NULL;
@@ -1477,11 +1473,6 @@ static void Player_crash(move_state_t *ms, int pt, bool turning)
 	hudmsg = "[Wall]";
 	break;
 
-    case CrashWallAngle:
-	howfmt = "%s was trashed%s against a wall";
-	hudmsg = "[Wall]";
-	break;
-
     case CrashTreasure:
 	howfmt = "%s smashed%s against a treasure";
 	hudmsg = "[Treasure]";
@@ -1499,7 +1490,7 @@ static void Player_crash(move_state_t *ms, int pt, bool turning)
     }
 
     if (howfmt && hudmsg) {
-	player		*pushers[MAX_RECORDED_SHOVES];
+	player_t		*pushers[MAX_RECORDED_SHOVES];
 	int		cnt[MAX_RECORDED_SHOVES];
 	int		num_pushers = 0;
 	int		total_pusher_count = 0;
@@ -1547,7 +1538,7 @@ static void Player_crash(move_state_t *ms, int pt, bool turning)
 						/ total_pusher_count;
 
 	    for (i = 0; i < num_pushers; i++) {
-		player		*pusher = pushers[i];
+		player_t		*pusher = pushers[i];
 		const char	*sep = (!i) ? " with help from "
 					    : (i < num_pushers - 1) ? ", "
 					    : " and ";
@@ -1589,7 +1580,7 @@ static void Player_crash(move_state_t *ms, int pt, bool turning)
 
 void Move_player(int ind)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     int			nothing_done = 0;
     int			i;
     int			dist;
@@ -1602,10 +1593,10 @@ void Move_player(int ind)
     clpos_t		pos;
     clvec_t		todo;
     clvec_t		done;
-    vector		vel;
-    vector		r[RES];
-    ivec		sign;		/* sign (-1 or 1) of direction */
-    ipos		block;		/* block index */
+    vector_t		vel;
+    vector_t		r[RES];
+    ivec_t		sign;		/* sign (-1 or 1) of direction */
+    ipos_t		block;		/* block index */
     bool		pos_update = false;
 
 
@@ -1641,7 +1632,7 @@ void Move_player(int ind)
     }
 
     mi.pl = pl;
-    mi.obj = (object *) pl;
+    mi.obj = (object_t *) pl;
     mi.edge_wrap = BIT(World.rules->mode, WRAP_PLAY);
     mi.edge_bounce = edgeBounce;
     mi.wall_bounce = true;
@@ -1756,25 +1747,21 @@ void Move_player(int ind)
 	    worst = bounce;
 	    if (ms[worst].bounce != BounceEdge) {
 		DFLOAT	speed = VECTOR_LENGTH(ms[worst].vel);
-		int	v = (int) speed >> 2;
+		/*int	v = (int) speed >> 2;
 		int	m = (int) (pl->mass - pl->emptymass * 0.75f);
 		DFLOAT	b = 1 - 0.5f * playerWallBrakeFactor;
-		long	cost = (long) (b * m * v);
+		long	cost = (long) (b * m * v);*/
 		int	delta_dir,
 			abs_delta_dir,
 			wall_dir;
 		DFLOAT	max_speed = BIT(pl->used, OBJ_SHIELD)
 				    ? maxShieldedWallBounceSpeed
 				    : maxUnshieldedWallBounceSpeed;
-		int	max_angle = BIT(pl->used, OBJ_SHIELD)
-				    ? mp.max_shielded_angle
-				    : mp.max_unshielded_angle;
 
 		if (BIT(pl->used, OBJ_SHIELD) == OBJ_SHIELD) {
 		    if (max_speed < 100) {
 			max_speed = 100;
 		    }
-		    max_angle = RES;
 		}
 
 		ms[worst].vel.x *= playerWallBrakeFactor;
@@ -1809,11 +1796,6 @@ void Move_player(int ind)
 				: -(pl->dir + RES - wall_dir);
 		}
 		abs_delta_dir = ABS(delta_dir);
-		if (abs_delta_dir > max_angle) {
-		    crash = worst;
-		    ms[worst].crash = CrashWallAngle;
-		    break;
-		}
 		if (abs_delta_dir <= RES/16) {
 		    pl->float_dir += (1.0f - playerWallBrakeFactor) * delta_dir;
 		    if (pl->float_dir >= RES) {
@@ -1910,7 +1892,7 @@ void Move_player(int ind)
 
 void Move_player_interpolation(int ind)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     int			nothing_done = 0;
     int			i;
     int			dist;
@@ -1923,12 +1905,12 @@ void Move_player_interpolation(int ind)
     clpos_t		pos;
     clvec_t		todo;
     clvec_t		done;
-    vector		vel;
-    vector		r[RES];
-    ivec		sign;		/* sign (-1 or 1) of direction */
-    ipos		block;		/* block index */
+    vector_t		vel;
+    vector_t		r[RES];
+    ivec_t		sign;		/* sign (-1 or 1) of direction */
+    ipos_t		block;		/* block index */
     bool		pos_update = false;
-    float               speedfactor = 1.0/frameDivisor;
+    float               speedfactor = ticksPerFrame;
 
     if (BIT(pl->status, PLAYING|PAUSE|GAME_OVER|KILLED) != PLAYING) {
 	if (!BIT(pl->status, KILLED|PAUSE)) {
@@ -1966,7 +1948,7 @@ void Move_player_interpolation(int ind)
 
 
     mi.pl = pl;
-    mi.obj = (object *) pl;
+    mi.obj = (object_t *) pl;
     mi.edge_wrap = BIT(World.rules->mode, WRAP_PLAY);
     mi.edge_bounce = edgeBounce;
     mi.wall_bounce = true;
@@ -2084,25 +2066,21 @@ void Move_player_interpolation(int ind)
 
 
 	        DFLOAT	speed = VECTOR_LENGTH(ms[worst].vel);
-		int	v = (int) speed >> 2;
+		/*int	v = (int) speed >> 2;
 		int	m = (int) (pl->mass - pl->emptymass * 0.75f);
 		DFLOAT	b = 1 - 0.5f * playerWallBrakeFactor;
-		long	cost = (long) (b * m * v);
+		long	cost = (long) (b * m * v);*/
 		int	delta_dir,
 			abs_delta_dir,
 			wall_dir;
 		DFLOAT	max_speed = BIT(pl->used, OBJ_SHIELD)
 				    ? maxShieldedWallBounceSpeed
 				    : maxUnshieldedWallBounceSpeed;
-		int	max_angle = BIT(pl->used, OBJ_SHIELD)
-				    ? mp.max_shielded_angle
-				    : mp.max_unshielded_angle;
 
 		if (BIT(pl->used, OBJ_SHIELD) == OBJ_SHIELD) {
 		    if (max_speed < 100) {
 			max_speed = 100;
 		    }
-		    max_angle = RES;
 		}
 
 		ms[worst].vel.x *= playerWallBrakeFactor;
@@ -2137,11 +2115,6 @@ void Move_player_interpolation(int ind)
 				: -(pl->dir + RES - wall_dir);
 		}
 		abs_delta_dir = ABS(delta_dir);
-		if (abs_delta_dir > max_angle) {
-		    crash = worst;
-		    ms[worst].crash = CrashWallAngle;
-		    break;
-		}
 		if (abs_delta_dir <= RES/16) {
 		    pl->float_dir += (1.0f - playerWallBrakeFactor) * delta_dir;
 		    if (pl->float_dir >= RES) {
@@ -2220,7 +2193,7 @@ void Move_player_interpolation(int ind)
 
 void Turn_player(int ind)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     int			i;
     move_info_t		mi;
     move_state_t	ms[RES];
@@ -2232,7 +2205,7 @@ void Turn_player(int ind)
     int			turns_done = 0;
     int			blocked = 0;
     clpos_t		pos;
-    vector		salt;
+    vector_t		salt;
 
     if (new_dir == pl->dir) {
 	return;
@@ -2248,7 +2221,7 @@ void Turn_player(int ind)
     }
 
     mi.pl = pl;
-    mi.obj = (object *) pl;
+    mi.obj = (object_t *) pl;
     mi.edge_wrap = BIT(World.rules->mode, WRAP_PLAY);
     mi.edge_bounce = edgeBounce;
     mi.wall_bounce = true;

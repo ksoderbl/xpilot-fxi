@@ -1,4 +1,4 @@
-/* $Id: player.c,v 1.3 2007/03/08 20:32:00 kps Exp $
+/* $Id: player.c,v 1.4 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -37,6 +37,7 @@
 #include "netserver.h"
 #include "error.h"
 #include "objpos.h"
+#include "rank.h"
 
 char player_version[] = VERSION;
 
@@ -51,7 +52,7 @@ bool            limitedRoundsGameOver = false;
 
 void Pick_startpos(int ind)
 {
-    player	*pl = Players[ind];
+    player_t	*pl = Players[ind];
     int		i, num_free;
     int		pick = 0, seen = 0;
     static int	prev_num_bases = 0;
@@ -128,8 +129,8 @@ void Pick_startpos(int ind)
 
 void Go_home(int ind)
 {
-    player		*pl = Players[ind];
-    int			i, x, y, dir;
+    player_t		*pl = Players[ind];
+    int			x, y, dir;
     DFLOAT		vx, vy, velo;
 
     x = World.base[pl->home_base].pos.x;
@@ -154,7 +155,7 @@ void Go_home(int ind)
     if (playerStartsShielded != 0) {
 	SET_BIT(pl->used, OBJ_SHIELD);
 	if (playerShielding == 0) {
-	    pl->shield_time = 2 * FPS;
+	    pl->shield_time = 2 * intGameSpeed;
 	    SET_BIT(pl->have, OBJ_SHIELD);
 	}
     }
@@ -171,7 +172,7 @@ void Go_home(int ind)
  */
 void Player_add_tank(int ind, long tank_fuel)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     long		tank_cap, add_fuel;
 
     if (pl->fuel.num_tanks < MAX_TANKS) {
@@ -192,7 +193,7 @@ void Player_add_tank(int ind, long tank_fuel)
  */
 void Player_remove_tank(int ind, int which_tank)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     int			i, tank_ind;
     long		tank_fuel, tank_cap;
 
@@ -222,7 +223,7 @@ void Player_remove_tank(int ind, int which_tank)
  */
 static void Player_init_fuel(int ind, long total_fuel)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     long		fuel = total_fuel;
     int			i;
 
@@ -242,9 +243,9 @@ static void Player_init_fuel(int ind, long total_fuel)
     }
 }
 
-int Init_player(int ind, wireobj *ship)
+int Init_player(int ind, shipshape_t *ship)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     bool		too_late = false;
     int			i;
 
@@ -309,7 +310,7 @@ int Init_player(int ind, wireobj *ship)
     pl->life		= World.rules->lives;
     pl->prev_life	= pl->life;
     pl->ball 		= NULL;
-    pl->player_fps	= FPS;
+    pl->player_fps	= intGameSpeed; /* kps - this affects how often robots appear to turn */
 
     pl->kills		= 0;
     pl->deaths		= 0;
@@ -359,19 +360,19 @@ int Init_player(int ind, wireobj *ship)
 }
 
 
-static player			*playerArray;
+static player_t			*playerArray;
 
 void Alloc_players(int number)
 {
-    player *p;
+    player_t *p;
     int i;
 
 
     /* Allocate space for pointers */
-    Players = (player **) calloc(number + 1, sizeof(player *));
+    Players = (player_t **) calloc(number + 1, sizeof(player_t *));
 
     /* Allocate space for all entries, all player structs */
-    p = playerArray = (player *) calloc(number, sizeof(player));
+    p = playerArray = (player_t *) calloc(number, sizeof(player_t));
 
     if (!Players || !playerArray) {
 	error("Not enough memory for Players.");
@@ -404,7 +405,7 @@ void Free_players(void)
 void Update_score_table(void)
 {
     int			i, j;
-    player		*pl;
+    player_t		*pl;
 
     for (j = 0; j < NumPlayers; j++) {
 	pl = Players[j];
@@ -428,7 +429,7 @@ void Update_score_table(void)
 
 void Reset_all_players(void)
 {
-    player		*pl;
+    player_t		*pl;
     int			i, j;
 
     updateScores = true;
@@ -492,7 +493,7 @@ void Reset_all_players(void)
 
     if (endOfRoundReset) {
 	for (i = 0; i < NumObjs; i++) {
-	    object *obj = Obj[i];
+	    object_t *obj = Obj[i];
 	    if (BIT(obj->type, OBJ_SHOT|OBJ_DEBRIS|OBJ_SPARK))
 		obj->life = 0;
 	}
@@ -504,7 +505,7 @@ void Reset_all_players(void)
 
 void Check_team_members(int team)
 {
-    player		*pl;
+    player_t		*pl;
     int			members, i;
 
     if (! BIT(World.rules->mode, TEAM_PLAY))
@@ -535,7 +536,7 @@ void Check_team_treasures(int team)
 {
     int 		i, j, ownerind, idind;
     treasure_t		*t;
-    object		*obj;
+    object_t		*obj;
 
     if (! BIT(World.rules->mode, TEAM_PLAY))
 	return;
@@ -603,12 +604,11 @@ static void Give_best_player_bonus(int average_score,
     int			points;
     char		msg[MSG_LEN];
 
-
-    if (num_best_players == 0) {
-	sprintf(msg, "There is no Deadly Player");
+    if (num_best_players < 1 || best_ratio <= 0.0f) {
+	sprintf(msg, "There is no Deadly Player.");
     }
     else if (num_best_players == 1) {
-	player *bp = Players[best_players[0]];
+	player_t *bp = Players[best_players[0]];
 
 	sprintf(msg,
 		"%s is the Deadliest Player with a kill ratio of %d/%d.",
@@ -623,7 +623,7 @@ static void Give_best_player_bonus(int average_score,
     else {
 	msg[0] = '\0';
 	for (i = 0; i < num_best_players; i++) {
-	    player	*bp = Players[best_players[i]];
+	    player_t	*bp = Players[best_players[i]];
 	    int		ratio = Rate(bp->score, average_score);
 	    DFLOAT	score = (DFLOAT) (ratio + num_best_players)
 				/ num_best_players;
@@ -735,8 +735,7 @@ void Team_game_over(int winning_team, const char *reason)
 	    if ((BIT(Players[i]->status, PAUSE)
 		    && Players[i]->count <= 0)
 		|| (BIT(Players[i]->status, GAME_OVER)
-		    && Players[i]->mychar == 'W'
-		    && Players[i]->score == 0)) {
+		    && Players[i]->mychar == 'W')) {
 		continue;
 	    }
 	    for (j = 0; j < num_best_players; j++) {
@@ -1084,8 +1083,8 @@ void Compute_game_status(void)
 
 void Delete_player(int ind)
 {
-    player		*pl = Players[ind];
-    object		*obj;
+    player_t		*pl = Players[ind];
+    object_t		*obj;
     int			i, j,
 			id = pl->id;
 
@@ -1229,7 +1228,7 @@ void Kill_player(int ind, bool rank_death)
 
 void Player_death_reset(int ind, bool rank_death)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     int			i;
 
     Detach_ball(ind, -1);

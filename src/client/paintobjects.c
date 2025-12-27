@@ -1,4 +1,4 @@
-/* $Id: paintobjects.c,v 1.1.1.1 2007/01/21 16:40:58 kps Exp $
+/* $Id: paintobjects.c,v 1.2 2007/06/03 21:12:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -75,7 +75,7 @@ static int wreckageRawShapes[NUM_WRECKAGE_SHAPES][NUM_WRECKAGE_POINTS][2] = {
 };
 
 
-position *wreckageShapes[NUM_WRECKAGE_SHAPES][NUM_WRECKAGE_POINTS];
+position_t *wreckageShapes[NUM_WRECKAGE_SHAPES][NUM_WRECKAGE_POINTS];
 
 
 u_byte	debris_colors;		/* Number of debris intensities from server */
@@ -628,7 +628,7 @@ int Init_wreckage()
     /*
      * Allocate memory for all the wreckage points.
      */
-    point_size = sizeof(position) * RES;
+    point_size = sizeof(position_t) * RES;
     total_size = point_size * NUM_WRECKAGE_POINTS * NUM_WRECKAGE_SHAPES;
     if ((dynmem = (char *) malloc(total_size)) == NULL) {
 	error("Not enough memory for wreckage shapes");
@@ -640,9 +640,9 @@ int Init_wreckage()
      */
     for ( shp = 0; shp < NUM_WRECKAGE_SHAPES; shp++ ) {
 	for ( i = 0; i < NUM_WRECKAGE_POINTS; i++ ) {
-	    extern void Rotate_point(position pt[RES]);
+	    extern void Rotate_point(position_t pt[RES]);
 
-	    wreckageShapes[shp][i] = (position *) dynmem;
+	    wreckageShapes[shp][i] = (position_t *) dynmem;
 	    dynmem += point_size;
 	    wreckageShapes[shp][i][0].x = wreckageRawShapes[shp][i][0];
 	    wreckageShapes[shp][i][0].y = wreckageRawShapes[shp][i][1];

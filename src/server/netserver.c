@@ -1,4 +1,4 @@
-/* $Id: netserver.c,v 1.3 2007/02/09 23:23:35 pgma Exp $
+/* $Id: netserver.c,v 1.4 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -129,15 +129,12 @@
 #undef NETSERVER_C
 #include "checknames.h"
 #include "server.h"
+#include "rank.h"
 
 char netserver_version[] = VERSION;
 
 #define MAX_SELECT_FD			(sizeof(int) * 8 - 1)
 #define MAX_RELIABLE_DATA_PACKET_SIZE	1024
-
-#define MAX_MOTD_CHUNK			512
-#define MAX_MOTD_SIZE			(30*1024)
-#define MAX_MOTD_LOOPS			(10*FPS)
 
 static connection_t	*Conn = NULL;
 static int		max_connections = 0;
@@ -670,8 +667,6 @@ int Setup_connection(char *real, char *nick, char *dpy, int team,
     connp->rtt_timeouts = 0;
     connp->acks = 0;
     connp->setup = 0;
-    connp->motd_offset = -1;
-    connp->motd_stop = 0;
     connp->view_width = DEF_VIEW_SIZE;
     connp->view_height = DEF_VIEW_SIZE;
     connp->debris_colors = 0;
@@ -811,7 +806,7 @@ static int Handle_setup(int ind)
 			  Setup->map_data_len,
 			  Setup->mode, Setup->lives,
 			  Setup->x, Setup->y,
-			  Setup->frames_per_second, Setup->map_order,
+			  (short)fps, Setup->map_order,
 			  Setup->name, Setup->author);
 	if (n <= 0) {
 	    Destroy_connection(ind, "setup 0 write error");
@@ -844,7 +839,7 @@ static int Handle_setup(int ind)
 	}
 	connp->setup += len;
 	if (len >= 512) {
-	    connp->start += (len * FPS) / (8 * 512) + 1;
+	    connp->start += (len * fps) / (8 * 512) + 1;
 	}
     }
     if (connp->setup >= Setup->setup_size) {
@@ -863,7 +858,7 @@ static int Handle_setup(int ind)
 static int Handle_login(int ind)
 {
     connection_t	*connp = &Conn[ind];
-    player		*pl;
+    player_t		*pl;
     int			i,
 			war_on_id,
 			conn_bit;
@@ -1121,9 +1116,7 @@ int Input(void)
 	if (connp->state == CONN_FREE) {
 	    continue;
 	}
-	if (connp->start + connp->timeout * FPS < main_loops) {
-	  printf("huhu\n");
-	  fflush(stdout);
+	if (connp->start + connp->timeout * fps < main_loops) {
 	    /*
 	     * Timeout this fellow if we have not heard a single thing
 	     * from him for a long time.
@@ -1200,7 +1193,7 @@ static int Send_modifiers(int ind, char *mods)
  * receives counts for items it doesn't know about.
  * This is new since pack version 4203.
  */
-static int Send_self_items(int ind, player *pl)
+static int Send_self_items(int ind, player_t *pl)
 {
     connection_t	*connp = &Conn[ind];
     unsigned		item_mask = 0;
@@ -1245,7 +1238,7 @@ static int Send_self_items(int ind, player *pl)
  * Send all frame data related to the player self and his HUD.
  */
 int Send_self(int ind,
-	      player *pl,
+	      player_t *pl,
 	      int lock_id,
 	      int lock_dist,
 	      int lock_dir,
@@ -1478,7 +1471,7 @@ int Send_seek(int ind, int programmer_id, int robot_id, int sought_id)
 int Send_player(int ind, int id)
 {
     connection_t	*connp = &Conn[ind];
-    player		*pl = Players[GetInd[id]];
+    player_t		*pl = Players[GetInd[id]];
     int			n;
     char		buf[MSG_LEN], ext[MSG_LEN];
     int			sbuf_len = connp->c.len;
@@ -1788,10 +1781,6 @@ int Send_end_of_frame(int ind)
       Sockbuf_clear(&connp->w);
       return 0;
     }
-    while (connp->motd_offset >= 0
-	&& connp->c.len + connp->w.len < MAX_RELIABLE_DATA_PACKET_SIZE) {
-	Send_motd(ind);
-    }
     if (connp->c.len > 0 && connp->w.len < MAX_RELIABLE_DATA_PACKET_SIZE) {
 	if (Send_reliable(ind) == -1) {
 	    return -1;
@@ -1811,7 +1800,7 @@ int Send_end_of_frame(int ind)
 static int Receive_keyboard(int ind)
 {
     connection_t	*connp = &Conn[ind];
-    player		*pl;
+    player_t		*pl;
     long		change;
     u_byte		ch;
     int			size = KEYBOARD_SIZE;
@@ -1905,7 +1894,7 @@ static int Receive_play(int ind)
 static int Receive_power(int ind)
 {
     connection_t	*connp = &Conn[ind];
-    player		*pl;
+    player_t		*pl;
     unsigned char	ch;
     short		tmp;
     int			n;
@@ -2248,7 +2237,7 @@ static int Receive_ack_fuel(int ind)
 static void Handle_talk(int ind, char *str)
 {
     connection_t	*connp = &Conn[ind];
-    player		*pl = Players[GetInd[connp->id]];
+    player_t		*pl = Players[GetInd[connp->id]];
     int			i, sent, team;
 	unsigned int	len;
     char		*cp,
@@ -2486,147 +2475,15 @@ static int Receive_motd(int ind)
 	}
 	return n;
     }
-    connp->motd_offset = offset;
-    connp->motd_stop = offset + bytes;
 
-    return 1;
-}
-
-/*
- * Return part of the MOTD into buf starting from offset
- * and continueing at most for maxlen bytes.
- * Return the total MOTD size in size_ptr.
- * The return value is the actual amount of MOTD bytes copied
- * or -1 on error.  A value of 0 means EndOfMOTD.
- *
- * The MOTD is completely read into a dynamic buffer.
- * If this MOTD buffer hasn't been accessed for a while
- * then on the next access the MOTD file is checked for changes.
- */
-
-int Get_motd(char *buf, int offset, int maxlen, int *size_ptr)
-{
-    static int		motd_size;
-    static char		*motd_buf;
-    static long		motd_loops;
-    static time_t	motd_mtime;
-
-    if (size_ptr) {
-	*size_ptr = 0;
-    }
-    if (offset < 0 || maxlen < 0) {
-	return -1;
-    }
-
-    if (!motd_loops
-	|| (motd_loops + MAX_MOTD_LOOPS < main_loops
-	    && offset == 0)) {
-
-	int			fd, size;
-	struct stat		st;
-
-	motd_loops = main_loops;
-
-	if ((fd = open(Conf_servermotdfile(), O_RDONLY)) == -1) {
-	    motd_size = 0;
-	    return -1;
-	}
-	if (fstat(fd, &st) == -1 || st.st_size == 0) {
-	    motd_size = 0;
-	    close(fd);
-	    return -1;
-	}
-	size = st.st_size;
-	if (size > MAX_MOTD_SIZE) {
-	    size = MAX_MOTD_SIZE;
-	}
-	if (size != motd_size) {
-	    motd_mtime = 0;
-	    motd_size = size;
-	    if (motd_size == 0) {
-		close(fd);
-		return 0;
-	    }
-	    if (motd_buf) {
-		free(motd_buf);
-	    }
-	    if ((motd_buf = (char *) malloc(size)) == NULL) {
-		close(fd);
-		return -1;
-	    }
-	}
-	if (motd_mtime != st.st_mtime) {
-	    motd_mtime = st.st_mtime;
-	    if ((size = read(fd, motd_buf, motd_size)) <= 0) {
-		free(motd_buf);
-		motd_buf = 0;
-		close(fd);
-		motd_size = 0;
-		return -1;
-	    }
-	    motd_size = size;
-	}
-	close(fd);
-    }
-
-    motd_loops = main_loops;
-
-    if (size_ptr) {
-	*size_ptr = motd_size;
-    }
-    if (offset + maxlen > motd_size) {
-	maxlen = motd_size - offset;
-    }
-    if (maxlen <= 0) {
-	return 0;
-    }
-    memcpy(buf, motd_buf + offset, maxlen);
-    return maxlen;
-}
-
-/*
- * Send the server MOTD to the client.
- * The last time we send a motd packet it should
- * have datalength zero to mean EOMOTD.
- */
-static int Send_motd(int ind)
-{
-    connection_t	*connp = &Conn[ind];
-    int			len;
-    int			off = connp->motd_offset,
-			size = 0;
-    char		buf[MAX_MOTD_CHUNK];
-
-    len = MIN(MAX_MOTD_CHUNK, MAX_RELIABLE_DATA_PACKET_SIZE - connp->c.len - 10);
-    if (len >= 10) {
-	len = Get_motd(buf, off, len, &size);
-	if (len <= 0) {
-	    len = 0;
-	    connp->motd_offset = -1;
-	}
-	if (Packet_printf(&connp->c,
-			  "%c%ld%hd%ld",
-			  PKT_MOTD, off, len, size) <= 0) {
-	    Destroy_connection(ind, "motd header");
-	    return -1;
-	}
-	if (len > 0) {
-	    connp->motd_offset += len;
-	    if (Sockbuf_write(&connp->c, buf, len) != len) {
-		Destroy_connection(ind, "motd data");
-		return -1;
-	    }
-	}
-    }
-
-    /* Return ok */
+    /* Client requests MOTD. Don't care. */
     return 1;
 }
 
 static int Receive_pointer_move(int ind)
 {
     connection_t	*connp = &Conn[ind];
-    player		*pl;
+    player_t		*pl;
     unsigned char	ch;
     short		movement;
     int			n;
@@ -2669,12 +2526,12 @@ static int Receive_pointer_move(int ind)
 static int Receive_fps_request(int ind)
 {
     connection_t	*connp = &Conn[ind];
-    player		*pl;
+    player_t		*pl;
     int			n;
     unsigned char	ch;
-    unsigned char	fps;
+    unsigned char	wanted_fps;
 
-    if ((n = Packet_scanf(&connp->r, "%c%c", &ch, &fps)) <= 0) {
+    if ((n = Packet_scanf(&connp->r, "%c%c", &ch, &wanted_fps)) <= 0) {
 	if (n == -1) {
 	    Destroy_connection(ind, "read error");
 	}
@@ -2682,9 +2539,11 @@ static int Receive_fps_request(int ind)
     }
     if (connp->id != -1) {
 	pl = Players[GetInd[connp->id]];
-	if (fps <= 0)
-	    fps = 1;
-	pl->player_fps = fps;
+	if (wanted_fps <= 0)
+	    wanted_fps = 1;
+	if (wanted_fps == 20)
+	    wanted_fps = 254;
+	pl->player_fps = wanted_fps;
 	/* printf("receivefps:%d\n",fps);*/
     }
 
@@ -2694,7 +2553,6 @@ static int Receive_fps_request(int ind)
 static int Receive_audio_request(int ind)
 {
     connection_t        *connp = &Conn[ind];
-    player              *pl;
     int                 n;
     unsigned char       ch; 
     unsigned char       onoff;

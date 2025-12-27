@@ -1,4 +1,4 @@
-/* $Id: click.h,v 1.3 2007/03/04 18:06:44 kps Exp $
+/* $Id: click.h,v 1.1.1.1 2007/05/20 21:59:20 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *

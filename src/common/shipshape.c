@@ -1,4 +1,4 @@
-/* $Id: shipshape.c,v 1.1.1.1 2007/01/21 16:41:12 kps Exp $
+/* $Id: shipshape.c,v 1.2 2007/06/03 21:12:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -47,17 +47,17 @@ static int	shapeLimits;
 static int	Get_shape_keyword(char *keyw);
 extern void	Make_table(void);
 
-void Rotate_point(position pt[RES])
+void Rotate_point(position_t pt[RES])
 {
   int			i;
     
   for (i = 1; i < RES; i++) {
-    pt[i].x = tcos(i) * pt[0].x - tsin(i) * pt[0].y;
-	pt[i].y = tsin(i) * pt[0].x + tcos(i) * pt[0].y;
+      pt[i].x = tcos(i) * pt[0].x - tsin(i) * pt[0].y;
+      pt[i].y = tsin(i) * pt[0].x + tcos(i) * pt[0].y;
   }
 }
 
-static void Rotate_ship(wireobj *w)
+static void Rotate_ship(shipshape_t *w)
 {
     int			i;
 
@@ -94,10 +94,10 @@ static void Rotate_ship(wireobj *w)
  * This function should always succeed,
  * therefore no malloc()ed memory is used.
  */
-wireobj *Default_ship(void)
+shipshape_t *Default_ship(void)
 {
-    static wireobj	sh;
-    static position	pts[6][RES];
+    static shipshape_t	sh;
+    static position_t	pts[6][RES];
 
     if (!sh.num_points) {
 	sh.num_points = 3;
@@ -142,7 +142,7 @@ wireobj *Default_ship(void)
     return &sh;
 }
 
-static int shape2wire(char *ship_shape_str, wireobj *w)
+static int shape2wire(char *ship_shape_str, shipshape_t *w)
 {
 /*
  * Macros to simplify limit-checking for ship points.
@@ -172,7 +172,7 @@ static int shape2wire(char *ship_shape_str, wireobj *w)
 			inx, iny, max,
 			ofNum, ofLeft, ofRight,		/* old format */
 			shape_version = 0;
-    ipos 		pt[MAX_SHIP_PTS],
+    ipos_t 		pt[MAX_SHIP_PTS],
 			engine,
 			m_gun,
 			l_light[MAX_LIGHT_PTS],
@@ -961,22 +961,22 @@ static int shape2wire(char *ship_shape_str, wireobj *w)
 	}
     }
 
-    i = sizeof(position) * RES;
-    if (!(w->pts[0] = (position*)malloc(w->num_points * i))
+    i = sizeof(position_t) * RES;
+    if (!(w->pts[0] = (position_t*)malloc(w->num_points * i))
 	|| (w->num_l_gun
-	    && !(w->l_gun[0] = (position*)malloc(w->num_l_gun * i)))
+	    && !(w->l_gun[0] = (position_t*)malloc(w->num_l_gun * i)))
 	|| (w->num_r_gun
-	    && !(w->r_gun[0] = (position*)malloc(w->num_r_gun * i)))
+	    && !(w->r_gun[0] = (position_t*)malloc(w->num_r_gun * i)))
 	|| (w->num_l_rgun
-	    && !(w->l_rgun[0] = (position*)malloc(w->num_l_rgun * i)))
+	    && !(w->l_rgun[0] = (position_t*)malloc(w->num_l_rgun * i)))
 	|| (w->num_r_rgun
-	    && !(w->r_rgun[0] = (position*)malloc(w->num_r_rgun * i)))
+	    && !(w->r_rgun[0] = (position_t*)malloc(w->num_r_rgun * i)))
 	|| (w->num_l_light
-	    && !(w->l_light[0] = (position*)malloc(w->num_l_light * i)))
+	    && !(w->l_light[0] = (position_t*)malloc(w->num_l_light * i)))
 	|| (w->num_r_light
-	    && !(w->r_light[0] = (position*)malloc(w->num_r_light * i)))
+	    && !(w->r_light[0] = (position_t*)malloc(w->num_r_light * i)))
 	|| (w->num_m_rack
-	    && !(w->m_rack[0] = (position*)malloc(w->num_m_rack * i)))
+	    && !(w->m_rack[0] = (position_t*)malloc(w->num_m_rack * i)))
 	) {
 	error("Not enough memory for ship shape");
 	if (w->pts[0]) {
@@ -1076,9 +1076,9 @@ static int shape2wire(char *ship_shape_str, wireobj *w)
     return 0;
 }
 
-static wireobj *do_parse_shape(char *str)
+static shipshape_t *do_parse_shape(char *str)
 {
-    wireobj		*w;
+    shipshape_t		*w;
 
     if (!str || !*str) {
 	if (debugShapeParsing) {
@@ -1086,7 +1086,7 @@ static wireobj *do_parse_shape(char *str)
 	}
 	return Default_ship();
     }
-    if (!(w = (wireobj *)malloc(sizeof(*w)))) {
+    if (!(w = (shipshape_t *)malloc(sizeof(*w)))) {
 	error("No mem for ship shape");
 	return Default_ship();
     }
@@ -1104,7 +1104,7 @@ static wireobj *do_parse_shape(char *str)
     return(w);
 }
 
-void Free_ship_shape(wireobj *w)
+void Free_ship_shape(shipshape_t *w)
 {
     if (w != NULL && w != Default_ship()) {
 	if (w->num_points > 0 && w->pts[0]) free(w->pts[0]);
@@ -1123,14 +1123,14 @@ void Free_ship_shape(wireobj *w)
     }
 }
 
-wireobj *Parse_shape_str(char *str)
+shipshape_t *Parse_shape_str(char *str)
 {
     verboseShapeParsing = debugShapeParsing;
     shapeLimits = 1;
     return do_parse_shape(str);
 }
 
-wireobj *Convert_shape_str(char *str)
+shipshape_t *Convert_shape_str(char *str)
 {
     verboseShapeParsing = debugShapeParsing;
     shapeLimits = debugShapeParsing;
@@ -1139,7 +1139,7 @@ wireobj *Convert_shape_str(char *str)
 
 int Validate_shape_str(char *str)
 {
-    wireobj		*w;
+    shipshape_t		*w;
 
     verboseShapeParsing = 1;
     shapeLimits = 1;
@@ -1148,7 +1148,7 @@ int Validate_shape_str(char *str)
     return (w && w != Default_ship());
 }
 
-void Convert_ship_2_string(wireobj *w, char *buf, char *ext,
+void Convert_ship_2_string(shipshape_t *w, char *buf, char *ext,
 			   unsigned shape_version)
 {
     char		tmp[MSG_LEN];
@@ -1418,7 +1418,7 @@ static int Get_shape_keyword(char *keyw)
     return(i);
 }
 
-void Calculate_shield_radius(wireobj *w)
+void Calculate_shield_radius(shipshape_t *w)
 {
     int			i;
     int			radius2, max_radius = 0;

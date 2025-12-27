@@ -1,4 +1,4 @@
-/* $Id: update.c,v 1.5 2007/03/18 22:08:32 pgma Exp $
+/* $Id: update.c,v 1.5 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -46,11 +46,12 @@ char update_version[] = VERSION;
 	(o_)->vel.y += (o_)->acc.y;					\
     }
 
+#define	UPDATE_SCORE_DELAY  (intGameSpeed)
 
 static char msg[MSG_LEN];
 extern int frame_cycle;
 void update_player_turn(int ind);
-void update_player_thrust(player *pl);
+void update_player_thrust(player_t *pl);
 static void Transport_to_home(int ind)
 {
     /*
@@ -61,7 +62,7 @@ static void Transport_to_home(int ind)
      * acceleration G, during the second part we make this a negative one -G.
      * This results in a visually pleasing take off and landing.
      */
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     DFLOAT		bx, by, dx, dy,	t, m;
     const int		T = RECOVERY_DELAY;
 
@@ -86,9 +87,9 @@ static void Transport_to_home(int ind)
 
 
 void Init_interpolation_data(void){
-  int i, j;
-  player *pl;
-  object *obj;
+  int i;
+  player_t *pl;
+  object_t *obj;
 
   for (i = 0; i < NumPlayers; i++) {
     pl = Players[i];
@@ -109,22 +110,12 @@ void Init_interpolation_data(void){
 
 void Update_objects_interpolation(void)
 {
-  int i, j;
-  player *pl;
-  object *obj;
+  int i;
+  player_t *pl;
+  object_t *obj;
   int player_fps;
-
-  if (fireRepeatRate > 0) {
-    for (i = 0; i < NumPlayers; i++) {
-      pl = Players[i];
-      if (BIT(pl->used, OBJ_SHOT)) {
-	Fire_normal_shots(i);
-      }
-    }
-  }
   
-
-
+  
   for (i = 0; i < NumObjs; i++) {
     obj = Obj[i];
     if (BIT(obj->type, OBJ_BALL)) {
@@ -173,9 +164,9 @@ void Update_objects_interpolation(void)
 
 void Update_objects(void)
 {
-    int i, j;
-    player *pl;
-    object *obj;
+    int i;
+    player_t *pl;
+    object_t *obj;
     
 
 
@@ -372,7 +363,7 @@ void Update_objects(void)
     }
 
     for (i = 0; i < NumPlayers; i++) {
-	player *pl = Players[i];
+	player_t *pl = Players[i];
 	if (BIT(pl->lock.tagged, LOCK_PLAYER)) {
 	    pl->lock.distance =
 		Wrap_length(pl->pos.x - Players[GetInd[pl->lock.pl_id]]->pos.x,
@@ -390,7 +381,7 @@ void Update_objects(void)
      * Update tanks, Kill players that ought to be killed.
      */
     for (i=NumPlayers-1; i>=0; i--) {
-	player *pl = Players[i];
+	player_t *pl = Players[i];
 
 	if (BIT(pl->status, PLAYING|PAUSE|GAME_OVER|KILLED) == PLAYING)
 	    Update_tanks(&(pl->fuel));
@@ -398,7 +389,7 @@ void Update_objects(void)
 	    Kill_player(i, true);
 
 	    if (IS_HUMAN_PTR(pl)) {
-	      if (frame_loops - pl->frame_last_busy > 60 * FPS * frameDivisor  /*ok -pgm */
+	      if (frame_loops - pl->frame_last_busy > 60 * fps
 		    && (NumPlayers - NumPseudoPlayers) > 1) {
 		Pause_player(i, 1);
 		}
@@ -429,7 +420,7 @@ void update_player_turn(int ind){
   /*
    * Compute turn
    */
-  player *pl;
+  player_t *pl;
   pl = Players[ind];
   pl->turnvel	+= pl->turnacc;
   
@@ -462,7 +453,7 @@ void update_player_turn(int ind){
   Turn_player(ind);
 }
 
-void update_player_thrust(player *pl){
+void update_player_thrust(player_t *pl){
   /*
    * Update acceleration vector etc.
    */

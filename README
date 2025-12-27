@@ -278,6 +278,28 @@ unsymmetricity it introduces.. so don't use 16 2/3 fps on a 50 fps server!
 - removed score multipliers and options related to them
 - removed some unnecessary balloptions
 - added a feature: shooting can be done in intermediate frames too
+
+1.3.6fxi:
+- removed xpilot 4.3 based client
+- if client maxfps is 20, treat that as maxfps 254,
+  this will make life easier for players with legacy clients
+- same set of robots always to make aimers tests less random
+  R0 = Cobra, R1 = Cobra, R2 = Uzi, R3 = Uzi
+- removed feature that shooting can be done in intermediate frames
+- set usewreckage option to false by default; we dont want wreckages
+  usually, not at least on laggy servers to add more noise to steering
+- removed a lot of server options
+- in Punish_team and Team_game_over, don't require waiting players to have
+  0 points to ignore them
+
+1.3.7fxi:
+- put back xpilot 4.3 based client
+- fix keyboard turning speed to be invariant of fps
+- fix delays in netserver.c: previously delays were too slow if fps was high,
+  causing player timeouts
+
+
+
 ----
 
 PROBLEMS

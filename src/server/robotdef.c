@@ -1,4 +1,4 @@
-/* $Id: robotdef.c,v 1.2 2007/03/08 20:32:00 kps Exp $
+/* $Id: robotdef.c,v 1.4 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -128,7 +128,7 @@ static bool Ball_handler(int ind);
  * Function to cast from player structure to robot data structure.
  * This isolates casts (aka. type violations) to a few places.
  */
-static robot_default_data_t *Robot_default_get_data(player *pl)
+static robot_default_data_t *Robot_default_get_data(player_t *pl)
 {
     return (robot_default_data_t *)pl->robot_data_ptr->private_data;
 }
@@ -138,7 +138,7 @@ static robot_default_data_t *Robot_default_get_data(player *pl)
  */
 static void Robot_default_create(int ind, char *str)
 {
-    player			*pl = Players[ind];
+    player_t			*pl = Players[ind];
     robot_default_data_t	*my_data;
 
     if (!(my_data = (robot_default_data_t *)malloc(sizeof(*my_data)))) {
@@ -192,7 +192,7 @@ static void Robot_default_create(int ind, char *str)
  */
 static void Robot_default_go_home(int ind)
 {
-    player			*pl = Players[ind];
+    player_t			*pl = Players[ind];
     robot_default_data_t	*my_data = Robot_default_get_data(pl);
 
     my_data->robot_mode      = RM_TAKE_OFF;
@@ -204,7 +204,7 @@ static void Robot_default_go_home(int ind)
  */
 static void Robot_default_set_war(int ind, int victim_id)
 {
-    player			*pl = Players[ind];
+    player_t			*pl = Players[ind];
     robot_default_data_t	*my_data = Robot_default_get_data(pl);
 
     if (victim_id == -1) {
@@ -220,7 +220,7 @@ static void Robot_default_set_war(int ind, int victim_id)
  */
 static int Robot_default_war_on_player(int ind)
 {
-    player			*pl = Players[ind];
+    player_t			*pl = Players[ind];
     robot_default_data_t	*my_data = Robot_default_get_data(pl);
 
     if (BIT(my_data->robot_lock, LOCK_PLAYER)) {
@@ -236,7 +236,7 @@ static int Robot_default_war_on_player(int ind)
 static void Robot_default_message(int ind, const char *message)
 {
 #if 0
-    player			*pl = Players[ind];
+    player_t			*pl = Players[ind];
     robot_default_data_t	*my_data = Robot_default_get_data(pl);
     int				len;
     char			*ptr;
@@ -272,7 +272,7 @@ static void Robot_default_message(int ind, const char *message)
  */
 static void Robot_default_destroy(int ind)
 {
-    player			*pl = Players[ind];
+    player_t			*pl = Players[ind];
 
     free(pl->robot_data_ptr->private_data);
     pl->robot_data_ptr->private_data = NULL;
@@ -302,9 +302,9 @@ static bool Really_empty_space(int ind, int x, int y)
 static bool Check_robot_evade(int ind, int mine_i, int ship_i)
 {
     int				i;
-    player			*pl = Players[ind];
-    object			*shot;
-    player			*ship;
+    player_t			*pl = Players[ind];
+    object_t			*shot;
+    player_t			*ship;
     long			stop_dist;
     bool			evade;
     bool			left_ok, right_ok;
@@ -501,7 +501,7 @@ static bool Check_robot_target(int ind,
 			       int item_x, int item_y,
 			       int new_mode)
 {
-    player			*pl = Players[ind];
+    player_t			*pl = Players[ind];
     long			item_dist;
     int				item_dir;
     int				travel_dir;
@@ -683,8 +683,8 @@ static bool Check_robot_target(int ind,
 
 static bool Check_robot_hunt(int ind)
 {
-    player			*pl = Players[ind];
-    player			*ship;
+    player_t			*pl = Players[ind];
+    player_t			*ship;
     int				ship_dir;
     int				travel_dir;
     int				delta_dir;
@@ -757,7 +757,7 @@ static bool Detect(int ind, int j)
 
 static bool Ball_handler(int ind)
 {
-    player	*pl = Players[ind];
+    player_t	*pl = Players[ind];
     int		i,
 		closest_t = -1,
 		closest_nt = -1,
@@ -796,7 +796,7 @@ static bool Ball_handler(int ind)
 	}
     }
     if (BIT(pl->have, OBJ_BALL) || pl->ball) {
-	object *ball = 0;
+	object_t *ball = 0;
 	int dist_np = LONG_MAX;
 	int xdist, ydist;
 	int dx, dy;
@@ -906,7 +906,7 @@ static bool Ball_handler(int ind)
 
 static int Robot_default_play_check_map(int ind)
 {
-    player			*pl = Players[ind];
+    player_t			*pl = Players[ind];
     int				j;
     int				fuel_i;
     int				dx, dy;
@@ -980,9 +980,9 @@ static void Robot_default_play_check_objects(int ind,
 					     int *item_imp,
 					     int *mine_i, int *mine_dist)
 {
-    player			*pl = Players[ind];
+    player_t			*pl = Players[ind];
     int				j;
-    object			*shot;
+    object_t			*shot;
     int				distance;
     int				dx, dy;
     int				shield_range;
@@ -1060,7 +1060,7 @@ static void Robot_default_play_check_objects(int ind,
 	if (BIT(shot->type, OBJ_BALL)
 	    && !WITHIN(my_data->last_thrown_ball,
 		       my_data->robot_count,
-		       3 * FPS)) {
+		       3 * intGameSpeed)) {
 	    SET_BIT(pl->used, OBJ_CONNECTOR);
 	}
 
@@ -1130,7 +1130,7 @@ static void Robot_default_play_check_objects(int ind,
 
 static void Robot_default_play(int ind)
 {
-    player			*pl = Players[ind],
+    player_t			*pl = Players[ind],
 				*ship;
     DFLOAT			distance, ship_dist,
 				enemy_dist,
@@ -1343,8 +1343,6 @@ static void Robot_default_play(int ind)
 	    }
 	    else if (maxShieldedWallBounceSpeed >
 		    maxUnshieldedWallBounceSpeed
-		&& maxShieldedWallBounceAngle >=
-		    maxUnshieldedWallBounceAngle
 		&& BIT(pl->have, OBJ_SHIELD)) {
 		SET_BIT(pl->used, OBJ_SHIELD);
 	    }

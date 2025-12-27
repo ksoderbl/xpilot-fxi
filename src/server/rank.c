@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <expat.h>
-
+#include <unistd.h>
 
 #define SERVER
 #include "xpconfig.h"
@@ -36,8 +36,9 @@
 #include "const.h"
 #include "global.h"
 #include "types.h"
-
-
+#include "proto.h"
+#include "error.h"
+#include "netserver.h"
 
 char rank_version[] = VERSION;
 
@@ -50,7 +51,7 @@ char *rankWebpageFileName;
 static bool Rank_parse_rankfile(FILE *file);
 static void tagstart(void *data, const char *el, const char **attr);
 static void tagend(void *data, const char *el);
-static inline void Player_set_score(player *pl, int points);
+static inline void Player_set_score(player_t *pl, int points);
 
 /* Score data */
 static ranknode_t ranknodes[MAX_SCORES];
@@ -263,19 +264,18 @@ static void SortRankings(void)
 static const char *Rank_get_logout_message(ranknode_t *rank)
 {
     static char msg[MSG_LEN];
-    int ind;
-    player *pl;
+    player_t *pl;
+
     assert(strlen(rank->name) > 0);
-    ind =  Get_player_index_by_name(rank->name);
-    if (ind >= 0){
-      pl = Players[ind];
-      if (BIT(pl->status, PAUSE))
-	snprintf(msg, sizeof(msg), "paused");
-      else 
-	snprintf(msg, sizeof(msg), "playing");
+    pl = Get_player_by_name(rank->name, NULL, NULL);
+    if (pl) {
+	if (BIT(pl->status, PAUSE))
+	    snprintf(msg, sizeof(msg), "paused");
+	else 
+	    snprintf(msg, sizeof(msg), "playing");
     }
     else
-      snprintf(msg, sizeof(msg), "%s", rank_showtime(rank->timestamp));
+	snprintf(msg, sizeof(msg), "%s", rank_showtime(rank->timestamp));
     
     return msg;
 }
@@ -392,12 +392,11 @@ bool Rank_get_stats(const char *name, char *buf)
     return true;
 }
 
-
-
 ranknode_t *Rank_get_by_name(const char *name)
 {
     int i;
-    player *pl;
+    player_t *pl;
+
     assert(name != NULL);
 
     for (i = 0; i < MAX_SCORES; i++) {
@@ -412,13 +411,13 @@ ranknode_t *Rank_get_by_name(const char *name)
      * let's see if it could be an abbreviation of the nick of some player
      * who is currently playing.
      */
-    i =  Get_player_index_by_name(name);
-    pl = Players[i];
-    if ((i != -1) && pl->rank)
+    pl = Get_player_by_name(name, NULL, NULL);
+    if (pl && pl->rank)
 	return pl->rank;
 
     return NULL;
 }
+
 
 static void Init_ranknode(ranknode_t *rank,
 			  const char *name, const char *user, const char *host)
@@ -481,7 +480,7 @@ void Rank_init_saved_scores(void)
  * A player has logged in. Find his info or create new info by kicking
  * the player who hasn't played for the longest time.
  */
-void Rank_get_saved_score(player * pl)
+void Rank_get_saved_score(player_t * pl)
 {
     ranknode_t *rank, *unused = NULL;
     int i;
@@ -668,7 +667,7 @@ static void tagend(void *data, const char *el)
 }
 
 /* A player has quit, save his info and mark him as not playing. */
-void Rank_save_score(player *pl)
+void Rank_save_score(player_t *pl)
 {
     ranknode_t *rank = pl->rank;
     rank->score = pl->score;
@@ -807,101 +806,3 @@ void Rank_write_rankfile(void)
     return;
 }
 
-/* static routines from rank.h + player.h in ng47pre */
-
-
-static inline void Player_add_score(player *pl, int points)
-{
-    pl->score += points;
-    pl->update_score = true;
-    updateScores = true;
-}
-
-static inline void Player_set_score(player *pl, int points)
-{
-    pl->score = points;
-    pl->update_score = true;
-    updateScores = true;
-}
-
-inline void Rank_add_score(player *pl, int points)
-{
-    if (pl->rank)
-        pl->rank->score += points;
-}
-
-static inline void Rank_set_score(int ind, int points)
-{
-    player *pl = Players[ind];
-    pl->score = points;
-    pl->update_score = true;
-    if (pl->rank)
-        pl->rank->score = points;
-}
-
-inline void Rank_fire_shot(player *pl)
-{
-    pl->shots++;
-    if (pl->rank)
-        pl->rank->shots++;
-}
-
-inline void Rank_add_kill(int ind)
-{
-    player *pl = Players[ind];
-    pl->kills++;
-    if (pl->rank)
-        pl->rank->kills++;
-}
-
-inline void Rank_add_death(player *pl)
-{
-    pl->deaths++;
-    if (pl->rank)
-        pl->rank->deaths++;
-}
-
-inline void Rank_add_round(player *pl)
-{
-  if (pl->rank)
-    pl->rank->rounds++;
-}
-
-inline void Rank_cashed_ball(player *pl)
-{
-    if (pl->rank)
-        pl->rank->ballsCashed++; 
-}
-
-void Rank_saved_ball(player *pl)
-{
-    if (pl->rank)
-        pl->rank->ballsSaved++;
-}
-
-inline void Rank_won_ball(player *pl)
-{
-    if (pl->rank)
-        pl->rank->ballsWon++;
-}
-
-inline void Rank_lost_ball(player *pl)
-{
-    if (pl->rank)
-        pl->rank->ballsLost++;
-}
-
-inline void Rank_ballrun(player *pl, int tim)
-{
-    if (pl->rank) {
-        if (pl->rank->bestball == 0 || tim < pl->rank->bestball)
-            pl->rank->bestball = tim;
-    }
-}
-
-
-
-inline int Rank_get_best_ballrun(player *pl)
-{
-    return pl->rank ? pl->rank->bestball : 0;
-}

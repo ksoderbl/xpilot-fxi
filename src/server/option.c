@@ -1,4 +1,4 @@
-/* $Id: option.c,v 1.2 2007/03/03 11:28:46 kps Exp $
+/* $Id: option.c,v 1.3 2007/06/03 21:12:47 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -839,63 +839,11 @@ static void Option_parse_node(hash_node *np)
 	    break;
 	}
 
-    case valIPos:
-	{
-	    ipos	*ptr = (ipos *)desc->variable;
-	    char	*s;
-
-	    s = strchr(value, ',');
-	    if (!s) {
-		error("Invalid coordinate pair for %s - %s\n",
-		      desc->name, value);
-		break;
-	    }
-	    if (Convert_string_to_int(value, &(ptr->x)) != TRUE ||
-		Convert_string_to_int(s + 1, &(ptr->y)) != TRUE) {
-		warn("%s value '%s' not a valid position.",
-			np->name, value);
-		value = desc->defaultValue;
-		s = strchr(value, ',');
-		Convert_string_to_int(value, &(ptr->x));
-		Convert_string_to_int(s + 1, &(ptr->y));
-	    }
-	    break;
-	}
-
     case valString:
 	{
 	    char	**ptr = (char **)desc->variable;
 
 	    *ptr = xp_safe_strdup(value);
-	    break;
-	}
-
-    case valSec:
-	{
-	    int		*ptr = (int *)desc->variable;
-	    DFLOAT	seconds;
-
-	    if (Convert_string_to_float(value, &seconds) != TRUE) {
-		warn("%s value '%s' not a number.",
-			np->name, value);
-		Convert_string_to_float(desc->defaultValue, &seconds);
-	    }
-	    *ptr = (int)(seconds * FPS);
-	    break;
-	}
-
-    case valPerSec:
-	{
-	    DFLOAT	*ptr = (DFLOAT *)desc->variable;
-	    DFLOAT	seconds;
-
-	    if (Convert_string_to_float(value, &seconds) != TRUE) {
-		warn("%s value '%s' not a number.",
-			np->name, value);
-		Convert_string_to_float(desc->defaultValue, &seconds);
-	    }
-
-	    *ptr = (DFLOAT)(seconds / FPS);
 	    break;
 	}
 
@@ -936,36 +884,6 @@ static void Options_parse_expand(void)
     }
 }
 
-
-/*
- * Parse the -FPS option.
- */
-static void Options_parse_FPS(void)
-{
-    char	*fpsstr;
-    optOrigin	value_origin;
-
-    fpsstr = Option_get_value("intGameSpeed", &value_origin);
-    if (fpsstr != NULL) {
-	int		frames;
-
-	if (Convert_string_to_int(fpsstr, &frames) != TRUE) {
-	    warn("Invalid intGameSpeed specification '%s' in %s.",
-		fpsstr, Origin_name(value_origin));
-	}
-	else {
-	    intGameSpeed = frames;
-	}
-    }
-
-    if (FPS <= 0) {
-	fatal("Can't run with intGameSpeed %d, should be positive\n",
-	    FPS);
-    }
-
-}
-
-
 /*
  * Go through the hash table looking for name-value pairs that have defaults
  * assigned to them.   Process the defaults and, if possible, set the
@@ -984,12 +902,6 @@ void Options_parse(void)
      * Expand a possible "-expand" option.
      */
     Options_parse_expand();
-
-    /*
-     * This must be done in order that FPS will return the eventual
-     * frames per second for computing valSec and valPerSec.
-     */
-    Options_parse_FPS();
 
     for (i = 0; i < option_count; i++) {
 	np = Get_hash_node_by_name(options[i].name);

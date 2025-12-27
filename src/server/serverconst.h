@@ -1,4 +1,4 @@
-/* $Id: serverconst.h,v 1.1.1.1 2007/01/21 16:41:27 kps Exp $
+/* $Id: serverconst.h,v 1.2 2007/06/02 14:48:54 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -120,8 +120,8 @@
 #define TEAM_IMMUNE(i, j)	(teamImmunity && TEAM(i, j))
 
 
-#define RECOVERY_DELAY		(FPS*3)
-#define ROBOT_CREATE_DELAY	(FPS*2)
+#define RECOVERY_DELAY		(intGameSpeed*3)
+#define ROBOT_CREATE_DELAY	(intGameSpeed*2)
 
 #define NO_ID			(-1)
 #define NUM_IDS			256

@@ -1,4 +1,4 @@
-/* $Id: robot.c,v 1.1.1.1 2007/01/21 16:41:24 kps Exp $
+/* $Id: robot.c,v 1.2 2007/06/03 21:12:47 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -691,7 +691,7 @@ static void Robot_talks(enum robot_talk_t says_what,
 
 static void Robot_create(void)
 {
-    player		*robot;
+    player_t		*robot;
     robot_t		*rob;
     int			i,
 			num;
@@ -750,7 +750,7 @@ static void Robot_create(void)
 
     Init_player(NumPlayers, (allowShipShapes)
 			    ? Parse_shape_str(rob->shape)
-			    : (wireobj *)NULL);
+			    : (shipshape_t *)NULL);
     robot = Players[NumPlayers];
     SET_BIT(robot->type_ext, OBJ_EXT_ROBOT);
     robot->robot_data_ptr = new_data;
@@ -818,7 +818,7 @@ static void Robot_create(void)
 
 void Robot_destroy(int ind)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
 
     (*robot_types[pl->robot_data_ptr->robot_types_ind].destroy)(ind);
     free(Players[ind]->robot_data_ptr);
@@ -868,7 +868,7 @@ void Robot_delete(int ind, int kicked)
  */
 static void Robot_set_war(int ind, int victim_id)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
 
     (*robot_types[pl->robot_data_ptr->robot_types_ind].set_war)(ind, victim_id);
 }
@@ -900,7 +900,7 @@ void Robot_program(int ind, int victim_id)
  */
 int Robot_war_on_player(int ind)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     robot_type_t	*rob_type =
 			    &robot_types[pl->robot_data_ptr->robot_types_ind];
 
@@ -916,7 +916,7 @@ int Robot_war_on_player(int ind)
  */
 void Robot_war(int ind, int killer)
 {
-    player		*pl = Players[ind],
+    player_t		*pl = Players[ind],
 			*kp = Players[killer];
     int			i;
 
@@ -975,7 +975,7 @@ void Robot_go_home(int ind)
  */
 void Robot_message(int ind, const char *message)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     robot_type_t	*rob_type =
 			    &robot_types[pl->robot_data_ptr->robot_types_ind];
 
@@ -999,7 +999,7 @@ static void Robot_play(int ind)
  */
 static int Robot_check_leave(int ind)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     char		msg[MSG_LEN];
 
     if (robotsLeave
@@ -1027,7 +1027,7 @@ static int Robot_check_leave(int ind)
 
 void Robot_update(void)
 {
-    player		*pl;
+    player_t		*pl;
     int			i;
     static int		new_robot_delay;
 

@@ -1,4 +1,4 @@
-/* $Id: server.c,v 1.5 2007/03/03 12:25:14 kps Exp $
+/* $Id: server.c,v 1.4 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -56,6 +56,7 @@
 #include "error.h"
 #include "portability.h"
 #include "server.h"
+#include "rank.h"
 
 char server_version[] = VERSION;
 
@@ -64,9 +65,9 @@ char server_version[] = VERSION;
  */
 int			NumPlayers = 0;
 int			NumObjs = 0;
-player			**Players;
+player_t			**Players;
 int			obj_1;
-object			*Obj[MAX_TOTAL_SHOTS];
+object_t		*Obj[MAX_TOTAL_SHOTS];
 int			GetInd_1;
 int			GetInd[NUM_IDS+1];
 server_t		Server;
@@ -91,6 +92,10 @@ extern int              received_packets;
 int frameDivisor;
 int fps;
 int frame_cycle = 0;
+int intGameSpeed = 12;
+float ticksPerFrame = 1.0;
+DFLOAT gameSpeed;
+
 static void Check_server_versions(void);
 static void Handle_signal(int sig_no);
 void checkPlayers(void);
@@ -202,6 +207,7 @@ void Main_loop(void)
 
   gettimeofday(&tv1, NULL);
   main_loops++;
+  ticksPerFrame = 1.0f / frameDivisor;
   
   //printf("mainloop: %e\n",timeval_to_seconds(tv1));
 
@@ -282,7 +288,7 @@ static inline double timeval_to_seconds(struct timeval tv)
  */
 void End_game(void)
 {
-    player		*pl;
+    player_t		*pl;
     char		msg[MSG_LEN];
 
     sprintf(msg, "server exiting");
@@ -335,7 +341,7 @@ int Pick_team(int pick_for_type)
 			num_available_teams = 0,
 			playing_teams = 0,
 			losing_team;
-    player		*pl;
+    player_t		*pl;
     int			playing[MAX_TEAMS];
     int			free_bases[MAX_TEAMS];
     int			available_teams[MAX_TEAMS];
@@ -443,7 +449,7 @@ int Pick_team(int pick_for_type)
 void Server_info(char *str, unsigned max_size)
 {
     int			i, j, k;
-    player		*pl, **order, *best = NULL;
+    player_t		*pl, **order, *best = NULL;
     DFLOAT		ratio, best_ratio = -1e7;
     char		name[MAX_CHARS];
     char		lblstr[MAX_CHARS];
@@ -480,7 +486,7 @@ void Server_info(char *str, unsigned max_size)
     }
     strcat(str, msg);
 
-    if ((order = (player **) malloc(NumPlayers * sizeof(player *))) == NULL) {
+    if ((order = (player_t **) malloc(NumPlayers * sizeof(player_t *))) == NULL) {
 	error("No memory for order");
 	return;
     }

@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.1.1.1 2007/01/21 16:41:18 kps Exp $
+/* $Id: event.c,v 1.3 2007/06/03 21:12:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -51,7 +51,7 @@ static char		msg[MSG_LEN];
 /* rewrote this (was a real ugly hack) -pgm */
 static void Refuel(int ind)
 {
-    player *pl = Players[ind];
+    player_t *pl = Players[ind];
     int i;
     int xpos, ypos;
     DFLOAT l, dist = 100;
@@ -103,7 +103,7 @@ bool team_dead(int team)
  */
 bool Player_lock_allowed(int ind, int lock)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
 
     /* we can never lock on ourselves, nor on -1. */
     if (ind == lock || lock == -1) {
@@ -157,7 +157,7 @@ bool Player_lock_allowed(int ind, int lock)
  */
 int Player_lock_closest(int ind, int next)
 {
-    player *pl = Players[ind];
+    player_t *pl = Players[ind];
     int lock, i, newpl;
     DFLOAT dist, best, l;
 
@@ -202,11 +202,11 @@ int Player_lock_closest(int ind, int next)
 
 void Pause_player(int ind, int onoff)
 {
-    player		*pl = Players[ind];
+    player_t		*pl = Players[ind];
     int			i;
 
     if (onoff != 0 && !BIT(pl->status, PAUSE)) { /* Turn pause mode on */
-	pl->count = 10*FPS;
+	pl->count = 10*intGameSpeed;
 	CLR_BIT(pl->status, SELF_DESTRUCT|PLAYING);
 	SET_BIT(pl->status, PAUSE);
 	pl->mychar = 'P';
@@ -252,7 +252,7 @@ void Pause_player(int ind, int onoff)
 
 int Handle_keyboard(int ind)
 {
-    player  	*pl = Players[ind];
+    player_t  	*pl = Players[ind];
     int	    	i, j, k, key, pressed, xi, yi;
     DFLOAT  	minv;
 
@@ -462,10 +462,10 @@ int Handle_keyboard(int ind)
 	    case KEY_TURN_RIGHT:
 	        pl->turnacc = 0;
 		if (BITV_ISSET(pl->last_keyv, KEY_TURN_LEFT)) {
-		    pl->turnacc += pl->turnspeed;
+		    pl->turnacc += pl->turnspeed * ticksPerFrame;
 		}
 		if (BITV_ISSET(pl->last_keyv, KEY_TURN_RIGHT)) {
-		    pl->turnacc -= pl->turnspeed;
+		    pl->turnacc -= pl->turnspeed * ticksPerFrame;
 		}
 		break;
 
@@ -563,10 +563,10 @@ int Handle_keyboard(int ind)
 	    case KEY_TURN_RIGHT:
 		pl->turnacc = 0;
 		if (BITV_ISSET(pl->last_keyv, KEY_TURN_LEFT)) {
-		    pl->turnacc += pl->turnspeed;
+		    pl->turnacc += pl->turnspeed * ticksPerFrame;
 		}
 		if (BITV_ISSET(pl->last_keyv, KEY_TURN_RIGHT)) {
-		    pl->turnacc -= pl->turnspeed;
+		    pl->turnacc -= pl->turnspeed * ticksPerFrame;
 		}
 		break;
 

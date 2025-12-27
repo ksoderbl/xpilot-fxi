@@ -1,4 +1,4 @@
-/* $Id: netserver.h,v 1.1.1.1 2007/01/21 16:41:22 kps Exp $
+/* $Id: netserver.h,v 1.4 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -55,14 +55,14 @@
 /*
  * Maximum roundtrip time taken as serious for rountrip time calculations.
  */
-#define MAX_RTT			(FPS + 1)
+#define MAX_RTT			(fps + 1)
 
 /*
  * The retransmission timeout bounds in number of frames.
  */
-#define MIN_RETRANSMIT		(FPS / 8 + 1)
-#define MAX_RETRANSMIT		(FPS + 1)
-#define DEFAULT_RETRANSMIT	(FPS / 2)
+#define MIN_RETRANSMIT		(fps / 8 + 1)
+#define MAX_RETRANSMIT		(fps + 1)
+#define DEFAULT_RETRANSMIT	(fps / 2)
 
 #if !defined(MAXHOSTNAMELEN)
 #define MAXHOSTNAMELEN 64
@@ -99,8 +99,6 @@ typedef struct {
     unsigned		version;		/* XPilot version of client */
     long		last_key_change;	/* last keyboard change */
     long		talk_sequence_num;	/* talk acknowledgement */
-    long		motd_offset;		/* offset into motd or -1 */
-    long		motd_stop;		/* max offset into motd */
     int			num_keyboard_updates;	/* Keyboards in one packet */
     int			view_width, view_height;/* Viewable area dimensions */
     int			debris_colors;		/* Max. debris intensities */
@@ -108,7 +106,7 @@ typedef struct {
     char		*real;			/* real login name of player */
     char		*nick;			/* nickname of player */
     char		*dpy;			/* display of player */
-    wireobj		*ship;			/* ship shape of player */
+    shipshape_t		*ship;			/* ship shape of player */
     char		*addr;			/* address of players host */
     char		*host;			/* hostname of players host */
 } connection_t;
@@ -138,8 +136,6 @@ static int Receive_pointer_move(int ind);
 static int Receive_audio_request(int ind);
 static int Receive_fps_request(int ind);
 
-static int Send_motd(int ind);
-
 #endif	/* NETSERVER_C */
 
 char *showtime(void);
@@ -151,7 +147,7 @@ int Setup_connection(char *real, char *nick, char *dpy, int team,
 		     char *addr, char *host, unsigned version);
 int Input(void);
 int Send_reply(int ind, int replyto, int result);
-int Send_self(int ind, player *pl,
+int Send_self(int ind, player_t *pl,
 	      int lock_id,
 	      int lock_dist,
 	      int lock_dir,

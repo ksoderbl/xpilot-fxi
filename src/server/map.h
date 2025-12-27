@@ -1,4 +1,4 @@
-/* $Id: map.h,v 1.2 2007/03/04 18:06:45 kps Exp $
+/* $Id: map.h,v 1.2 2007/06/03 21:12:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -64,8 +64,8 @@
 #define DIR_DOWN		(3*RES/4)
 
 typedef struct {
-    ipos	blk_pos;
-    position	pix_pos;
+    ipos_t	blk_pos;
+    position_t	pix_pos;
     long	fuel;
     unsigned	conn_mask;
     long	last_change;
@@ -73,7 +73,7 @@ typedef struct {
 } fuel_t;
 
 typedef struct {
-    ipos	pos;
+    ipos_t	pos;
     int		dir;
     u_short	team;
 } base_t;
@@ -84,7 +84,7 @@ typedef struct {
 } item_t;
 
 typedef struct {
-    ipos	pos;
+    ipos_t	pos;
     bool	have;		/* true if this treasure has ball in it */
     u_short	team;		/* team of this treasure */
     int 	destroyed;	/* number of times this treasure destroyed */

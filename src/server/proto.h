@@ -1,4 +1,4 @@
-/* $Id: proto.h,v 1.2 2007/03/06 18:30:29 kps Exp $
+/* $Id: proto.h,v 1.3 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -25,7 +25,7 @@
 #define	PROTO_H
 
 #ifndef OBJECT_H
-/* need player */
+/* need player_t */
 #include "object.h"
 #endif
 
@@ -65,7 +65,9 @@ void release_ID(int id);
 void Walls_init(void);
 void Move_init(void);
 void Move_object(int ind);
+void Move_object_interpolation(int ind);
 void Move_player(int ind);
+void Move_player_interpolation(int ind);
 void Turn_player(int ind);
 
 /*
@@ -106,15 +108,16 @@ void Free_options(void);
  * Prototypes for play.c
  */
 void Thrust(int ind);
-void Recoil(object *ship, object *shot);
-void Record_shove(player *pl, player *pusher, long time);
-void Delta_mv(object *ship, object *obj);
-void Obj_repel(object *obj1, object *obj2, int repel_dist);
+void Recoil(object_t *ship, object_t *shot);
+void Record_shove(player_t *pl, player_t *pusher, long time);
+void Delta_mv(object_t *ship, object_t *obj);
+void Obj_repel(object_t *obj1, object_t *obj2, int repel_dist);
 void Alloc_shots(int number);
 void Free_shots(void);
 void Add_fuel(pl_fuel_t*, long);
 void Update_tanks(pl_fuel_t *);
 void Move_ball(int ind);
+void Move_ball_interpolation(int ind);
 void Fire_shot(int ind, int type, int dir);
 void Fire_general_shot(int ind, u_short team, bool cannon, DFLOAT x, DFLOAT y,
 		       int type, int dir, DFLOAT speed,
@@ -160,17 +163,17 @@ void Explode_fighter(int ind);
 /*
  * Prototypes for command.c
  */
-void Handle_player_command(player *pl, char *cmd);
+void Handle_player_command(player_t *pl, char *cmd);
 
 /*
  * Prototypes for player.c
  */
 void Pick_startpos(int ind);
 void Go_home(int ind);
-void Compute_sensor_range(player *);
+void Compute_sensor_range(player_t *);
 void Player_add_tank(int ind, long tank_fuel);
 void Player_remove_tank(int ind, int which_tank);
-int Init_player(int ind, wireobj *ship);
+int Init_player(int ind, shipshape_t *ship);
 void Alloc_players(int number);
 void Free_players(void);
 void Update_score_table(void);
@@ -232,6 +235,12 @@ int Queue_show_list(char *msg);
 void Set_deny_hosts(void);
 
 /*
+ * Prototypes for command.c
+ */
+player_t *Get_player_by_name(const char *str,
+			     int *error_p, const char **errorstr_p);
+
+/*
  * Prototypes for metaserver.c
  */
 void Meta_send(char *mesg, int len);
@@ -245,7 +254,7 @@ void Meta_update(int change);
  */
 void Frame_update(void);
 void Set_message(const char *message);
-void Set_player_message(player *pl, const char *message);
+void Set_player_message(player_t *pl, const char *message);
 
 /*
  * Prototypes for update.c
@@ -253,6 +262,8 @@ void Set_player_message(player *pl, const char *message);
 void Update_radar_target(int);
 void Update_objects(void);
 void Autopilot(int ind, int on);
+void Init_interpolation_data(void);
+void Update_objects_interpolation(void);
 
 /*
  * Prototypes for option.c
@@ -290,214 +301,6 @@ bool parsePasswordFile(const char *filename);
 bool parseMapFile(const char *filename);
 void expandKeyword(const char *keyword);
 
-#if 0
-/*
- * Prototypes for cell.c
- */
-void Free_cells(void);
-void Alloc_cells(void);
-void Cell_init_object(object *obj);
-void Cell_add_object(object *obj);
-void Cell_remove_object(object *obj);
-void Cell_get_objects(int x, int y, int r, int max, object ***list, int *count);
-
-/*
- * Prototypes for collision.c
- */
-void Check_collision(void);
-int IsOffensiveItem(enum Item i);
-int IsDefensiveItem(enum Item i);
-int CountOffensiveItems(player *pl);
-int CountDefensiveItems(player *pl);
-
-/*
- * Prototypes for id.c
- */
-int peek_ID(void);
-int request_ID(void);
-void release_ID(int id);
-
-/*
- * Prototypes for walls.c
- */
-void Walls_init(void);
-void Treasure_init(void);
-void Move_init(void);
-void Move_object(object *obj);
-void Move_player(int ind);
-void Turn_player(int ind);
-
-/*
- * Prototypes for event.c
- */
-int Handle_keyboard(int);
-void Pause_player(int ind, int onoff);
-int Player_lock_closest(int ind, int next);
-bool team_dead(int team);
-void filter_mods(modifiers *mods);
-
-/*
- * Prototypes for play.c
- */
-void Thrust(int ind);
-void Turn_thrust(int ind,int num_sparks);
-void Recoil(object *ship, object *shot);
-void Record_shove(player *pl, player *pusher, long time);
-void Delta_mv(object *ship, object *obj);
-void Delta_mv_elastic(object *obj1, object *obj2);
-void Obj_repel(object *obj1, object *obj2, int repel_dist);
-void Item_damage(int ind, DFLOAT prob);
-void Tank_handle_detach(player*);
-void Add_fuel(pl_fuel_t*, long);
-void Update_tanks(pl_fuel_t *);
-void Place_item(int type, int ind);
-int Choose_random_item(void);
-char *Describe_shot(int type, long status, modifiers mods, int hit);
-void Move_ball(int ind);
-void Fire_shot(int ind, int type, int dir);
-void Fire_general_shot(int ind, unsigned short team, bool cannon,
-		       DFLOAT x, DFLOAT y, int type, int dir,
-		       modifiers mods, int target);
-void Fire_normal_shots(int ind);
-void Fire_main_shot(int ind, int type, int dir);
-void Fire_shot(int ind, int type, int dir);
-void Fire_left_shot(int ind, int type, int dir, int gun);
-void Fire_right_shot(int ind, int type, int dir, int gun);
-void Fire_left_rshot(int ind, int type, int dir, int gun);
-void Fire_right_rshot(int ind, int type, int dir, int gun);
-void Make_treasure_ball(int treasure);
-int Punish_team(int ind, int t_destroyed, int t_target);
-void Delete_shot(int ind);
-void Fire_laser(int ind);
-void Fire_general_laser(int ind, unsigned short team, DFLOAT x, DFLOAT y, int dir,
-			modifiers mods);
-void do_lose_item(int ind);
-void Make_item(int px, int py,
-	       int vx, int vy,
-	       int item, int num_per_pack,
-	       long status);
-void Explode(int ind);
-void Explode_fighter(int ind);
-void Throw_items(int ind);
-void Detonate_items(int ind);
-
-
-
-/*
- * Prototypes for command.c
- */
-void Handle_player_command(player *pl, char *cmd);
-
-/*
- * Prototypes for player.c
- */
-void Pick_startpos(int ind);
-void Go_home(int ind);
-void Compute_sensor_range(player *);
-void Player_add_tank(int ind, long tank_fuel);
-void Player_remove_tank(int ind, int which_tank);
-void Player_hit_armor(int ind);
-void Player_used_kill(int ind);
-void Player_set_mass(int ind);
-int Init_player(int ind, shipobj *ship);
-void Alloc_players(int number);
-void Free_players(void);
-void Update_score_table(void);
-void Reset_all_players(void);
-void Check_team_members(int);
-void Compute_game_status(void);
-void Delete_player(int ind);
-void Detach_ball(int ind, int ball);
-void Kill_player(int ind);
-void Player_death_reset(int ind);
-void Team_game_over(int winning_team, const char *reason);
-void Individual_game_over(int winner);
-int Team_immune(int id1, int id2);
-
-/*
- * Prototypes for robot.c
- */
-void Parse_robot_file(void);
-void Robot_init(void);
-void Robot_delete(int ind, int kicked);
-void Robot_destroy(int ind);
-void Robot_update(void);
-void Robot_invite(int ind, int inv_ind);
-void Robot_war(int ind, int killer);
-void Robot_reset_war(int ind);
-int Robot_war_on_player(int ind);
-void Robot_go_home(int ind);
-void Robot_program(int ind, int victim_id);
-void Robot_message(int ind, const char *message);
-
-/*
- * Prototypes for rules.c
- */
-void Tune_item_probs(void);
-void Tune_item_packs(void);
-void Set_initial_resources(void);
-void Set_world_items(void);
-void Set_world_rules(void);
-
-/*
- * Prototypes for server.c
- */
-int End_game(void);
-int Pick_team(int pick_for_type);
-void Server_info(char *str, unsigned max_size);
-void Log_game(const char *heading);
-void Game_Over(void);
-void Server_log_admin_message(int ind, const char *str);
-int plock_server(int onoff);
-void Main_loop(void);
-
-
-/*
- * Prototypes for contact.c
- */
-void Contact_cleanup(void);
-int Contact_init(void);
-void Contact(int fd, void *arg);
-void Queue_loop(void);
-int Queue_advance_player(char *name, char *msg);
-int Queue_show_list(char *msg);
-void Set_deny_hosts(void);
-
-/*
- * Prototypes for metaserver.c
- */
-void Meta_send(char *mesg, int len);
-int Meta_from(char *addr, int port);
-void Meta_gone(void);
-void Meta_init(void);
-void Meta_update(int change);
-
-/*
- * Prototypes for frame.c
- */
-void Frame_update(void);
-void Set_message(const char *message);
-void Set_player_message(player *pl, const char *message);
-
-/*
- * Prototypes for update.c
- */
-void Update_objects(void);
-void Autopilot(int ind, int on);
-
-/*
- * Prototypes for object.c
- */
-object *Object_allocate(void);
-void Object_free_ind(int ind);
-void Object_free_ptr(object *obj);
-void Alloc_shots(int number);
-void Free_shots(void);
-
-/*
- * Prototypes for showtime.c
- */
-char *showtime(void);
-#endif
+void insert_measure(void);
 
 #endif

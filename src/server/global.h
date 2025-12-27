@@ -1,4 +1,4 @@
-/* $Id: global.h,v 1.7 2007/03/15 21:04:04 pgma Exp $
+/* $Id: global.h,v 1.4 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -54,14 +54,12 @@ typedef struct {
 /*
  * Global data.
  */
-#define FPS		intGameSpeed
-
 
 /*#define NumObjs		(ObjCount + 0)*/
 
 
-extern player		**Players;
-extern object		*Obj[];
+extern player_t		**Players;
+extern object_t		*Obj[];
 extern long		frame_loops;
 extern int		NumPlayers;
 extern int		NumPseudoPlayers;
@@ -115,8 +113,6 @@ extern bool		cloakedShield;
 extern DFLOAT		maxObjectWallBounceSpeed;
 extern DFLOAT		maxShieldedWallBounceSpeed;
 extern DFLOAT		maxUnshieldedWallBounceSpeed;
-extern DFLOAT		maxShieldedWallBounceAngle;
-extern DFLOAT		maxUnshieldedWallBounceAngle;
 extern DFLOAT		playerWallBrakeFactor;
 extern DFLOAT		objectWallBrakeFactor;
 extern DFLOAT		objectWallBounceLifeFactor;
@@ -131,7 +127,6 @@ extern bool		keepShots;
 extern bool		teamAssign;
 extern bool		teamImmunity;
 extern bool		teamShareScore;
-extern bool		timing;
 extern bool		edgeWrap;
 extern bool		edgeBounce;
 extern bool		extraBorder;
@@ -145,7 +140,6 @@ extern char		*denyHosts;
 extern int		maxClientsPerIP;
 
 extern bool		playersOnRadar;
-extern bool		treasureKillTeam;
 
 extern bool		treasureCollisionDestroys;
 extern bool		treasureCollisionMayKill;
@@ -202,6 +196,7 @@ extern unsigned		SPACE_BLOCKS;
 extern int 	frameDivisor;
 extern int	fps;
 extern int	intGameSpeed;
+extern float	ticksPerFrame;
 extern DFLOAT	gameSpeed;
 extern char	*rankFileName;
 extern char	*rankWebpageFileName;

@@ -1,4 +1,4 @@
-/* $Id: painthud.c,v 1.1.1.1 2007/01/21 16:41:02 kps Exp $
+/* $Id: painthud.c,v 1.2 2007/06/03 21:12:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -236,7 +236,7 @@ static void Paint_lock(int hud_pos_x, int hud_pos_y)
     int		i, dir = 96;
     int		hudShipColor = hudColor;
     other_t	*target;
-    wireobj	*ship;
+    shipshape_t	*ship;
     char	str[50];
     static int	warningCount;
     static int	mapdiag = 0;

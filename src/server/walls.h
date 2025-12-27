@@ -1,4 +1,4 @@
-/* $Id: walls.h,v 1.3 2007/03/04 18:06:45 kps Exp $
+/* $Id: walls.h,v 1.3 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -54,8 +54,7 @@ typedef enum {
     CrashTreasure = 0x08,
     CrashUnknown = 0x20,
     CrashWallSpeed = 0x80,
-    CrashWallNoFuel = 0x100,
-    CrashWallAngle = 0x200
+    CrashWallNoFuel = 0x100
 } move_crash_t;
 
 typedef enum {
@@ -76,8 +75,8 @@ typedef struct {
     int			edge_bounce;
     int			wall_bounce;
     int			treasure_crashes;
-    object		*obj;
-    player		*pl;
+    object_t		*obj;
+    player_t		*pl;
 } move_info_t;
 
 typedef struct {
@@ -85,7 +84,7 @@ typedef struct {
     move_crash_t	crash;
     move_bounce_t	bounce;
     clpos_t		pos;
-    vector		vel;
+    vector_t		vel;
     clvec_t		todo;
     clvec_t		done;
     int			dir;
@@ -93,9 +92,6 @@ typedef struct {
 } move_state_t;
 
 struct move_parameters {
-    int			max_shielded_angle;	/* max player bounce angle */
-    int			max_unshielded_angle;	/* max player bounce angle */
-
     unsigned long	obj_bounce_mask;	/* which objects bounce? */
     unsigned long	obj_treasure_mask;	/* objects treasure crash? */
 };

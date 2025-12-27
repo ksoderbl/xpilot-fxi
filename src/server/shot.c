@@ -1,4 +1,4 @@
-/* $Id: shot.c,v 1.5 2007/03/18 22:08:32 pgma Exp $
+/* $Id: shot.c,v 1.5 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -44,14 +44,14 @@ extern int frame_cycle;
  * Functions for shots.
  */
 
-static object *objArray;
+static object_t *objArray;
 
 void Alloc_shots(int number)
 {
-    object		*x;
+    object_t		*x;
     int			i;
 
-    x = (object *) calloc(number, sizeof(object));
+    x = (object_t *) calloc(number, sizeof(object_t));
     if (!x) {
 	error("Not enough memory for shots.");
 	exit(1);
@@ -76,7 +76,7 @@ void Free_shots(void)
 
 void Make_treasure_ball(int treasure)
 {
-    object *ball;
+    object_t *ball;
     treasure_t *t = &(World.treasures[treasure]);
     int cx = (t->pos.x + 0.5) * BLOCK_CLICKS;
     int cy = (t->pos.y * BLOCK_CLICKS) + 10 * CLICK;
@@ -116,12 +116,12 @@ void Make_treasure_ball(int treasure)
 void Fire_normal_shots(int ind)
 
 {
-    player		*pl = (ind == -1 ? NULL : Players[ind]);
+    player_t		*pl = (ind == -1 ? NULL : Players[ind]);
     int			life, fuse = 0, lock = 0, status = 0, pl_range = 0, pl_radius = 0;
-    DFLOAT		turnspeed = 0, max_speed = SPEED_LIMIT, angle;
-    vector		mv;
+    DFLOAT		turnspeed = 0, max_speed = SPEED_LIMIT;
+    vector_t		mv;
     clpos_t		shotpos;
-    object              *shot = Obj[NumObjs];
+    object_t            *shot = Obj[NumObjs];
     int cx, cy;
     u_short team        = pl->team;
     DFLOAT speed        = pl->shot_speed;
@@ -189,21 +189,14 @@ void Fire_normal_shots(int ind)
       return;            /* this is necessary or the game will crash sometimes -pgm */
     }
     
-    if (frame_cycle == 0)
-      Object_position_init_clicks(shot, shotpos.cx, shotpos.cy);
-    else
-      Object_position_init_clicks_interpolation(shot, shotpos.cx, shotpos.cy);
+    
+    Object_position_init_clicks(shot, shotpos.cx, shotpos.cy);
 
     mv.x = mv.y = shot->acc.x = shot->acc.y = 0;
     
     shot->vel.x     = mv.x + (pl ? pl->vel.x : 0.0) + tcos(dir) * speed;
     shot->vel.y     = mv.y + (pl ? pl->vel.y : 0.0) + tsin(dir) * speed;
     
-    /* for shooting at interpolated frames, also update intermediate velocity */
-    if (frame_cycle != 0){
-      shot->vel_interp.x = shot->vel.x;
-      shot->vel_interp.y = shot->vel.y;
-    }
     
     shot->status    = status;
     shot->dir       = dir;
@@ -214,8 +207,8 @@ void Fire_normal_shots(int ind)
 /* Removes shot from array */
 void Delete_shot(int ind)
 {
-    object		*shot = Obj[ind];	/* Used when swapping places */
-    player		*pl;
+    object_t		*shot = Obj[ind];	/* Used when swapping places */
+    player_t		*pl;
     int			addBall = 0;
     int			i;
 
@@ -329,9 +322,9 @@ void Move_ball(int ind)
      * from 0.25 to 0.30.  Not sure if that helps enough, or too much.
      */
 
-    object		*ball = Obj[ind];
-    player		*pl = Players[ GetInd[ball->id] ];
-    vector		D;
+    object_t		*ball = Obj[ind];
+    player_t		*pl = Players[ GetInd[ball->id] ];
+    vector_t		D;
     DFLOAT		length, force, ratio, accell, cosine, pl_damping, ball_damping;
     DFLOAT		k = ballConnectorSpringConstant;
     DFLOAT		b = ballConnectorDamping;
@@ -387,14 +380,14 @@ void Move_ball_interpolation(int ind)
       similar to Move_ball, but without detaching -pgm
      */
 
-    object		*ball = Obj[ind];
-    player		*pl = Players[ GetInd[ball->id] ];
-    vector		D;
+    object_t		*ball = Obj[ind];
+    player_t		*pl = Players[ GetInd[ball->id] ];
+    vector_t		D;
     DFLOAT		length, force, ratio, accell, cosine, pl_damping, ball_damping;
     DFLOAT		k = ballConnectorSpringConstant;
     DFLOAT		b = ballConnectorDamping;
-    DFLOAT		max_spring_ratio = maxBallConnectorRatio;
-    float               speedfactor = 1.0/frameDivisor;
+    /*DFLOAT		max_spring_ratio = maxBallConnectorRatio;*/
+    float               speedfactor = ticksPerFrame;
 
     /* compute the normalized vector between the ball and the player */
     D.x = WRAP_DX(pl->pos_interp.x - ball->pos_interp.x);

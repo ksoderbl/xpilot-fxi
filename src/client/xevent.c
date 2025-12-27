@@ -1,4 +1,4 @@
-/* $Id: xevent.c,v 1.1.1.1 2007/01/21 16:41:06 kps Exp $
+/* $Id: xevent.c,v 1.2 2007/06/03 21:12:44 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -25,23 +25,12 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#ifndef	_WINDOWS
 #include <X11/Xlib.h>
 #include <X11/Xos.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
 #include <X11/Xmd.h>
-#ifdef	__apollo
-#    include <X11/ap_keysym.h>
-#endif
-#else
-#include <math.h>
-#include "NT/winX.h"
-#include "NT/winAudio.h"
-#include "NT/winClient.h"
-#include "NT/winXKey.h"
-#endif
 
 #include "version.h"
 #include "config.h"
@@ -794,8 +783,8 @@ void xevent_keyboard(int queued)
 #endif
 }
 
-ipos	delta;
-ipos	mouse;		/* position of mouse pointer. */
+ipos_t	delta;
+ipos_t	mouse;		/* position of mouse pointer. */
 int	movement;	/* horizontal mouse movement. */
 
 

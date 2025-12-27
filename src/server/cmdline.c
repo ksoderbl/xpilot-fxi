@@ -1,4 +1,4 @@
-/* $Id: cmdline.c,v 1.7 2007/03/15 21:04:04 pgma Exp $
+/* $Id: cmdline.c,v 1.4 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -79,8 +79,8 @@ char		*greeting;		/* Greeting for joining players */
 bool		crashWithPlayer;	/* Can players overrun other players? */
 bool		bounceWithPlayer;	/* Can players bounce other players? */
 bool		playerKillings;		/* Can players kill each other? */
-bool		playerShielding;	/* Can players use shields? */
-bool		playerStartsShielded;	/* Players start with shields up? */
+bool		playerShielding = false;	/* Can players use shields? */
+bool		playerStartsShielded = true;	/* Players start with shields up? */
 bool		shotsWallBounce;	/* Do shots bounce off walls? */
 bool		sparksWallBounce;	/* Do sparks bounce off walls? */
 bool		debrisWallBounce;	/* Do sparks bounce off walls? */
@@ -88,8 +88,6 @@ bool		ballCollisions;		/* Do balls participate in colls.? */
 DFLOAT		maxObjectWallBounceSpeed;	/* max object bounce speed */
 DFLOAT		maxShieldedWallBounceSpeed;	/* max shielded bounce speed */
 DFLOAT		maxUnshieldedWallBounceSpeed; /* max unshielded bounce speed */
-DFLOAT		maxShieldedWallBounceAngle;	/* max angle for landing */
-DFLOAT		maxUnshieldedWallBounceAngle;	/* max angle for landing */
 DFLOAT		playerWallBrakeFactor;	/* wall lowers speed if less than 1 */
 DFLOAT		objectWallBrakeFactor;	/* wall lowers speed if less than 1 */
 DFLOAT		objectWallBounceLifeFactor;	/* reduce object life */
@@ -124,8 +122,6 @@ char		*denyHosts;		/* Computers which are denied service */
 
 bool		teamAssign;		/* Assign player to team if not set? */
 bool		teamImmunity;		/* Is team immune from player action */
-
-bool		treasureKillTeam;	/* die if treasure is destroyed? */
 
 bool		treasureCollisionDestroys;
 bool		treasureCollisionMayKill;
@@ -582,26 +578,6 @@ static option_desc options[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
-	"allowShields",
-	"shields",
-	"yes",
-	&playerShielding,
-	valBool,
-	tuner_playershielding,
-	"Are shields allowed?\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-	"playerStartsShielded",
-	"playerStartShielded",
-	"yes",
-	&playerStartsShielded,
-	valBool,
-	tuner_playerstartsshielded,
-	"Do players start with shields up?\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
 	"shotsWallBounce",
 	"shotsWallBounce",
 	"no",
@@ -669,26 +645,6 @@ static option_desc options[] = {
 	valReal,
 	Move_init,
 	"Maximum allowed speed for an unshielded player to bounce off walls.\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-	"maxShieldedPlayerWallBounceAngle",
-	"maxShieldedBounceAngle",
-	"90",
-	&maxShieldedWallBounceAngle,
-	valReal,
-	Move_init,
-	"Maximum allowed angle for a shielded player to bounce off walls.\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
-	"maxUnshieldedPlayerWallBounceAngle",
-	"maxUnshieldedBounceAngle",
-	"30",
-	&maxUnshieldedWallBounceAngle,
-	valReal,
-	Move_init,
-	"Maximum allowed angle for an unshielded player to bounce off walls.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
@@ -866,16 +822,6 @@ static option_desc options[] = {
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {
-	"treasureKillTeam",
-	"treasureKillTeam",
-	"no",
-	&treasureKillTeam,
-	valBool,
-	tuner_dummy,
-	"Do team members die when their treasure is destroyed?\n",
-	OPT_ORIGIN_ANY | OPT_VISIBLE
-    },
-    {
 	"treasureCollisionDestroys",
 	"treasureCollisionDestroy",
 	"yes",
@@ -1039,6 +985,7 @@ static option_desc options[] = {
 	"The maximum size in bytes of the admin message file.\n",
 	OPT_COMMAND | OPT_DEFAULTS
     },
+#if 0
     {
 	"intGameSpeed",
 	"intGameSpeed",
@@ -1059,6 +1006,7 @@ static option_desc options[] = {
 	"The number of ticks per second for timing purposes.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
+#endif
     {
 	"allowShipShapes",
 	"ShipShapes",
@@ -1112,7 +1060,7 @@ static option_desc options[] = {
     {
 	"useWreckage",
 	"useWreckage",
-	"true",
+	"false",
 	&useWreckage,
 	valBool,
 	tuner_dummy,
@@ -1186,6 +1134,7 @@ static option_desc options[] = {
 	"Use UDP ports clientPortStart - clientPortEnd (for firewalls)\n",
 	OPT_COMMAND | OPT_DEFAULTS | OPT_VISIBLE
     },
+#if 0
     {
 	"maxPauseTime",
 	"maxPauseTime",
@@ -1198,22 +1147,22 @@ static option_desc options[] = {
 	"Setting this option to 0 disables the feature.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
-
+#endif
     {
         "frameDivisor",
 	"frameDivisor",
-	"2",
+	"4",
 	&frameDivisor,
 	valInt,
 	tuner_framedivisor,
-	"Divisor for the Fps to get the higher rate to act effectively as lower at places where this is required.\n",
+	"Set frameDivisor so that fps/frameDivisor is close to 12.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     
     {
         "fps",
 	"fps",
-	"25",
+	"50",
 	&fps,
 	valInt,
 	tuner_fps,

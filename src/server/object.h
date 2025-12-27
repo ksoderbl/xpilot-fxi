@@ -1,4 +1,4 @@
-/* $Id: object.h,v 1.2 2007/03/08 20:32:00 kps Exp $
+/* $Id: object.h,v 1.3 2007/06/12 18:59:38 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -80,6 +80,9 @@
 #define IS_ROBOT_PTR(pl)	(BIT((pl)->type_ext,OBJ_EXT_ROBOT)==OBJ_EXT_ROBOT)
 #define IS_HUMAN_PTR(pl)	(!BIT((pl)->type_ext,OBJ_EXT_ROBOT))
 
+#define Player_by_id(id)	(Players[GetInd[id]])
+#define Player_by_index(ind)	(Players[ind])
+
 #define LOCK_NONE		0x00	/* No lock */
 #define LOCK_PLAYER		0x01	/* Locked on player */
 #define LOCK_VISIBLE		0x02	/* Lock information was on HUD */
@@ -94,7 +97,7 @@
  *
  * NB: position in pixels used to be a float.
  */
-typedef const struct _objposition objposition;
+typedef const struct _objposition objposition_t;
 struct _objposition {
     int		cx, cy;			/* object position in clicks. */
     int		x, y;			/* object position in pixels. */
@@ -107,19 +110,19 @@ struct _objposition {
 #define OBJ_X_IN_BLOCKS(obj)	((obj)->pos.bx)
 #define OBJ_Y_IN_BLOCKS(obj)	((obj)->pos.by)
 
-typedef struct _object object;
+typedef struct _object object_t;
 struct _object {
     byte	color;			/* Color of object */
     u_byte	dir;			/* Direction of acceleration */
     int		id;			/* For shots => id of player */
     u_short	team;			/* Team of player or cannon */
-    objposition	pos;			/* World coordinates */
-    ipos	prevpos;		/* Object's previous position... */
-    vector	vel;
-    vector	acc;
-    objposition pos_interp;
-    vector      vel_interp;
-    vector      acc_interp;
+    objposition_t	pos;			/* World coordinates */
+    ipos_t	prevpos;		/* Object's previous position... */
+    vector_t	vel;
+    vector_t	acc;
+    objposition_t	pos_interp;
+    vector_t	vel_interp;
+    vector_t	acc_interp;
     DFLOAT	max_speed;
     DFLOAT	mass;
     int		type;
@@ -133,7 +136,7 @@ struct _object {
     DFLOAT	turnspeed;		/* for missiles only */
     long	fuselife;		/* Ticks left when considered fused */
 
-    object	*cell_list;		/* linked list for cell lookup */
+    object_t	*cell_list;		/* linked list for cell lookup */
 
     int 	owner;			/* Who's object is this ? */
 					/* (spare for id)*/
@@ -185,19 +188,19 @@ struct robot_data;
  * this makes it possible to use the same basic operations on both of them
  * (mainly used in update.c).
  */
-typedef struct player player;
+typedef struct player player_t;
 struct player {
     byte	color;			/* Color of object */
     u_byte	dir;			/* Direction of acceleration */
     int		id;			/* Unique id of object */
     u_short	team;			/* What team is the player on? */
-    objposition	pos;			/* World coordinates */
-    ipos	prevpos;		/* Previous position... */
-    vector	vel;			/* Velocity of object */
-    vector	acc;			/* Acceleration constant */
-    objposition pos_interp;
-    vector	vel_interp;
-    vector	acc_interp;
+    objposition_t	pos;			/* World coordinates */
+    ipos_t	prevpos;		/* Previous position... */
+    vector_t	vel;			/* Velocity of object */
+    vector_t	acc;			/* Acceleration constant */
+    objposition_t	pos_interp;
+    vector_t	vel_interp;
+    vector_t	acc_interp;
     DFLOAT	max_speed;		/* Maximum speed of object */
     DFLOAT	mass;			/* Mass of object (incl. cargo) */
     int		type;			/* Type of object */
@@ -229,7 +232,7 @@ struct player {
     long	score;			/* Current score of player */
     long	prev_score;		/* Last score that has been updated */
     int		prev_life;		/* Last life that has been updated */
-    wireobj	*ship;			/* wire model of ship shape */
+    shipshape_t	*ship;			/* wire model of ship shape */
     DFLOAT	power;			/* Force of thrust */
     DFLOAT	power_s;		/* Saved power fiks */
     DFLOAT	turnspeed_s;		/* Saved turnspeed */
@@ -259,7 +262,7 @@ struct player {
     char	realname[MAX_CHARS];	/* Real name of player */
     char	hostname[MAX_CHARS];	/* Hostname of client player uses */
 					/* (detaching!) */
-    object	*ball;
+    object_t	*ball;
 
     /*
      * Pointer to robot private data (dynamically allocated).

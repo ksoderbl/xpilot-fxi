@@ -1,4 +1,4 @@
-/* $Id: talkmacros.c,v 1.1.1.1 2007/01/21 16:41:07 kps Exp $
+/* $Id: talkmacros.c,v 1.1.1.1 2007/05/20 21:59:18 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
