@@ -1,4 +1,4 @@
-/* $Id: command.c,v 1.3 2007/06/12 18:59:38 kps Exp $
+/* $Id: command.c,v 1.5 2007/09/11 19:20:28 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -167,6 +167,8 @@ static int Cmd_advance(char *arg, player_t *pl, int oper, char *msg);
 static int Cmd_get(char *arg, player_t *pl, int oper, char *msg);
 static int Cmd_stats(char *arg, player_t *pl, int oper, char *msg);
 static int Cmd_plinfo(char *arg, player_t *pl, int oper, char *msg);
+static int Cmd_addr(char *arg, player_t *pl, int oper, char *msg);
+static int Cmd_oldturn(char *arg, player_t *pl, int oper, char *msg);
 
 typedef struct {
     const char		*name;
@@ -282,6 +284,21 @@ static Command_info commands[] = {
 	0,
 	Cmd_plinfo
     },
+    {
+	"addr",
+	"addr",
+	"/addr <player name or ID number>. Show IP-address of player."
+	"(operator)",
+	1,
+	Cmd_addr
+    },
+    {
+	"oldturn",
+	"oldturn",
+	"/oldturn  Use old turning code. /oldturn 1 enables. /oldturn 0 disables.",
+	0,
+	Cmd_oldturn
+     },
 };
 
 
@@ -818,6 +835,61 @@ static int Cmd_plinfo(char *arg, player_t *pl, int oper, char *msg)
 	     pl2->player_fps, pl2->turnspeed, pl2->turnresistance);
     /*(int)((pl2->conn->rtt_smoothed >> 3) * timePerFrame * 1000),
       (int)((pl2->conn->rtt_dev >> 2) * timePerFrame * 1000));*/
+
+    return CMD_RESULT_SUCCESS;
+}
+
+static int Cmd_addr(char *arg, player_t *pl, int oper, char *msg)
+{
+    player_t *pl2 = NULL;
+    const char *errorstr;
+    size_t size = MSG_LEN;
+
+    /*UNUSED_PARAM(pl);*/
+
+    if (!oper)
+	return CMD_RESULT_NOT_OPERATOR;
+
+    if (!arg || !*arg)
+	return CMD_RESULT_NO_NAME;
+
+    pl2 = Get_player_by_name(arg, NULL, &errorstr);
+    if (pl2) {
+	const char *addr = Player_get_addr(pl2);
+
+	if (addr == NULL)
+	    snprintf(msg, size, "Unable to get address for %s.", pl2->name);
+	else
+	    snprintf(msg, size, "%s plays from: %s.", pl2->name, addr);
+    } else {
+	strlcpy(msg, errorstr, size);
+	return CMD_RESULT_ERROR;
+    }
+
+    return CMD_RESULT_SUCCESS;
+}
+
+static int Cmd_oldturn(char *arg, player_t *pl, int oper, char *msg)
+{
+    if (!arg || !*arg) {
+	sprintf(msg, "You are currently using %s turn code.",
+		pl->oldturn ? "old" : "new");
+	return CMD_RESULT_SUCCESS;
+    }
+
+    if (!strcmp(arg, "1")) {
+	pl->oldturn = 1;
+    }
+    else if (!strcmp(arg, "0")) {
+	pl->oldturn = 0;
+    }
+    else {
+	sprintf(msg, "Invalid argument '%s'.  Specify either 0 or 1.", arg);
+	return CMD_RESULT_ERROR;
+    }
+
+    sprintf(msg, "You are now using %s turn code.",
+	    pl->oldturn ? "old" : "new");
 
     return CMD_RESULT_SUCCESS;
 }

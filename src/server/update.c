@@ -1,4 +1,4 @@
-/* $Id: update.c,v 1.5 2007/06/12 18:59:38 kps Exp $
+/* $Id: update.c,v 1.6 2007/09/12 15:17:27 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -444,13 +444,16 @@ void update_player_turn(int ind){
    * turnresistance is zero: client requests linear turning behaviour
    * when playing with pointer control.
    */
-  if (!pl->turnresistance) {
-    pl->turnvel = 0;
-  }
-  /*  printf("%d\n",main_loops);
-      fflush(stdout);
-  */
-  Turn_player(ind);
+    if (!pl->turnresistance) {
+	pl->turnvel = 0;
+    }
+    /*  printf("%d\n",main_loops);
+	fflush(stdout);
+    */
+    if (pl->oldturn)
+	Old_turn_player(ind);
+    else
+	Turn_player(pl);
 }
 
 void update_player_thrust(player_t *pl){

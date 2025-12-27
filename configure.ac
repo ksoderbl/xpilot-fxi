@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([XPilot], 1.3.8fxi, foo@bar.com, xpilot)
+AC_INIT([XPilot], 1.4.0fxi, foo@bar.com, xpilot)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(src/server/walls.c)
 
@@ -23,26 +23,12 @@ AC_SUBST([XP_COPYRIGHTDATE])
 XP_COPYRIGHT="Copyright © $XP_COPYRIGHTDATE by $XP_AUTHORS"
 AC_SUBST([XP_COPYRIGHT])
 
-AC_SUBST([XP_RELEASEDATE],["Aug 20, 2007"])
+AC_SUBST([XP_RELEASEDATE],["Sep 13, 2007"])
 AC_SUBST([XP_DATADIR],"$prefix/share/xpilot")
 
 
 dnl  Checks for options.
 dnl  We should have some general macro for these.
-AC_ARG_ENABLE(dbe,
-	AC_HELP_STRING([--enable-dbe],
-			[support for X Doublebuffer Extension in client]),
-[if test x$enable_dbe = xyes; then
-	AC_DEFINE([DBE], 1, [support for X Doublebuffer Extension in client])
-fi])
-
-AC_ARG_ENABLE(mbx,
-	AC_HELP_STRING([--enable-mbx],
-			[support for X Multibuffer Extension in client]),
-[if test x$enable_mbx = xyes; then
-	AC_DEFINE([MBX], 1, [support for X Multibuffer Extension in client])
-fi])
-
 AC_ARG_ENABLE(plockserver,
 	AC_HELP_STRING([--enable-plockserver],
 			[lock the xpilot-ng server into memory]),

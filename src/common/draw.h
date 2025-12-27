@@ -1,4 +1,4 @@
-/* $Id: draw.h,v 1.3 2007/06/03 21:12:44 kps Exp $
+/* $Id: draw.h,v 1.4 2007/09/12 15:17:26 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -116,9 +116,11 @@ typedef struct {			/* Defines wire-obj, i.e. ship */
 	char*	name;
 	char*	author;
 #endif
+    int		default_ship;		/* A default ship using statically allocated memory. */
 } shipshape_t;
 
-extern shipshape_t *Default_ship(void);
+extern shipshape_t *Triangle_ship(void);
+extern shipshape_t *Circle_ship(void);
 extern void Free_ship_shape(shipshape_t *w);
 extern shipshape_t *Parse_shape_str(char *str);
 extern shipshape_t *Convert_shape_str(char *str);

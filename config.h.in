@@ -1,8 +1,5 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* support for X Doublebuffer Extension in client */
-#undef DBE
-
 /* enable development code */
 #undef DEVELOPMENT
 
@@ -244,9 +241,6 @@
 /* Define to 1 if `lstat' dereferences a symlink specified with a trailing
    slash. */
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
-
-/* support for X Multibuffer Extension in client */
-#undef MBX
 
 /* Name of package */
 #undef PACKAGE

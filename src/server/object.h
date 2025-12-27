@@ -1,4 +1,4 @@
-/* $Id: object.h,v 1.3 2007/06/12 18:59:38 kps Exp $
+/* $Id: object.h,v 1.4 2007/09/11 19:20:28 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -291,6 +291,7 @@ struct player {
     int		isoperator;		/* If player has operator privileges. */
     bool        update_score;           /* score table info needs to be sent */
     struct ranknode     *rank;		
+    int		oldturn;		/* Use old turn player code */
 };
 
 #endif

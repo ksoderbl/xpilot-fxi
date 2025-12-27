@@ -1,4 +1,4 @@
-/* $Id: const.h,v 1.1.1.1 2007/05/20 21:59:10 kps Exp $
+/* $Id: const.h,v 1.2 2007/09/11 19:20:28 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -143,7 +143,7 @@ extern DFLOAT		tbl_cos[];
 
 #define SPEED_LIMIT		65.0
 #define MAX_PLAYER_TURNSPEED	64.0
-#define MIN_PLAYER_TURNSPEED	4.0
+#define MIN_PLAYER_TURNSPEED	0.1
 #define MAX_PLAYER_POWER	55.0
 #define MIN_PLAYER_POWER	5.0
 #define MAX_PLAYER_TURNRESISTANCE	1.0

@@ -1,4 +1,4 @@
-/* $Id: walls.c,v 1.4 2007/06/12 18:59:38 kps Exp $
+/* $Id: walls.c,v 1.5 2007/09/12 15:17:27 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -1598,7 +1598,10 @@ void Move_player(int ind)
     ivec_t		sign;		/* sign (-1 or 1) of direction */
     ipos_t		block;		/* block index */
     bool		pos_update = false;
+    shipshape_t		*ship = pl->ship;
 
+    if (!pl->oldturn)
+	ship = Circle_ship();
 
     if (BIT(pl->status, PLAYING|PAUSE|GAME_OVER|KILLED) != PLAYING) {
 	if (!BIT(pl->status, KILLED|PAUSE)) {
@@ -1641,9 +1644,9 @@ void Move_player(int ind)
     vel = pl->vel;
     todo.cx = FLOAT_TO_CLICK(vel.x);
     todo.cy = FLOAT_TO_CLICK(vel.y);
-    for (i = 0; i < pl->ship->num_points; i++) {
-	DFLOAT x = pl->ship->pts[i][pl->dir].x;
-	DFLOAT y = pl->ship->pts[i][pl->dir].y;
+    for (i = 0; i < ship->num_points; i++) {
+	DFLOAT x = ship->pts[i][pl->dir].x;
+	DFLOAT y = ship->pts[i][pl->dir].y;
 	ms[i].pos.cx = pl->pos.cx + FLOAT_TO_CLICK(x);
 	ms[i].pos.cy = pl->pos.cy + FLOAT_TO_CLICK(y);
 	ms[i].vel = vel;
@@ -1654,8 +1657,8 @@ void Move_player(int ind)
 
     for (;; moves_made++) {
 
-	pos.cx = ms[0].pos.cx - FLOAT_TO_CLICK(pl->ship->pts[0][ms[0].dir].x);
-	pos.cy = ms[0].pos.cy - FLOAT_TO_CLICK(pl->ship->pts[0][ms[0].dir].y);
+	pos.cx = ms[0].pos.cx - FLOAT_TO_CLICK(ship->pts[0][ms[0].dir].x);
+	pos.cy = ms[0].pos.cy - FLOAT_TO_CLICK(ship->pts[0][ms[0].dir].y);
 	pos.cx = WRAP_XCLICK(pos.cx);
 	pos.cy = WRAP_YCLICK(pos.cy);
 	block.x = pos.cx / BLOCK_CLICKS;
@@ -1683,7 +1686,7 @@ void Move_player(int ind)
 	    }
 	    todo.cx -= done.cx;
 	    todo.cy -= done.cy;
-	    for (i = 0; i < pl->ship->num_points; i++) {
+	    for (i = 0; i < ship->num_points; i++) {
 		ms[i].pos.cx += done.cx;
 		ms[i].pos.cy += done.cy;
 		ms[i].todo = todo;
@@ -1715,7 +1718,7 @@ void Move_player(int ind)
 
 	bounce = -1;
 	crash = -1;
-	for (i = 0; i < pl->ship->num_points; i++) {
+	for (i = 0; i < ship->num_points; i++) {
 	    Move_segment(&ms[i]);
 	    pos_update |= (ms[i].crash | ms[i].bounce);
 	    if (ms[i].crash) {
@@ -1732,7 +1735,7 @@ void Move_player(int ind)
 		}
 		else if ((ms[bounce].bounce == BounceEdge)
 		    == (ms[i].bounce == BounceEdge)) {
-		    if ((int)(rfrac() * (pl->ship->num_points - bounce)) == i) {
+		    if ((int)(rfrac() * (ship->num_points - bounce)) == i) {
 			bounce = i;
 		    }
 		}
@@ -1815,14 +1818,14 @@ void Move_player(int ind)
 	    }
 	}
 	else {
-	    for (i = 0; i < pl->ship->num_points; i++) {
+	    for (i = 0; i < ship->num_points; i++) {
 		r[i].x = (vel.x) ? (DFLOAT) ms[i].todo.cx / vel.x : 0;
 		r[i].y = (vel.y) ? (DFLOAT) ms[i].todo.cy / vel.y : 0;
 		r[i].x = ABS(r[i].x);
 		r[i].y = ABS(r[i].y);
 	    }
 	    worst = 0;
-	    for (i = 1; i < pl->ship->num_points; i++) {
+	    for (i = 1; i < ship->num_points; i++) {
 		if (r[i].x > r[worst].x || r[i].y > r[worst].y) {
 		    worst = i;
 		}
@@ -1844,7 +1847,7 @@ void Move_player(int ind)
 	}
 
 	vel = ms[worst].vel;
-	for (i = 0; i < pl->ship->num_points; i++) {
+	for (i = 0; i < ship->num_points; i++) {
 	    if (i != worst) {
 		ms[i].pos.cx += ms[worst].done.cx;
 		ms[i].pos.cy += ms[worst].done.cy;
@@ -1855,8 +1858,8 @@ void Move_player(int ind)
 	}
     }
 
-    pos.cx = ms[worst].pos.cx - FLOAT_TO_CLICK(pl->ship->pts[worst][pl->dir].x);
-    pos.cy = ms[worst].pos.cy - FLOAT_TO_CLICK(pl->ship->pts[worst][pl->dir].y);
+    pos.cx = ms[worst].pos.cx - FLOAT_TO_CLICK(ship->pts[worst][pl->dir].x);
+    pos.cy = ms[worst].pos.cy - FLOAT_TO_CLICK(ship->pts[worst][pl->dir].y);
     pos.cx = WRAP_XCLICK(pos.cx);
     pos.cy = WRAP_YCLICK(pos.cy);
     Player_position_set_clicks(pl, pos.cx, pos.cy);
@@ -1911,6 +1914,10 @@ void Move_player_interpolation(int ind)
     ipos_t		block;		/* block index */
     bool		pos_update = false;
     float               speedfactor = ticksPerFrame;
+    shipshape_t		*ship = pl->ship;
+
+    if (!pl->oldturn)
+	ship = Circle_ship();
 
     if (BIT(pl->status, PLAYING|PAUSE|GAME_OVER|KILLED) != PLAYING) {
 	if (!BIT(pl->status, KILLED|PAUSE)) {
@@ -1957,9 +1964,9 @@ void Move_player_interpolation(int ind)
     vel = pl->vel_interp;
     todo.cx = FLOAT_TO_CLICK(vel.x*speedfactor);
     todo.cy = FLOAT_TO_CLICK(vel.y*speedfactor);
-    for (i = 0; i < pl->ship->num_points; i++) {
-	DFLOAT x = pl->ship->pts[i][pl->dir].x;
-	DFLOAT y = pl->ship->pts[i][pl->dir].y;
+    for (i = 0; i < ship->num_points; i++) {
+	DFLOAT x = ship->pts[i][pl->dir].x;
+	DFLOAT y = ship->pts[i][pl->dir].y;
 	ms[i].pos.cx = pl->pos_interp.cx + FLOAT_TO_CLICK(x);
 	ms[i].pos.cy = pl->pos_interp.cy + FLOAT_TO_CLICK(y);
 	ms[i].vel = vel;
@@ -1971,8 +1978,8 @@ void Move_player_interpolation(int ind)
 
     for (;; moves_made++) {
 
-	pos.cx = ms[0].pos.cx - FLOAT_TO_CLICK(pl->ship->pts[0][ms[0].dir].x);
-	pos.cy = ms[0].pos.cy - FLOAT_TO_CLICK(pl->ship->pts[0][ms[0].dir].y);
+	pos.cx = ms[0].pos.cx - FLOAT_TO_CLICK(ship->pts[0][ms[0].dir].x);
+	pos.cy = ms[0].pos.cy - FLOAT_TO_CLICK(ship->pts[0][ms[0].dir].y);
 	pos.cx = WRAP_XCLICK(pos.cx);
 	pos.cy = WRAP_YCLICK(pos.cy);
 	block.x = pos.cx / BLOCK_CLICKS;
@@ -2000,7 +2007,7 @@ void Move_player_interpolation(int ind)
 	    }
 	    todo.cx -= done.cx;
 	    todo.cy -= done.cy;
-	    for (i = 0; i < pl->ship->num_points; i++) {
+	    for (i = 0; i < ship->num_points; i++) {
 		ms[i].pos.cx += done.cx;
 		ms[i].pos.cy += done.cy;
 		ms[i].todo = todo;
@@ -2032,7 +2039,7 @@ void Move_player_interpolation(int ind)
 
 	bounce = -1;
 	crash = -1;
-	for (i = 0; i < pl->ship->num_points; i++) {
+	for (i = 0; i < ship->num_points; i++) {
 	    Move_segment(&ms[i]);
 	    pos_update |= (ms[i].crash | ms[i].bounce);
 	    if (ms[i].crash) {
@@ -2049,7 +2056,7 @@ void Move_player_interpolation(int ind)
 		}
 		else if ((ms[bounce].bounce == BounceEdge)
 		    == (ms[i].bounce == BounceEdge)) {
-		    if ((int)(rfrac() * (pl->ship->num_points - bounce)) == i) {
+		    if ((int)(rfrac() * (ship->num_points - bounce)) == i) {
 			bounce = i;
 		    }
 		}
@@ -2134,14 +2141,14 @@ void Move_player_interpolation(int ind)
 	    }
 	}
 	else {
-	    for (i = 0; i < pl->ship->num_points; i++) {
+	    for (i = 0; i < ship->num_points; i++) {
 		r[i].x = (vel.x) ? (DFLOAT) ms[i].todo.cx / vel.x : 0;
 		r[i].y = (vel.y) ? (DFLOAT) ms[i].todo.cy / vel.y : 0;
 		r[i].x = ABS(r[i].x);
 		r[i].y = ABS(r[i].y);
 	    }
 	    worst = 0;
-	    for (i = 1; i < pl->ship->num_points; i++) {
+	    for (i = 1; i < ship->num_points; i++) {
 		if (r[i].x > r[worst].x || r[i].y > r[worst].y) {
 		    worst = i;
 		}
@@ -2163,7 +2170,7 @@ void Move_player_interpolation(int ind)
 	}
 
 	vel = ms[worst].vel;
-	for (i = 0; i < pl->ship->num_points; i++) {
+	for (i = 0; i < ship->num_points; i++) {
 	    if (i != worst) {
 		ms[i].pos.cx += ms[worst].done.cx;
 		ms[i].pos.cy += ms[worst].done.cy;
@@ -2174,8 +2181,8 @@ void Move_player_interpolation(int ind)
 	}
     }
 
-    pos.cx = ms[worst].pos.cx - FLOAT_TO_CLICK(pl->ship->pts[worst][pl->dir].x);
-    pos.cy = ms[worst].pos.cy - FLOAT_TO_CLICK(pl->ship->pts[worst][pl->dir].y);
+    pos.cx = ms[worst].pos.cx - FLOAT_TO_CLICK(ship->pts[worst][pl->dir].x);
+    pos.cy = ms[worst].pos.cy - FLOAT_TO_CLICK(ship->pts[worst][pl->dir].y);
 
     pos.cx = WRAP_XCLICK(pos.cx);
     pos.cy = WRAP_YCLICK(pos.cy);
@@ -2188,10 +2195,12 @@ void Move_player_interpolation(int ind)
 
 }
 
+void Turn_player(player_t *pl)
+{
+    pl->dir = MOD2((int)(pl->float_dir + 0.5f), RES);
+}
 
-
-
-void Turn_player(int ind)
+void Old_turn_player(int ind)
 {
     player_t		*pl = Players[ind];
     int			i;

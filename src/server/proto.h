@@ -1,4 +1,4 @@
-/* $Id: proto.h,v 1.3 2007/06/12 18:59:38 kps Exp $
+/* $Id: proto.h,v 1.4 2007/09/12 15:17:27 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -68,7 +68,8 @@ void Move_object(int ind);
 void Move_object_interpolation(int ind);
 void Move_player(int ind);
 void Move_player_interpolation(int ind);
-void Turn_player(int ind);
+void Turn_player(player_t *pl);
+void Old_turn_player(int ind);
 
 /*
  * Prototypes for event.c

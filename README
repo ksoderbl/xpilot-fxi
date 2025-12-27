@@ -46,12 +46,6 @@ among the best combinations.
 ***
 
 
-CLIENT CHANGES 
-
-- scalefactor on compile time
-- away with textures
-- TODO integrate the changes from fix6 to this release
-
 SERVER CHANGES
 1.0.0hpx:
 - xpilot-fix6 changes(see xpilot-4.3.0fix-rc6 package)
@@ -302,7 +296,13 @@ unsymmetricity it introduces.. so don't use 16 2/3 fps on a 50 fps server!
 - removed xpilot 4.3 based client again
 - do not look for X in configure
 
-
+1.4.0fxi:
+- added /addr command
+- serverHost option fix by Ben Armstrong
+- minimum possible player turnspeed is now 0.1 (previously 4.0)
+- patch to get rid of turnloss near walls and ships getting stuck in walls,
+  including an /oldturn command can be used by individual players to use the
+  old behaviour
 
 ----
 

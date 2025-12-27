@@ -1,4 +1,4 @@
-/* $Id: player.c,v 1.4 2007/06/12 18:59:38 kps Exp $
+/* $Id: player.c,v 1.5 2007/09/12 15:17:27 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -271,7 +271,7 @@ int Init_player(int ind, shipshape_t *ship)
 	pl->ship = ship;
     }
     else {
-	pl->ship = Default_ship();
+	pl->ship = Triangle_ship();
     }
 
     pl->power			= 45.0;
@@ -355,6 +355,7 @@ int Init_player(int ind, shipshape_t *ship)
 
     pl->isowner = 0;
     pl->isoperator = 0;
+    pl->oldturn = 0;
 
     return pl->id;
 }

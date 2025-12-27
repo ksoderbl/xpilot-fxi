@@ -1,4 +1,4 @@
-/* $Id: netserver.h,v 1.4 2007/06/12 18:59:38 kps Exp $
+/* $Id: netserver.h,v 1.5 2007/09/11 14:38:17 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -138,6 +138,10 @@ static int Receive_fps_request(int ind);
 
 #endif	/* NETSERVER_C */
 
+#ifndef OBJECT_H
+#include "object.h" /* need player_t */
+#endif
+
 char *showtime(void);
 int Get_motd(char *buf, int offset, int maxlen, int *size_ptr);
 int Setup_net_server(void);
@@ -185,5 +189,7 @@ void Get_display_parameters(int ind, int *width, int *height,
 			    int *debris_colors, int *spark_rand);
 int Get_player_id(int);
 int Send_shape(int ind, int shape);
+const char *Player_get_addr(player_t *pl);
+
 #endif
 

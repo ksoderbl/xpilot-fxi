@@ -1,4 +1,4 @@
-/* $Id: shipshape.c,v 1.2 2007/06/03 21:12:44 kps Exp $
+/* $Id: shipshape.c,v 1.3 2007/09/12 15:17:26 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -57,6 +57,48 @@ void Rotate_point(position_t pt[RES])
   }
 }
 
+void Copy_point(position_t pt[RES])
+{
+    int			i;
+    
+    for (i = 1; i < RES; i++) {
+	pt[i].x = pt[0].x;
+	pt[i].y = pt[0].y;
+    }
+}
+
+static void Rotate_circle_ship(shipshape_t *w)
+{
+    int			i;
+
+    for (i = 0; i < w->num_points; i++) {
+	Copy_point(&w->pts[i][0]);
+    }
+    Rotate_point(&w->engine[0]);
+    Rotate_point(&w->m_gun[0]);
+    for (i = 0; i < w->num_l_gun; i++) {
+	Rotate_point(&w->l_gun[i][0]);
+    }
+    for (i = 0; i < w->num_r_gun; i++) {
+	Rotate_point(&w->r_gun[i][0]);
+    }
+    for (i = 0; i < w->num_l_rgun; i++) {
+	Rotate_point(&w->l_rgun[i][0]);
+    }
+    for (i = 0; i < w->num_r_rgun; i++) {
+	Rotate_point(&w->r_rgun[i][0]);
+    }
+    for (i = 0; i < w->num_l_light; i++) {
+	Rotate_point(&w->l_light[i][0]);
+    }
+    for (i = 0; i < w->num_r_light; i++) {
+	Rotate_point(&w->r_light[i][0]);
+    }
+    for (i = 0; i < w->num_m_rack; i++) {
+	Rotate_point(&w->m_rack[i][0]);
+    }
+}
+
 static void Rotate_ship(shipshape_t *w)
 {
     int			i;
@@ -90,11 +132,11 @@ static void Rotate_ship(shipshape_t *w)
 }
 
 /*
- * Return a pointer to a default ship.
+ * Return a pointer to a triangle ship.
  * This function should always succeed,
  * therefore no malloc()ed memory is used.
  */
-shipshape_t *Default_ship(void)
+shipshape_t *Triangle_ship(void)
 {
     static shipshape_t	sh;
     static position_t	pts[6][RES];
@@ -133,6 +175,7 @@ shipshape_t *Default_ship(void)
 	sh.m_rack[0][0].y = 0;
 
 	sh.num_l_gun = sh.num_r_gun = sh.num_l_rgun = sh.num_r_rgun = 0;
+	sh.default_ship = 1;
 
 	Make_table();
 
@@ -141,6 +184,47 @@ shipshape_t *Default_ship(void)
 
     return &sh;
 }
+
+/*
+ * Return a pointer to "circle" ship.
+ * This function should always succeed,
+ * therefore no malloc()ed memory is used.
+ */
+shipshape_t *Circle_ship(void)
+{
+    static shipshape_t	sh;
+    static position_t	pts[MAX_SHIP_PTS*2][RES];
+    int i;
+
+#define RADIUS 10
+
+    if (!sh.num_points) {
+	sh.num_points = MAX_SHIP_PTS;
+	for (i = 0; i < MAX_SHIP_PTS; i++) {
+	    sh.pts[i] = &pts[i][0];
+	    sh.pts[i][0].x = (DFLOAT)RADIUS*cos(((double)i/MAX_SHIP_PTS)*2*M_PI);
+	    sh.pts[i][0].y = (DFLOAT)RADIUS*sin(((double)i/MAX_SHIP_PTS)*2*M_PI);
+	}
+	sh.engine[0].x = -RADIUS;
+	sh.engine[0].y = 0;
+
+	sh.m_gun[0].x = RADIUS;
+	sh.m_gun[0].y = 0;
+
+	sh.num_l_light = 0;
+	sh.num_r_light = 0;
+	sh.num_m_rack = 0;
+	sh.num_l_gun = sh.num_r_gun = sh.num_l_rgun = sh.num_r_rgun = 0;
+	sh.default_ship = 1;
+
+	Make_table();
+
+	Rotate_circle_ship(&sh);
+    }
+
+    return &sh;
+}
+
 
 static int shape2wire(char *ship_shape_str, shipshape_t *w)
 {
@@ -1071,6 +1155,7 @@ static int shape2wire(char *ship_shape_str, shipshape_t *w)
 	w->m_rack[i][0].x = m_rack[i].x;
 	w->m_rack[i][0].y = m_rack[i].y;
     }
+    w->default_ship = 0;
     Rotate_ship(w);
 
     return 0;
@@ -1084,18 +1169,18 @@ static shipshape_t *do_parse_shape(char *str)
 	if (debugShapeParsing) {
 	    xpprintf("shape str not set\n");
 	}
-	return Default_ship();
+	return Triangle_ship();
     }
     if (!(w = (shipshape_t *)malloc(sizeof(*w)))) {
 	error("No mem for ship shape");
-	return Default_ship();
+	return Triangle_ship();
     }
     if (shape2wire(str, w) != 0) {
 	free(w);
 	if (debugShapeParsing) {
 	    xpprintf("shape2wire failed\n");
 	}
-	return Default_ship();
+	return Triangle_ship();
     }
     if (debugShapeParsing) {
 	xpprintf("shape2wire succeeded\n");
@@ -1106,7 +1191,7 @@ static shipshape_t *do_parse_shape(char *str)
 
 void Free_ship_shape(shipshape_t *w)
 {
-    if (w != NULL && w != Default_ship()) {
+    if (w != NULL && !w->default_ship) {
 	if (w->num_points > 0 && w->pts[0]) free(w->pts[0]);
 	if (w->num_l_gun > 0 && w->l_gun[0]) free(w->l_gun[0]);
 	if (w->num_r_gun > 0 && w->r_gun[0]) free(w->r_gun[0]);
@@ -1145,7 +1230,7 @@ int Validate_shape_str(char *str)
     shapeLimits = 1;
     w = do_parse_shape(str);
     Free_ship_shape(w);
-    return (w && w != Default_ship());
+    return (w && !w->default_ship);
 }
 
 void Convert_ship_2_string(shipshape_t *w, char *buf, char *ext,

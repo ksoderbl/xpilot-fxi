@@ -1,4 +1,4 @@
-/* $Id: server.c,v 1.4 2007/06/12 18:59:38 kps Exp $
+/* $Id: server.c,v 1.5 2007/09/11 19:20:28 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -151,12 +151,17 @@ int main(int argc, char **argv)
 
 
     Rank_init_saved_scores();
+
     /*
      * Get server's official name.
      */
-    GetLocalHostName(Server.host, sizeof Server.host,
-		     (reportToMetaServer != 0 &&
-		      searchDomainForXPilot != 0));
+    if (serverHost)
+	strlcpy(Server.host, serverHost, sizeof Server.host);
+    else
+	GetLocalHostName(Server.host, sizeof Server.host,
+			 (reportToMetaServer != 0 &&
+			  searchDomainForXPilot != 0));
+ 
 
     Get_login_name(Server.owner, sizeof Server.owner);
 

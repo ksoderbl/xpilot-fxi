@@ -1,4 +1,4 @@
-/* $Id: netserver.c,v 1.4 2007/06/12 18:59:38 kps Exp $
+/* $Id: netserver.c,v 1.5 2007/09/11 14:38:17 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -2564,4 +2564,15 @@ static int Receive_audio_request(int ind)
         return n;
     }
     return 1;
+}
+
+const char *Player_get_addr(player_t *pl)
+{
+    connection_t *connp = NULL;
+
+    if (pl->conn != NOT_CONNECTED)
+	connp = &Conn[pl->conn];
+    if (connp != NULL)
+	return connp->addr;
+    return NULL;
 }
