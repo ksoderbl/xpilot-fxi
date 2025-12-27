@@ -1,4 +1,4 @@
-/* $Id: cmdline.c,v 1.5 2007/09/17 19:54:49 kps Exp $
+/* $Id: cmdline.c,v 1.6 2007/12/08 13:12:53 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-2001 by
  *
@@ -239,6 +239,16 @@ static option_desc options[] = {
 	valReal,
 	tuner_ballmass,
 	"Mass of balls.\n",
+	OPT_ORIGIN_ANY | OPT_VISIBLE
+    },
+    {
+	"shotMass",
+	"shotMass",
+	"0.1",
+	&ShotsMass,
+	valReal,
+	tuner_dummy,
+	"Mass of bullets.\n",
 	OPT_ORIGIN_ANY | OPT_VISIBLE
     },
     {

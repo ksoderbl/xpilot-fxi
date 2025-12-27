@@ -1,4 +1,4 @@
-/* $Id: pack.h,v 1.2 2007/10/10 13:39:57 kps Exp $
+/* $Id: pack.h,v 1.3 2007/11/03 13:58:54 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -107,14 +107,8 @@
 /*
  * Which client versions can join this server.
  */
-#define MIN_CLIENT_VERSION	0x3103
+#define MIN_CLIENT_VERSION	0x4210
 #define MAX_CLIENT_VERSION	MY_VERSION
-
-/*
- * Which server versions can this client join.
- */
-#define MIN_SERVER_VERSION	0x3103
-#define MAX_SERVER_VERSION	MY_VERSION
 
 #define	MAX_STR_LEN		4096
 #define	MAX_DISP_LEN		80

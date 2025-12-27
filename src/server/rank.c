@@ -95,20 +95,132 @@ static int rank_cmp(const void *p1, const void *p2)
 static char *rank_showtime(const time_t t)
 {
     struct tm *tmp;
-    static char month_names[13][4] = {
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-        "Bug"
-    };
     static char buf[80];
     time_t t2 = t;
 
     tmp = localtime(&t2);  
-    snprintf(buf, sizeof(buf), "%02d\xA0%s\xA0%02d:%02d:%02d",
-             tmp->tm_mday, month_names[tmp->tm_mon],
-             tmp->tm_hour, tmp->tm_min, tmp->tm_sec);
+    snprintf(buf, sizeof(buf), "%d-%02d-%02d&nbsp;%02d:%02d",
+             tmp->tm_year+1900, tmp->tm_mon, tmp->tm_mday,
+             tmp->tm_hour, tmp->tm_min);
     return buf; 
 }
+
+
+/*
+ * http://wolfwiki.anime.net/index.php/Color_Codes
+ * says these originate in Quake III Arena, therefore
+ * we call them q3_colors.
+ */
+static int q3_colors[] = {
+	0x3f3f3f, /* should be 0x000000,*/		/* black   e.g. 0 P p */
+	0xff0000,		/* red     e.g. 1 Q q */
+	0x00ff00,		/* green   e.g. 2 R r */
+	0xffff00,		/* yellow  e.g. 3 S s */
+	0x0000ff,		/* blue    e.g. 4 T t */
+	0x00ffff,		/* cyan    e.g. 5 U u */
+	0xff00ff,		/* magenta e.g. 6 V v */
+	0xffffff,		/* white   e.g. 7 W w */
+	0xff7f00,		/* orange  e.g. 8 X x */
+	0x7f7f7f,		/* gray    e.g. 9 Y y */
+	0xbfbfbf,		/* e.g. : Z z */
+	0xbfbfbf,		/* e.g. ; [ { */
+	0x007f00,		/* e.g. < \ | */
+	0x7f7f00,		/* e.g. = ] } */
+	0x00007f,		/* e.g. > ^ ~ */
+	0x7f0000,		/* e.g. ? _   */
+	0x7f3f00,		/* e.g. @     */
+	0xff9919,		/* e.g. ! A a */
+	0x007f7f,		/* e.g. " B b */
+	0x7f007f,		/* e.g. # C c */
+	0x007fff,		/* e.g. $ D d */
+	0x7f00ff,		/* e.g. % E e */
+	0x3399cc,		/* e.g. & F f */
+	0xccffcc,		/* e.g. ' G g */
+	0x006633,		/* e.g. ( H h */
+	0xff0033,		/* e.g. ) I i */
+	0xb21919,		/* e.g. * J j */
+	0x993300,		/* e.g. + K k */
+	0xcc9933,		/* e.g. , L l */
+	0x999933,		/* e.g. - M m */
+	0xffffbf,		/* e.g. . N n */
+	0xffff7f		/* e.g. / O o */
+};
+
+static inline int Index_by_color_code(int ascii_char)
+{
+	return (ascii_char + 16) & 31;
+}
+
+/*
+ * Turn Q3A style color codes into HTML font tags.
+ * Example: "XX^1Foo^2Bar^^" becomes
+ * "XX<font color="#ff0000">Foo</font><font color="#00ff00">Bar</font>^".
+ */
+static const char *colorize(const char *str)
+{
+    static char result[4096];
+    static char tmpstr[1024]; /* copy of str so we can modify it. */
+    char *s;
+    char *caret;
+    int color = -1; /* -1 mean no color. */
+
+    strlcpy(tmpstr, str, sizeof(tmpstr));
+
+    result[0] = '\0';
+    s = tmpstr;
+
+    while ((caret = strchr(s, '^')) != NULL) {
+	char c;
+
+	*caret = '\0';
+
+	/*printf("s = \"%s\"\n", s);*/
+
+	/* There were some chars before the caret, copy those. */
+	if (s != caret)
+	    strlcat(result, s, sizeof(result));
+
+	/* Char following caret determines what to do next. */
+	c = *(caret + 1);
+	/*printf("c = %c\n", c);*/
+
+	if (c == '^') {			/* Escaped caret. */
+	    strlcat(result, "^", sizeof(result));
+	    s = caret + 2;
+	}
+	else if (c == '\0') {		/* String ends. */
+	    /* Treat final "^" as "^^". */
+	    strlcat(result, "^", sizeof(result));
+	    s = caret + 1;
+	}
+	else {				/* A new color. */
+	    static char fontcolor[32];
+	    if (color >= 0) {
+		/*printf("old color = %d #%06x\n", color, q3_colors[color]);*/
+		strlcat(result, "</font>", sizeof(result));
+	    }
+#if 0
+	    color = randomMT() & 0x1F;
+#else
+	    color = Index_by_color_code(c);
+#endif
+	    snprintf(fontcolor, sizeof(fontcolor),
+		     "<font color=\"#%06x\">", q3_colors[color]);
+	    /*printf("new color = %d #%06x\n", color, q3_colors[color]);*/
+	    strlcat(result, fontcolor, sizeof(result));
+	    s = caret + 2;
+	}
+    }
+
+    /* No more carets found. */
+    strlcat(result, s, sizeof(result));
+
+    if (color >= 0)
+	strlcat(result, "</font>", sizeof(result));
+
+    return result;
+}
+
 
 
 /*
@@ -116,9 +228,9 @@ static char *rank_showtime(const time_t t)
  */     
 static char *encode(const char *str)
 {
-    static char result[MAX_CHARS];
+    static char result[1024];
     char c;
-       
+
     result[0] = '\0';
     while ((c = *str++) != '\0') {
         if (c == '<')
@@ -140,6 +252,37 @@ static char *encode(const char *str)
     }
     
     return result;
+}
+
+static int encode_to_file(const char *str, FILE *file)
+{
+    char c;
+    const char *entity;
+
+    /*printf("e2f \"%s\"...", str);*/
+
+    while ((c = *str++) != '\0') {
+	switch (c) {
+	case '<' : entity = "&lt;";   break;
+        case '>' : entity = "&gt;";   break;
+        case '&' : entity = "&amp;";  break;
+	case '\'': entity = "&apos;"; break;
+	case '"' : entity = "&quot;"; break;
+	default  : entity = NULL;     break;
+        }
+	if (entity != NULL) {
+	    if (fprintf(file, "%s", entity) < 0)
+		return -1;
+	}
+	else {
+	    if (fputc(c, file) == EOF)
+		return -1;
+	}
+    }
+
+    /*printf("OK\n");*/
+
+    return 0;
 }
 
 /* Here's where we calculate the ranks. Figure it out yourselves! */
@@ -299,22 +442,26 @@ static const char *Rank_get_logout_message(ranknode_t *rank)
 void Rank_write_webpage(void)
 {
     static const char header[] =
-	"<html><head><title>" PACKAGE_NAME " @ %s</title>\n"
-	"</head><body>\n"
-	"<h1>" PACKAGE_NAME " @ %s</h1>" /* <-- server name at %s and %s */
+	"<html>\n"
+	"<head><title> XPilot fxi @ %s</title>\n"
+	"<link rel=\"stylesheet\" type=\"text/css\" href=\"fxi-rank.css\" />\n"
+	"</head>\n"
+	"<body text=\"7f7f7f\" bgcolor=\"#000000\">\n"
+	"<h2><a href=\"http://bloodspilot.sourceforge.net/server.html\">"
+	PACKAGE_STRING "</a> @ %s</h2>" /* <-- server name at %s */
 	"<a href=\"previous_ranks.html\">Previous rankings</a> "
 	"<a href=\"rank_explanation.html\">How does the ranking work?</a>"
 	"<hr>\n" TABLEHEAD;
 
     static const char footer[] = "</table>"
-	"<i>Explanation for ballstats</i>:<br>"
-	"The numbers are c/s/w/l/b, where<br>"
-	"c = The number of enemy balls you have cashed.<br>"
-	"s = The number of your own balls you have returned.<br>"
-	"w = The number of enemy balls your team has cashed.<br>"
-	"l = The number of your own balls you have lost.<br>"
-	"b = The fastest ballrun you have made.<br>"
-	"<hr>%s<BR>\n\n"	/* <-- Insert time here. */
+	"<i>Explanation for ballstats</i>:<br>\n"
+	"The numbers are c/r/t/l/b, where<br>\n"
+	"c = The number of enemy balls you have cashed.<br>\n"
+	"r = The number of your own balls you have returned.<br>\n"
+	"t = The number of enemy balls your team has cashed.<br>\n"
+	"l = The number of your own balls you have lost.<br>\n"
+	"b = The fastest ballrun you have made (0 for none).<br>\n"
+	"<hr>Page generated %s<br>\n\n"	/* <-- Insert time here. */
 	"</body></html>";
 
     char *filename;
@@ -344,8 +491,7 @@ void Rank_write_webpage(void)
 	fprintf(file,
 		"<tr><td align=left><tt>%d</tt>"
 		"<td align=left><b>%s</b>",
-		i + 1,
-		encode(rank->name));
+		i + 1, colorize(encode(rank->name)));
 
 	fprintf(file,
 		"<td align=right>%d"
@@ -354,21 +500,24 @@ void Rank_write_webpage(void)
 		"<td align=right>%u"
 		"<td align=center>%u/%u/%u/%u/%u"
 		"<td align=right>%.2f"
-		"<td align=right>%s",
+		"<td align=right>",
 		rank->score,
 		rank->kills, rank->deaths,
 		rank->rounds,
 		rank->ballsCashed, rank->ballsSaved,
 		rank->ballsWon, rank->ballsLost,
 		rank->bestball,
-		rank_base[i].ratio,
-		encode(rank->user));
+		rank_base[i].ratio);
+
+	encode_to_file(rank->user, file);
 
 	fprintf(file,
-		"<td align=left>%s"
-		"<td align=center>%s\n"
-		"</tr>\n",
-		encode(rank->host),
+		"<td align=left>");
+	
+	encode_to_file(rank->host, file);
+
+	fprintf(file,
+		"<td align=center>%s</tr>\n",
 		Rank_get_logout_message(rank));
     }
     fprintf(file, footer, rank_showtime(time(NULL)));
@@ -441,21 +590,6 @@ void Rank_init_saved_scores(void)
 	ranknode_t *rank = &ranknodes[i];
 
 	memset(rank, 0, sizeof(ranknode_t));
-    }
-
-    if (getenv("XPILOTSCOREFILE")) {
-	warn("Environment variable XPILOTSCOREFILE is obsolete.");
-	warn("Use server option rankFileName instead.");
-    }
-
-    if (getenv("XPILOTRANKINGPAGE")) {
-	warn("Environment variable XPILOTRANKINGPAGE is obsolete.");
-	warn("Use server option rankWebpageFileName instead.");
-    }
-
-    if (getenv("XPILOTNOJSRANKINGPAGE")) {
-	warn("Environment variable XPILOTNOJSRANKINGPAGE is obsolete.");
-	warn("Use server option rankWebpageFileName instead.");
     }
 
     if (!rankFileName)
@@ -708,17 +842,27 @@ void Rank_write_rankfile(void)
 	if (strlen(rank->name) == 0)
 	    continue;
 
-	if (fprintf(file, "<Player "
-		    "name=\"%s\" ", encode(rank->name)) < 0)
+	if (fprintf(file, "<Player name=\"") < 0)
 	    goto writefailed;
 
-	if (fprintf(file,
-		    "user=\"%s\" ", encode(rank->user)) < 0)
+	if (encode_to_file(rank->name, file) < 0)
 	    goto writefailed;
 
-	if (fprintf(file,
-		    "host=\"%s\" ", encode(rank->host)) < 0)
+	if (fprintf(file, "\" user=\"") < 0)
 	    goto writefailed;
+
+	if (encode_to_file(rank->user, file) < 0)
+     	    goto writefailed;
+
+	if (fprintf(file, "\" host=\"") < 0)
+	    goto writefailed;
+
+	if (encode_to_file(rank->host, file) < 0)
+     	    goto writefailed;
+
+	if (fprintf(file, "\" ") < 0)
+	    goto writefailed;
+
 
 	if (rank->score != 0.0
 	    && fprintf(file, "score=\"%d\" ", rank->score) < 0)

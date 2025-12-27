@@ -1,7 +1,7 @@
 /* 
  * XPilot Fix, Blood's Music optimised XPilot
  *
- * Copyright (C) 1991-2007 by
+ * Copyright (C) 1991-2008 by
  *
  *      Bjørn Stabell        <bjoern@xpilot.org>
  *      Ken Ronny Schouten   <ken@xpilot.org>
@@ -26,11 +26,11 @@
 #ifndef	VERSION_H
 #define	VERSION_H
 
-#define TITLE			"XPilot 1.4.1fxi"
+#define TITLE			"XPilot 1.4.2fxi"
 #ifndef VERSION
-#  define VERSION		"1.4.1fxi"
+#  define VERSION		"1.4.2fxi"
 #endif
-#define AUTHORS			"Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Coppa"
-#define COPYRIGHT		"Copyright © 1991-2007 by Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Coppa"
+#define AUTHORS			"Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Dick Balaska and Kristian Söderblom"
+#define COPYRIGHT		"Copyright © 1991-2008 by Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Dick Balaska and Kristian Söderblom"
 
 #endif /* VERSION_H */

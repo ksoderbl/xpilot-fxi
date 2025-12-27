@@ -1,4 +1,4 @@
-/* $Id: ship.c,v 1.4 2007/09/17 19:54:49 kps Exp $
+/* $Id: ship.c,v 1.5 2007/12/08 13:12:53 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -97,6 +97,16 @@ void Thrust(int ind)
 	/* min,max speed  */ 1.0, max_speed,
 	/* min,max life   */ 3, max_life
 	);
+}
+
+/* Calculates the recoil if a ship fires a shot */
+void Recoil(object_t *ship, object_t *shot)
+{
+    /* new code thanks to Uoti Urpala. */
+    ship->vel.x -= (((shot->vel.x - ship->vel.x) *
+	shot->mass) / ship->mass);
+    ship->vel.y -= (((shot->vel.y - ship->vel.y) *
+	shot->mass) / ship->mass);
 }
 
 void Record_shove(player_t *pl, player_t *pusher, long time)

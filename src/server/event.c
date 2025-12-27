@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.4 2007/09/17 19:54:49 kps Exp $
+/* $Id: event.c,v 1.6 2007/12/06 15:11:18 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -280,6 +280,7 @@ int Handle_keyboard(int ind)
 	    case KEY_LOAD_LOCK_2:
 	    case KEY_LOAD_LOCK_3:
 	    case KEY_LOAD_LOCK_4:
+	    case KEY_REPROGRAM:
 	    case KEY_SWAP_SETTINGS:
 	    case KEY_INCREASE_POWER:
 	    case KEY_DECREASE_POWER:
@@ -428,17 +429,28 @@ int Handle_keyboard(int ind)
 		}
 		break;
 
+	    case KEY_REPROGRAM:
+		SET_BIT(pl->status, REPROGRAM);
+		break;
+
 	    case KEY_LOAD_LOCK_1:
 	    case KEY_LOAD_LOCK_2:
 	    case KEY_LOAD_LOCK_3:
 	    case KEY_LOAD_LOCK_4: {
-	      int *l = &(pl->lockbank[key - KEY_LOAD_LOCK_1]);
-	      if (*l != NOT_CONNECTED
-		  && Player_lock_allowed(ind, GetInd[*l])) {
-		pl->lock.pl_id = *l;
-		SET_BIT(pl->lock.tagged, LOCK_PLAYER);
-	      }
-	      break;
+		int *l = &(pl->lockbank[key - KEY_LOAD_LOCK_1]);
+
+		if (BIT(pl->status, REPROGRAM)) {
+		    if (BIT(pl->lock.tagged, LOCK_PLAYER)) {
+			*l = pl->lock.pl_id;
+		    }
+		} else {
+		    if (*l != NOT_CONNECTED
+			    && Player_lock_allowed(ind, GetInd[*l])) {
+			pl->lock.pl_id = *l;
+			SET_BIT(pl->lock.tagged, LOCK_PLAYER);
+		    }
+		}
+		break;
 	    }
 	      
 	    case KEY_TURN_LEFT:
@@ -579,6 +591,10 @@ int Handle_keyboard(int ind)
 
 	    case KEY_THRUST:
 		CLR_BIT(pl->status, THRUSTING);
+		break;
+
+	    case KEY_REPROGRAM:
+		CLR_BIT(pl->status, REPROGRAM);
 		break;
 
 	    default:

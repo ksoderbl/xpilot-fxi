@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT([XPilot], 1.4.1fxi, foo@bar.com, xpilot)
+AC_INIT([XPilot], 1.4.2fxi, kps at users.sourceforge.net, xpilot)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(src/server/walls.c)
 
@@ -14,16 +14,16 @@ AM_MAINTAINER_MODE
 AM_CONFIG_HEADER(config.h)
 
 dnl  Copyright & stuff.
-XP_AUTHORS="Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Coppa"
+XP_AUTHORS="Bjørn Stabell, Ken Ronny Schouten, Bert Gijsbers, Dick Balaska and Kristian Söderblom"
 AC_SUBST([XP_AUTHORS])
 
-XP_COPYRIGHTDATE="1991-2007"
+XP_COPYRIGHTDATE="1991-2008"
 AC_SUBST([XP_COPYRIGHTDATE])
 
 XP_COPYRIGHT="Copyright © $XP_COPYRIGHTDATE by $XP_AUTHORS"
 AC_SUBST([XP_COPYRIGHT])
 
-AC_SUBST([XP_RELEASEDATE],["Oct 22, 2007"])
+AC_SUBST([XP_RELEASEDATE],["Jan 4, 2008"])
 AC_SUBST([XP_DATADIR],"$prefix/share/xpilot")
 
 

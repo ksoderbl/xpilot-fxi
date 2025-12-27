@@ -1,4 +1,4 @@
-/* $Id: netserver.c,v 1.11 2007/10/21 12:45:07 kps Exp $
+/* $Id: netserver.c,v 1.12 2007/11/03 13:58:54 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -132,6 +132,7 @@
 #include "checknames.h"
 #include "server.h"
 #include "rank.h"
+#include "commonproto.h"
 
 char netserver_version[] = VERSION;
 
@@ -1202,9 +1203,7 @@ int Send_self(int ind,
     connection_t	*connp = &Conn[ind];
     int			n;
     u_byte		stat = (u_byte)status;
-    int			sbuf_len = connp->w.len;
     int posx, posy, velx, vely;
-    if (connp->version >= 0x4203) {
 
       if (frame_cycle == 0){
 	posx =  (int) (pl->pos.x + 0.5) ; posy = (int) (pl->pos.y + 0.5);
@@ -1263,106 +1262,6 @@ int Send_self(int ind,
       }
       return Send_modifiers(ind, mods);
     }
-
-    n = Packet_printf(&connp->w,
-		      "%c"
-		      "%hd%hd%hd%hd%c"
-		      "%c%c%c"
-		      "%hd%hd%c%c"
-		      "%c%c%c%c%c"
-		      "%c%c%c%c%c"
-		      "%c%c%c%c"
-		      "%c%hd%hd"
-		      "%hd%hd%c"
-		      "%c%c"
-		      ,
-		      PKT_SELF,
-		      (int) (pl->pos.x + 0.5), (int) (pl->pos.y + 0.5),
-		      (int) pl->vel.x, (int) pl->vel.y,
-		      pl->dir,
-		      (int) (pl->power + 0.5),
-		      (int) (pl->turnspeed + 0.5),
-		      (int) (pl->turnresistance * 255.0 + 0.5),
-		      lock_id, lock_dist, lock_dir,
-		      0,
-
-		      pl->item[ITEM_CLOAK],
-		      pl->item[ITEM_SENSOR],
-		      pl->item[ITEM_MINE],
-		      pl->item[ITEM_MISSILE],
-		      pl->item[ITEM_ECM],
-
-		      pl->item[ITEM_TRANSPORTER],
-		      pl->item[ITEM_WIDEANGLE],
-		      pl->item[ITEM_REARSHOT],
-		      pl->item[ITEM_AFTERBURNER],
-		      pl->fuel.num_tanks,
-
-		      pl->item[ITEM_LASER],
-		      pl->item[ITEM_EMERGENCY_THRUST],
-		      pl->item[ITEM_TRACTOR_BEAM],
-		      pl->item[ITEM_AUTOPILOT],
-
-		      pl->fuel.current,
-		      pl->fuel.sum >> FUEL_SCALE_BITS,
-		      pl->fuel.max >> FUEL_SCALE_BITS,
-
-		      connp->view_width, connp->view_height,
-		      connp->debris_colors,
-
-		      stat,
-		      autopilotlight
-
-		      );
-    if (n <= 0) {
-	return n;
-    }
-    if (connp->version >= 0x3800) {
-	n = Packet_printf(&connp->w,
-			  "%c%c%c%c",	/* %c", */
-			  pl->item[ITEM_EMERGENCY_SHIELD],
-			  pl->item[ITEM_DEFLECTOR],
-			  pl->item[ITEM_HYPERJUMP],
-			  pl->item[ITEM_PHASING] /* ,
-			  pl->item[ITEM_MIRROR] */
-			  );
-	if (n <= 0) {
-	    connp->w.len = sbuf_len;
-	    return n;
-	}
-	if (connp->version >= 0x4100) {
-	    n = Packet_printf(&connp->w,
-			      "%c",
-			      pl->item[ITEM_MIRROR]
-			      );
-	    if (n <= 0) {
-		connp->w.len = sbuf_len;
-		return n;
-	    }
-	    if (connp->version >= 0x4201) {
-		n = Packet_printf(&connp->w,
-				  "%c",
-				  pl->item[ITEM_ARMOR]
-				  );
-		if (n <= 0) {
-		    connp->w.len = sbuf_len;
-		    return n;
-		}
-	    }
-	}
-    }
-    else if (connp->version >= 0x3200) {
-	n = Packet_printf(&connp->w,
-			  "%c",
-			  pl->item[ITEM_EMERGENCY_SHIELD]);
-	if (n <= 0) {
-	    connp->w.len = sbuf_len;
-	    return n;
-	}
-    }
-
-    return Send_modifiers(ind, mods);
-}
 
 /*
  * Somebody is leaving the game.
@@ -1431,22 +1330,21 @@ int Send_player(int ind, int id)
 	      connp->state, connp->id);
 	return 0;
     }
-    Convert_ship_2_string(pl->ship, buf, ext,
-			  (connp->version < 0x3200) ? 0x3100 : 0x3200);
+    Convert_ship_2_string(pl->ship, buf, ext, 0x3200);
     n = Packet_printf(&connp->c,
 		      "%c%hd" "%c%c" "%s%s%s" "%S",
 		      PKT_PLAYER, pl->id,
 		      pl->team, pl->mychar,
 		      pl->name, pl->realname, pl->hostname,
 		      buf);
-    if (connp->version > 0x3200) {
+
 	if (n > 0) {
 	    n = Packet_printf(&connp->c, "%S", ext);
 	    if (n <= 0) {
 		connp->c.len = sbuf_len;
 	    }
 	}
-    }
+
     return n;
 }
 
@@ -1621,11 +1519,6 @@ int Send_radar(int ind, int x, int y, int size)
 {
     connection_t *connp = &Conn[ind];
 
-    /* Only since 4.2.1 can clients correctly handle teammates in green. */
-    /* Except the original patch from kth.se was 4.1.0 "experimental 1" */
-    if (connp->version < 0x4210 && connp->version != 0x4101) {
-	size &= ~0x80;
-    }
     return Packet_printf(&connp->w, "%c%hd%hd%c", PKT_RADAR, x, y, size);
 }
 
@@ -1771,10 +1664,6 @@ static int Receive_keyboard(int ind)
 
     //gettimeofday(&tv1, NULL);
     //printf("receive kb:%e %d\n",timeval_to_seconds(tv1), main_loops);
-    if (connp->version < 0x3800) {
-	/* older servers have a keyboard_size of 8 bytes instead of 9. */
-	size--;
-    }
     if (connp->r.ptr - connp->r.buf + size + 1 + 4 > connp->r.len) {
 	/*
 	 * Incomplete client packet.
@@ -2203,8 +2092,8 @@ static void Handle_talk(int ind, char *str)
     player_t		*pl = Players[GetInd[connp->id]];
     int			i, sent, team;
 	unsigned int	len;
-    char		*cp,
-			msg[MSG_LEN * 2];
+    char *cp, msg[MSG_LEN * 2];
+    const char *sender = " [*Server reply*]";
 
     if ((cp = strchr (str, ':')) == NULL
 	|| cp == str
@@ -2231,76 +2120,26 @@ static void Handle_talk(int ind, char *str)
 	    if (pl->team != team)
 		Set_player_message (pl, msg);
 	} else {
-	    sprintf(msg, "Message not sent, nobody in team %d!",
-		    team);
+	    sprintf(msg, "Message not sent. Nobody in team %d.", team);
+	    strlcat(msg, sender, sizeof(msg));
 	    Set_player_message(pl, msg);
-	}
-    }
-    else if (strcasecmp(str, "god") == 0) {
-	/*
-	 * Only log the message if logfile already exists,
-	 * is writable and less than some KBs in size.
-	 */
-	char		*logfilename = Conf_logfile();
-	const int	logfile_size_limit = 100*1024;
-	FILE		*fp;
-	struct stat	st;
-
-	if (access(logfilename, 2) == 0 &&
-	    stat(logfilename, &st) == 0 &&
-	    (st.st_size < logfile_size_limit) &&
-	    (fp = fopen(logfilename, "a")) != NULL)
-	{
-	    fprintf(fp,
-		    "%s[%s]{%s@%s(%s)|%s}:\n"
-		    "\t%s\n",
-		    showtime(),
-		    pl->name,
-		    pl->realname, connp->host, connp->addr, connp->dpy,
-		    cp);
-	    fclose(fp);
-	    sprintf(msg + strlen(msg), ":[%s]", "GOD");
-	    Set_player_message(pl, msg);
-	}
-	else {
-	    Set_player_message(pl, "Can't log to GOD.");
 	}
     }
     else {						/* Player message */
-	sent = -1;
-	/* first look for an exact match on player nickname. */
-	for (i = 0; i < NumPlayers; i++) {
-	    if (strcasecmp(Players[i]->name, str) == 0) {
-		sent = i;
-		break;
-	    }
-	}
-	if (sent == -1) {
-	    /* now look for a partial match on both nick and realname. */
-	    for (sent = -1, i = 0; i < NumPlayers; i++) {
-		if (strncasecmp(Players[i]->name, str, len) == 0
-		    || strncasecmp(Players[i]->realname, str, len) == 0)
-		    sent = (sent == -1) ? i : -2;
-	    }
-	}
-	switch (sent) {
-	case -2:
-	    sprintf(msg, "Message not sent, %s matches more than one player!",
-		    str);
-	    Set_player_message(pl, msg);
-	    break;
-	case -1:
-	    sprintf(msg, "Message not sent, %s does not match any player!",
-		    str);
-	    Set_player_message(pl, msg);
-	    break;
-	default:
-	    if (Players[sent] != pl) {
-		sprintf(msg + strlen(msg), ":[%s]", Players[sent]->name);
-		Set_player_message(Players[sent], msg);
+	const char *errmsg;
+	player_t *other_pl = Get_player_by_name(str, NULL, &errmsg);
+
+	if (!other_pl) {
+	    sprintf(msg, "Message not sent. ");
+	    strlcat(msg, errmsg, sizeof(msg));
+	    strlcat(msg, sender, sizeof(msg));
 		Set_player_message(pl, msg);
+	    return;
 	    }
-	    break;
+	if (other_pl != pl) {
+		sprintf(msg + strlen(msg), ":[%s]", other_pl->name);
+		Set_player_message(other_pl, msg);
+		Set_player_message(pl, msg);
 	}
     }
 }
@@ -2415,14 +2254,12 @@ static int Receive_shape(int ind)
 	}
 	return n;
     }
-    if (connp->version > 0x3200) {
 	if ((n = Packet_scanf(&connp->r, "%S", &str[strlen(str)])) <= 0) {
 	    if (n == -1) {
 		Destroy_connection(ind, "read shape ext");
 	    }
 	    return n;
 	}
-    }
     if (connp->state == CONN_LOGIN && connp->ship == NULL) {
 	connp->ship = Parse_shape_str(str);
     }

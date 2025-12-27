@@ -1,4 +1,4 @@
-/* $Id: shot.c,v 1.6 2007/09/17 19:54:49 kps Exp $
+/* $Id: shot.c,v 1.7 2007/12/08 13:12:53 kps Exp $
  *
  * XPilot, a multiplayer gravity war game.  Copyright (C) 1991-98 by
  *
@@ -118,7 +118,7 @@ void Make_treasure_ball(int treasure)
 void Fire_normal_shots(int ind)
 
 {
-    player_t		*pl = (ind == -1 ? NULL : Players[ind]);
+    player_t		*pl = Players[ind];
     int			life, fuse = 0, lock = 0, status = 0, pl_range = 0, pl_radius = 0;
     DFLOAT		turnspeed = 0, max_speed = SPEED_LIMIT;
     vector_t		mv;
@@ -168,6 +168,7 @@ void Fire_normal_shots(int ind)
  
     shot->life      = life;
     shot->fuselife  = shot->life - fuse;
+    shot->mass      = ShotsMass;
     shot->max_speed = max_speed;   
     shot->turnspeed = turnspeed;
     shot->count     = 0;
@@ -204,6 +205,8 @@ void Fire_normal_shots(int ind)
     shot->dir       = dir;
     shot->pl_range  = pl_range;
     shot->pl_radius = pl_radius;
+
+    Recoil((object_t *)pl, shot);
 }
 
 /* Removes shot from array */
