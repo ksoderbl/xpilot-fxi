@@ -1,23 +1,24 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.57)
-AC_INIT([XPilot], 1.4.6fxi, kps at users.sourceforge.net, xpilot)
-AC_CONFIG_AUX_DIR(config)
-AC_CONFIG_SRCDIR(src/server/walls.c)
+AC_PREREQ([2.72])
+AC_INIT([XPilot],[1.4.6fxi],[kps@users.sourceforge.net],[xpilot])
+
+AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_SRCDIR([src/server/walls.c])
+AC_CONFIG_HEADERS([config.h])
 
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_MAINTAINER_MODE
-AM_CONFIG_HEADER(config.h)
 
 dnl  Copyright & stuff.
 XP_AUTHORS="Bjoern Stabell, Ken Ronny Schouten, Bert Gijsbers, Dick Balaska, Kristian Soderblom, et al"
 AC_SUBST([XP_AUTHORS])
 
-XP_COPYRIGHTDATE="1991-2010"
+XP_COPYRIGHTDATE="1991-2025"
 AC_SUBST([XP_COPYRIGHTDATE])
 
 XP_COPYRIGHT="Copyright (C) $XP_COPYRIGHTDATE by $XP_AUTHORS"
@@ -30,31 +31,24 @@ AC_SUBST([XP_DATADIR],"$prefix/share/xpilot")
 dnl  Checks for options.
 dnl  We should have some general macro for these.
 AC_ARG_ENABLE(plockserver,
-	AC_HELP_STRING([--enable-plockserver],
-			[lock the server into memory]),
+	AS_HELP_STRING([--enable-plockserver],[lock the server into memory]),
 [if test x$enable_plockserver = xyes; then
 	AC_DEFINE([PLOCKSERVER], 1, [lock the server into memory])
 fi])
 
 AC_ARG_ENABLE(development,
-	AC_HELP_STRING([--enable-development],
-			[enable development code]),
+	AS_HELP_STRING([--enable-development],[enable development code]),
 [if test x$enable_development = xyes; then
 	AC_DEFINE([DEVELOPMENT], 1, [enable development code])
 fi])
 
 dnl  Checks for programs.
 AC_PROG_CC
-dnl AC_PROG_GCC_TRADITIONAL
-dnl AC_PROG_CPP
-dnl AC_PROG_CXX
-dnl AC_PROG_LN_S
+AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
-AC_PROG_INSTALL
 
 dnl Figure out which math library to use
-dnl (borrowed from from http://www.libsdl.org/opengl/SDLgears-1.0.2.tar.gz)
 case "$target" in
     *-*-mingw32*)
         MATHLIB=""
@@ -81,35 +75,11 @@ case "$target" in
 esac
 
 dnl  Checks for libraries.
-dnl kps - these should be cleaned up and not use the autoconf internal
-dnl shell variables.
-AC_CHECK_LIB(m, cos)
-if test x$ac_cv_lib_m_cos != xyes; then
-	AC_MSG_ERROR([*** Math library not found!])
-fi
-AC_CHECK_LIB(expat, XML_ParserCreate)
-if test x$ac_cv_lib_expat_XML_ParserCreate != xyes; then
-        AC_MSG_ERROR([*** Required library Expat not found!])
-fi  
-
-dnl override CFLAGS selection when debugging
-dnl TODO: make the old debug flags work with gcc 3.x
-dnl CFLAGS="-g -O0 -Wall -Wcast-align -Wimplicit -Wpointer-arith -Wno-pointer-sign -Wswitch -Wredundant-decls -Wreturn-type -Wunused  -Wstrict-prototypes  -Wmissing-declarations"
-
-CFLAGS="-O2"
-AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug], [enable debug messages]),
-[if test x$enable_debug = xyes; then
-	CFLAGS="-pg -g -O0 -Wall -Wcast-align -Wimplicit -Wswitch -Wredundant-decls -Wreturn-type -Wunused  -Wstrict-prototypes  -Wmissing-declarations"
-	LDFLAGS="${LDFLAGS} -rdynamic"
-	AC_DEFINE([DEBUG], 1, [debug level])
-fi])
-
-dnl AC_DEFINE_UNQUOTED(CFLAGS, "$CFLAGS", [C compiler flags])
-
+AC_CHECK_LIB([m], [cos], [], [AC_MSG_ERROR([*** Math library not found!])])
+AC_CHECK_LIB([expat], [XML_ParserCreate], [], [AC_MSG_ERROR([*** Required library Expat not found!])])
 
 dnl  Checks for header files.
-dnl AC_HEADER_STDC
-AC_HEADER_TIME
+
 dnl AC_HEADER_STDBOOL
 AC_CHECK_HEADERS([ \
 	arpa/inet.h \
@@ -118,7 +88,7 @@ AC_CHECK_HEADERS([ \
 	bstring.h \
 	ctype.h \
 	errno.h \
-        execinfo.h \
+    execinfo.h \
 	fcntl.h \
 	float.h \
 	limits.h \
@@ -164,64 +134,8 @@ AC_C_CONST
 AC_C_INLINE
 AC_C_VOLATILE
 AC_TYPE_MODE_T
-AC_TYPE_SIGNAL
 AC_TYPE_SIZE_T
 AC_STRUCT_TM
-
-dnl Check for socklen_t (in Unix98)
-AC_MSG_CHECKING(for socklen_t)
-AC_TRY_COMPILE([
-	#include <sys/types.h>
-	#include <sys/socket.h>
-	socklen_t x;
-], [],
-[
-	AC_MSG_RESULT(yes)
-], [
-	AC_TRY_COMPILE([
-		#include <sys/types.h>
-		#include <sys/socket.h>
-		int accept(int, struct sockaddr *, size_t *);
-	], [], [
-		AC_MSG_RESULT(size_t)
-		AC_DEFINE(socklen_t, size_t, [socklen_t size])
-	], [
-		AC_MSG_RESULT(int)
-		AC_DEFINE(socklen_t, int, [socklen_t size])
-	])
-])
-
-#
-# Code by Brooks Davis, taken from: http://www.open-mpi.org/community/lists/devel/2005/10/0445.php
-#
-# FreeBSD has backtrace in -lexecinfo. Can't use a simple AC_CHECK_LIB,
-# though, because Linux has backtrace in glic (so linking in libexecinfo
-# will "find" backtrace, even though it would have been found anyway
-# -- so -lexecinfo would be useless [and potentially harmful?] in this
-# case).
-#
-
-AC_MSG_CHECKING([if we need -lexecinfo for backtrace])
-AC_LINK_IFELSE(AC_LANG_PROGRAM([[extern char *backtrace;]],
-[[char *bar = backtrace;]]),
-[MSG=no],[MSG=not_found])
-if test "$MSG" = "not_found"; then
- LIBS_save="$LIBS"
- LIBS="$LIBS -lexecinfo"
- AC_LINK_IFELSE(AC_LANG_PROGRAM([[extern char *backtrace;]],
-[[char *bar = backtrace;]]),
-[MSG=yes],[MSG=not_found])
- if test "$MSG" = "not_found"; then
- LIBS="$LIBS_save"
- fi
-fi
-AC_MSG_RESULT([$MSG])
-
-# see if we actually have backtrace. Use AC_CHECK_FUNCS so that it
-# does the glibs "not implemented" check. Will use the current LIBS,
-# so will check in -lexecinfo if we decided we needed it above
-AC_CHECK_FUNCS([backtrace])
-
 
 dnl  Checks for library functions.
 
@@ -232,7 +146,6 @@ dnl AC_FUNC_REALLOC
 
 AC_FUNC_MEMCMP
 AC_FUNC_SELECT_ARGTYPES
-AC_FUNC_SETVBUF_REVERSED
 AC_FUNC_STAT
 AC_FUNC_STRFTIME
 AC_FUNC_STRTOD

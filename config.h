@@ -1,309 +1,310 @@
+/* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* enable development code */
-#undef DEVELOPMENT
+/* #undef DEVELOPMENT */
 
 /* Define to 1 if you have the 'alarm' function. */
-#undef HAVE_ALARM
+#define HAVE_ALARM 1
 
 /* Define to 1 if you have the <arpa/inet.h> header file. */
-#undef HAVE_ARPA_INET_H
+#define HAVE_ARPA_INET_H 1
 
 /* Define to 1 if you have the <arpa/nameser.h> header file. */
-#undef HAVE_ARPA_NAMESER_H
+#define HAVE_ARPA_NAMESER_H 1
 
 /* Define to 1 if you have the <assert.h> header file. */
-#undef HAVE_ASSERT_H
+#define HAVE_ASSERT_H 1
 
 /* Define to 1 if you have the <bstring.h> header file. */
-#undef HAVE_BSTRING_H
+/* #undef HAVE_BSTRING_H */
 
 /* Define to 1 if you have the <ctype.h> header file. */
-#undef HAVE_CTYPE_H
+#define HAVE_CTYPE_H 1
 
 /* Define to 1 if you don't have 'vprintf' but do have '_doprnt.' */
-#undef HAVE_DOPRNT
+/* #undef HAVE_DOPRNT */
 
 /* Define to 1 if you have the <errno.h> header file. */
-#undef HAVE_ERRNO_H
+#define HAVE_ERRNO_H 1
 
 /* Define to 1 if you have the <execinfo.h> header file. */
-#undef HAVE_EXECINFO_H
+#define HAVE_EXECINFO_H 1
 
 /* Define to 1 if you have the <fcntl.h> header file. */
-#undef HAVE_FCNTL_H
+#define HAVE_FCNTL_H 1
 
 /* Define to 1 if you have the <float.h> header file. */
-#undef HAVE_FLOAT_H
+#define HAVE_FLOAT_H 1
 
 /* Define to 1 if you have the 'floor' function. */
-#undef HAVE_FLOOR
+#define HAVE_FLOOR 1
 
 /* Define to 1 if you have the 'gethostbyaddr' function. */
-#undef HAVE_GETHOSTBYADDR
+#define HAVE_GETHOSTBYADDR 1
 
 /* Define to 1 if you have the 'gethostbyname' function. */
-#undef HAVE_GETHOSTBYNAME
+#define HAVE_GETHOSTBYNAME 1
 
 /* Define to 1 if you have the 'gethostname' function. */
-#undef HAVE_GETHOSTNAME
+#define HAVE_GETHOSTNAME 1
 
 /* Define to 1 if you have the 'gettimeofday' function. */
-#undef HAVE_GETTIMEOFDAY
+#define HAVE_GETTIMEOFDAY 1
 
 /* Define to 1 if you have the 'inet_ntoa' function. */
-#undef HAVE_INET_NTOA
+#define HAVE_INET_NTOA 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-#undef HAVE_INTTYPES_H
+#define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the 'isascii' function. */
-#undef HAVE_ISASCII
+#define HAVE_ISASCII 1
 
 /* Define to 1 if you have the 'expat' library (-lexpat). */
-#undef HAVE_LIBEXPAT
+#define HAVE_LIBEXPAT 1
 
 /* Define to 1 if you have the 'm' library (-lm). */
-#undef HAVE_LIBM
+#define HAVE_LIBM 1
 
 /* Define to 1 if you have the <limits.h> header file. */
-#undef HAVE_LIMITS_H
+#define HAVE_LIMITS_H 1
 
 /* Define to 1 if you have the <math.h> header file. */
-#undef HAVE_MATH_H
+#define HAVE_MATH_H 1
 
 /* Define to 1 if you have the 'memchr' function. */
-#undef HAVE_MEMCHR
+#define HAVE_MEMCHR 1
 
 /* Define to 1 if you have the 'memmove' function. */
-#undef HAVE_MEMMOVE
+#define HAVE_MEMMOVE 1
 
 /* Define to 1 if you have the 'memset' function. */
-#undef HAVE_MEMSET
+#define HAVE_MEMSET 1
 
 /* Define to 1 if you have the 'mkdir' function. */
-#undef HAVE_MKDIR
+#define HAVE_MKDIR 1
 
 /* Define to 1 if you have the <netdb.h> header file. */
-#undef HAVE_NETDB_H
+#define HAVE_NETDB_H 1
 
 /* Define to 1 if you have the <netinet/in.h> header file. */
-#undef HAVE_NETINET_IN_H
+#define HAVE_NETINET_IN_H 1
 
 /* Define to 1 if you have the <netinet/tcp.h> header file. */
-#undef HAVE_NETINET_TCP_H
+#define HAVE_NETINET_TCP_H 1
 
 /* Define to 1 if you have the <net/if.h> header file. */
-#undef HAVE_NET_IF_H
+#define HAVE_NET_IF_H 1
 
 /* Define to 1 if you have the 'pow' function. */
-#undef HAVE_POW
+#define HAVE_POW 1
 
 /* Define to 1 if you have the <pwd.h> header file. */
-#undef HAVE_PWD_H
+#define HAVE_PWD_H 1
 
 /* Define to 1 if you have the <resolv.h> header file. */
-#undef HAVE_RESOLV_H
+#define HAVE_RESOLV_H 1
 
 /* Define to 1 if you have the 'rint' function. */
-#undef HAVE_RINT
+#define HAVE_RINT 1
 
 /* Define to 1 if you have the 'select' function. */
-#undef HAVE_SELECT
+#define HAVE_SELECT 1
 
 /* Define to 1 if you have the <setjmp.h> header file. */
-#undef HAVE_SETJMP_H
+#define HAVE_SETJMP_H 1
 
 /* Define to 1 if you have the <signal.h> header file. */
-#undef HAVE_SIGNAL_H
+#define HAVE_SIGNAL_H 1
 
 /* Define to 1 if you have the 'socket' function. */
-#undef HAVE_SOCKET
+#define HAVE_SOCKET 1
 
 /* Define to 1 if you have the 'sqrt' function. */
-#undef HAVE_SQRT
+#define HAVE_SQRT 1
 
 /* Define to 1 if 'stat' has the bug that it succeeds when given the
    zero-length file name argument. */
-#undef HAVE_STAT_EMPTY_STRING_BUG
+/* #undef HAVE_STAT_EMPTY_STRING_BUG */
 
 /* Define to 1 if you have the <stdarg.h> header file. */
-#undef HAVE_STDARG_H
+#define HAVE_STDARG_H 1
 
 /* Define to 1 if you have the <stddef.h> header file. */
-#undef HAVE_STDDEF_H
+#define HAVE_STDDEF_H 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#undef HAVE_STDINT_H
+#define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdio.h> header file. */
-#undef HAVE_STDIO_H
+#define HAVE_STDIO_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-#undef HAVE_STDLIB_H
+#define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the 'strcasecmp' function. */
-#undef HAVE_STRCASECMP
+#define HAVE_STRCASECMP 1
 
 /* Define to 1 if you have the 'strchr' function. */
-#undef HAVE_STRCHR
+#define HAVE_STRCHR 1
 
 /* Define to 1 if you have the 'strdup' function. */
-#undef HAVE_STRDUP
+#define HAVE_STRDUP 1
 
 /* Define to 1 if you have the 'strerror' function. */
-#undef HAVE_STRERROR
+#define HAVE_STRERROR 1
 
 /* Define to 1 if you have the 'strftime' function. */
-#undef HAVE_STRFTIME
+#define HAVE_STRFTIME 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-#undef HAVE_STRINGS_H
+#define HAVE_STRINGS_H 1
 
 /* Define to 1 if you have the <string.h> header file. */
-#undef HAVE_STRING_H
+#define HAVE_STRING_H 1
 
 /* Define to 1 if you have the 'strlcat' function. */
-#undef HAVE_STRLCAT
+#define HAVE_STRLCAT 1
 
 /* Define to 1 if you have the 'strlcpy' function. */
-#undef HAVE_STRLCPY
+#define HAVE_STRLCPY 1
 
 /* Define to 1 if you have the 'strncasecmp' function. */
-#undef HAVE_STRNCASECMP
+#define HAVE_STRNCASECMP 1
 
 /* Define to 1 if you have the 'strpbrk' function. */
-#undef HAVE_STRPBRK
+#define HAVE_STRPBRK 1
 
 /* Define to 1 if you have the 'strrchr' function. */
-#undef HAVE_STRRCHR
+#define HAVE_STRRCHR 1
 
 /* Define to 1 if you have the 'strspn' function. */
-#undef HAVE_STRSPN
+#define HAVE_STRSPN 1
 
 /* Define to 1 if you have the 'strstr' function. */
-#undef HAVE_STRSTR
+#define HAVE_STRSTR 1
 
 /* Define to 1 if you have the 'strtol' function. */
-#undef HAVE_STRTOL
+#define HAVE_STRTOL 1
 
 /* Define to 1 if you have the 'strtoul' function. */
-#undef HAVE_STRTOUL
+#define HAVE_STRTOUL 1
 
 /* Define to 1 if you have the <sys/fcntl.h> header file. */
-#undef HAVE_SYS_FCNTL_H
+#define HAVE_SYS_FCNTL_H 1
 
 /* Define to 1 if you have the <sys/file.h> header file. */
-#undef HAVE_SYS_FILE_H
+#define HAVE_SYS_FILE_H 1
 
 /* Define to 1 if you have the <sys/filio.h> header file. */
-#undef HAVE_SYS_FILIO_H
+/* #undef HAVE_SYS_FILIO_H */
 
 /* Define to 1 if you have the <sys/inttypes.h> header file. */
-#undef HAVE_SYS_INTTYPES_H
+/* #undef HAVE_SYS_INTTYPES_H */
 
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
-#undef HAVE_SYS_IOCTL_H
+#define HAVE_SYS_IOCTL_H 1
 
 /* Define to 1 if you have the <sys/lock.h> header file. */
-#undef HAVE_SYS_LOCK_H
+/* #undef HAVE_SYS_LOCK_H */
 
 /* Define to 1 if you have the <sys/mman.h> header file. */
-#undef HAVE_SYS_MMAN_H
+#define HAVE_SYS_MMAN_H 1
 
 /* Define to 1 if you have the <sys/param.h> header file. */
-#undef HAVE_SYS_PARAM_H
+#define HAVE_SYS_PARAM_H 1
 
 /* Define to 1 if you have the <sys/select.h> header file. */
-#undef HAVE_SYS_SELECT_H
+#define HAVE_SYS_SELECT_H 1
 
 /* Define to 1 if you have the <sys/socket.h> header file. */
-#undef HAVE_SYS_SOCKET_H
+#define HAVE_SYS_SOCKET_H 1
 
 /* Define to 1 if you have the <sys/sockio.h> header file. */
-#undef HAVE_SYS_SOCKIO_H
+/* #undef HAVE_SYS_SOCKIO_H */
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#undef HAVE_SYS_STAT_H
+#define HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/time.h> header file. */
-#undef HAVE_SYS_TIME_H
+#define HAVE_SYS_TIME_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#undef HAVE_SYS_TYPES_H
+#define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#undef HAVE_UNISTD_H
+#define HAVE_UNISTD_H 1
 
 /* Define to 1 if you have the <values.h> header file. */
-#undef HAVE_VALUES_H
+#define HAVE_VALUES_H 1
 
 /* Define to 1 if you have the 'vprintf' function. */
-#undef HAVE_VPRINTF
+#define HAVE_VPRINTF 1
 
 /* Define to 1 if 'lstat' dereferences a symlink specified with a trailing
    slash. */
-#undef LSTAT_FOLLOWS_SLASHED_SYMLINK
+#define LSTAT_FOLLOWS_SLASHED_SYMLINK 1
 
 /* Name of package */
-#undef PACKAGE
+#define PACKAGE "xpilot"
 
 /* Define to the address where bug reports for this package should be sent. */
-#undef PACKAGE_BUGREPORT
+#define PACKAGE_BUGREPORT "kps@users.sourceforge.net"
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME
+#define PACKAGE_NAME "XPilot"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING
+#define PACKAGE_STRING "XPilot 1.4.6fxi"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME
+#define PACKAGE_TARNAME "xpilot"
 
 /* Define to the home page for this package. */
-#undef PACKAGE_URL
+#define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION
+#define PACKAGE_VERSION "1.4.6fxi"
 
 /* lock the server into memory */
-#undef PLOCKSERVER
+/* #undef PLOCKSERVER */
 
 /* Define to the type of arg 1 for 'select'. */
-#undef SELECT_TYPE_ARG1
+#define SELECT_TYPE_ARG1 int
 
 /* Define to the type of args 2, 3 and 4 for 'select'. */
-#undef SELECT_TYPE_ARG234
+#define SELECT_TYPE_ARG234 (fd_set *)
 
 /* Define to the type of arg 5 for 'select'. */
-#undef SELECT_TYPE_ARG5
+#define SELECT_TYPE_ARG5 (struct timeval *)
 
 /* Define to 1 if all of the C89 standard headers exist (not just the ones
    required in a freestanding environment). This macro is provided for
    backward compatibility; new code need not use it. */
-#undef STDC_HEADERS
+#define STDC_HEADERS 1
 
 /* Define to 1 if your <sys/time.h> declares 'struct tm'. */
-#undef TM_IN_SYS_TIME
+/* #undef TM_IN_SYS_TIME */
 
 /* Version number of package */
-#undef VERSION
+#define VERSION "1.4.6fxi"
 
 /* Define to empty if 'const' does not conform to ANSI C. */
-#undef const
+/* #undef const */
 
 /* Define to '__inline__' or '__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
-#undef inline
+/* #undef inline */
 #endif
 
 /* Define to 'int' if <sys/types.h> does not define. */
-#undef mode_t
+/* #undef mode_t */
 
 /* Define as 'unsigned int' if <stddef.h> doesn't define. */
-#undef size_t
+/* #undef size_t */
 
 /* Define to empty if the keyword 'volatile' does not work. Warning: valid
    code using 'volatile' can become incorrect without. Disable with care. */
-#undef volatile
+/* #undef volatile */

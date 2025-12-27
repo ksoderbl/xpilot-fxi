@@ -51,5 +51,13 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# debug information files
-*.dwo
+# Generated makefiles
+Makefile
+
+# Other
+.deps
+.vscode
+autom4te.cache
+*~
+config.log
+config.status
