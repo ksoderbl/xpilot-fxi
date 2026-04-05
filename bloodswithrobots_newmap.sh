@@ -1,1 +1,1 @@
-src/server/xpilots -noquit -password buu -map share/maps/teamcup2.xp -initialFuel 500 -robotteam 4 -maxrobots 4 -gamespeed 12 -allowviewing -internalFps $1 -frameDivisor $2
+/usr/local/bin/xpilot-fxi-server -noquit -password buu -map /usr/local/share/xpilot-fxi/maps/teamcup2.xp -initialFuel 500 -robotteam 4 -maxrobots 4 -gamespeed 12 -allowviewing -internalFps $1 -frameDivisor $2

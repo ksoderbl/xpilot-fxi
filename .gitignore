@@ -62,3 +62,8 @@ autom4te.cache
 *~
 config.log
 config.status
+
+# New
+build
+rank.txt
+rank.html
